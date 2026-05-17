@@ -26,20 +26,13 @@ jobs:
           host = os.getenv("EMAIL_SMTP_HOST", "smtp.qq.com")
           port = int(os.getenv("EMAIL_SMTP_PORT", "465"))
 
+          content = "当前持有：汇添富纳指100 159660\n当前溢价：2.01%\n20日均值：3.93%\n相对偏离：-1.92pct\n\n最佳候选：华夏纳指100 513300\n切换优势：-0.40pct\n结论：不推送，切换优势不足。\n\n收到这封邮件，说明 GitHub Actions -> QQ邮箱 已经打通。"
+
           msg = EmailMessage()
           msg["Subject"] = "纳指ETF监控测试"
           msg["From"] = email_from
           msg["To"] = email_to
-          msg.set_content("""当前持有：汇添富纳指100 159660
-当前溢价：2.01%
-20日均值：3.93%
-相对偏离：-1.92pct
-
-最佳候选：华夏纳指100 513300
-切换优势：-0.40pct
-结论：不推送，切换优势不足。
-
-收到这封邮件，说明 GitHub Actions -> QQ邮箱 已经打通。""")
+          msg.set_content(content)
 
           with smtplib.SMTP_SSL(host, port, timeout=20) as smtp:
               smtp.login(email_from, email_password)
