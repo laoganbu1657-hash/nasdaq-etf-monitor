@@ -1,0 +1,49 @@
+name: Test QQ Email
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send QQ email test message
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_SMTP_HOST: smtp.qq.com
+          EMAIL_SMTP_PORT: "465"
+        run: |
+          python - <<'PY'
+          import os
+          import smtplib
+          from email.message import EmailMessage
+
+          email_from = os.environ["EMAIL_FROM"]
+          email_password = os.environ["EMAIL_PASSWORD"]
+          email_to = os.environ["EMAIL_TO"]
+          host = os.getenv("EMAIL_SMTP_HOST", "smtp.qq.com")
+          port = int(os.getenv("EMAIL_SMTP_PORT", "465"))
+
+          msg = EmailMessage()
+          msg["Subject"] = "纳指ETF监控测试"
+          msg["From"] = email_from
+          msg["To"] = email_to
+          msg.set_content("""当前持有：汇添富纳指100 159660
+当前溢价：2.01%
+20日均值：3.93%
+相对偏离：-1.92pct
+
+最佳候选：华夏纳指100 513300
+切换优势：-0.40pct
+结论：不推送，切换优势不足。
+
+收到这封邮件，说明 GitHub Actions -> QQ邮箱 已经打通。""")
+
+          with smtplib.SMTP_SSL(host, port, timeout=20) as smtp:
+              smtp.login(email_from, email_password)
+              smtp.send_message(msg)
+
+          print(f"邮件已发送到：{email_to}")
+          PY
