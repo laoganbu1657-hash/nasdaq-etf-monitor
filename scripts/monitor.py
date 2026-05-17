@@ -45,7 +45,9 @@ class FundSignal:
     nav: float
     nav_date: str
     current_premium: float
+    avg10_premium: float
     avg20_premium: float
+    avg30_premium: float
     relative_deviation: float
     avg7_amount_wan: float
     operating_fee: float | None
@@ -181,9 +183,13 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
         latest_row = latest[latest["code"] == code].iloc[0]
         current_price = prices.get(code, float(latest_row["close"]))
         current_premium = (current_price / float(latest_row["nav"]) - 1) * 100
+        prev10 = group.iloc[-11:-1] if len(group) >= 11 else group.iloc[:-1]
         prev20 = group.iloc[-21:-1] if len(group) >= 21 else group.iloc[:-1]
+        prev30 = group.iloc[-31:-1] if len(group) >= 31 else group.iloc[:-1]
         last7 = group.iloc[-7:]
+        avg10 = float(prev10["live_premium_pct"].mean())
         avg20 = float(prev20["live_premium_pct"].mean())
+        avg30 = float(prev30["live_premium_pct"].mean())
         signals.append(
             FundSignal(
                 code=code,
@@ -192,7 +198,9 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
                 nav=float(latest_row["nav"]),
                 nav_date=str(latest_row["nav_date"]),
                 current_premium=current_premium,
+                avg10_premium=avg10,
                 avg20_premium=avg20,
+                avg30_premium=avg30,
                 relative_deviation=current_premium - avg20,
                 avg7_amount_wan=float(last7["amount_wan"].mean()),
                 operating_fee=fees.get(code),
@@ -205,29 +213,45 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
     return by_code[holding_code], signals
 
 
-def render_message(current: FundSignal, candidate: FundSignal, switch_advantage: float) -> tuple[str, str]:
-    title = f"纳指ETF切换提醒：{current.name} → {candidate.name}"
+def render_candidate(index: int, current: FundSignal, candidate: FundSignal) -> str:
+    switch_advantage = current.relative_deviation - candidate.relative_deviation
+    return f"""
+{index}. {candidate.name} {candidate.code}
+> 当前溢价：{pct(candidate.current_premium)}
+> 10日均值：{pct(candidate.avg10_premium)}
+> 20日均值：{pct(candidate.avg20_premium)}
+> 30日均值：{pct(candidate.avg30_premium)}
+> 相对偏离：{pct_point(candidate.relative_deviation)}
+> 切换优势：{pct_point(switch_advantage)}
+> 7日日均成交额：{amount_text(candidate.avg7_amount_wan)}
+> 运作费率：{fee_text(candidate.operating_fee)}
+"""
+
+
+def render_message(current: FundSignal, candidates: list[FundSignal]) -> tuple[str, str]:
+    best = candidates[0]
+    switch_advantage = current.relative_deviation - best.relative_deviation
+    title = f"纳指ETF切换提醒：{current.name} → {best.name}"
+    candidate_blocks = "\n".join(render_candidate(index, current, candidate) for index, candidate in enumerate(candidates, start=1))
     content = f"""
 ## 纳指ETF持仓切换提醒
 
 **当前持有：{current.name} {current.code}**
 > 当前溢价：{pct(current.current_premium)}
+> 10日均值：{pct(current.avg10_premium)}
 > 20日均值：{pct(current.avg20_premium)}
+> 30日均值：{pct(current.avg30_premium)}
 > 相对偏离：{pct_point(current.relative_deviation)}
 > 7日日均成交额：{amount_text(current.avg7_amount_wan)}
 > 运作费率：{fee_text(current.operating_fee)}
 
-**候选切换：{candidate.name} {candidate.code}**
-> 当前溢价：{pct(candidate.current_premium)}
-> 20日均值：{pct(candidate.avg20_premium)}
-> 相对偏离：{pct_point(candidate.relative_deviation)}
-> 7日日均成交额：{amount_text(candidate.avg7_amount_wan)}
-> 运作费率：{fee_text(candidate.operating_fee)}
-
 **切换优势：{pct_point(switch_advantage)}**
 
-**结论：可以考虑从 {current.name} 切到 {candidate.name}。**
-> 候选使用净值日：{candidate.nav_date}
+**结论：可以考虑从 {current.name} 切到 {best.name}。**
+> 使用净值日：{best.nav_date}
+
+**前5个最佳候选**
+{candidate_blocks}
 
 执行建议：不要开盘前10分钟硬切；用限价单，单笔资金可分2-3次成交。
 """
@@ -304,20 +328,45 @@ def main() -> None:
         print("没有满足流动性和绝对溢价过滤条件的候选。")
         return
 
-    best = sorted(candidates, key=lambda s: current.relative_deviation - s.relative_deviation, reverse=True)[0]
+    top_candidates = sorted(candidates, key=lambda s: current.relative_deviation - s.relative_deviation, reverse=True)[:5]
+    best = top_candidates[0]
     advantage = current.relative_deviation - best.relative_deviation
 
     print(f"当前持有：{current.name} {current.code}")
-    print(f"当前溢价：{pct(current.current_premium)} 20日均值：{pct(current.avg20_premium)} 相对偏离：{pct_point(current.relative_deviation)}")
+    print(
+        f"当前溢价：{pct(current.current_premium)} "
+        f"10日均值：{pct(current.avg10_premium)} "
+        f"20日均值：{pct(current.avg20_premium)} "
+        f"30日均值：{pct(current.avg30_premium)} "
+        f"相对偏离：{pct_point(current.relative_deviation)}"
+    )
     print(f"最佳候选：{best.name} {best.code}")
-    print(f"当前溢价：{pct(best.current_premium)} 20日均值：{pct(best.avg20_premium)} 相对偏离：{pct_point(best.relative_deviation)}")
+    print(
+        f"当前溢价：{pct(best.current_premium)} "
+        f"10日均值：{pct(best.avg10_premium)} "
+        f"20日均值：{pct(best.avg20_premium)} "
+        f"30日均值：{pct(best.avg30_premium)} "
+        f"相对偏离：{pct_point(best.relative_deviation)}"
+    )
+    print("前5个最佳候选：")
+    for index, candidate in enumerate(top_candidates, start=1):
+        candidate_advantage = current.relative_deviation - candidate.relative_deviation
+        print(
+            f"{index}. {candidate.name} {candidate.code} "
+            f"当前溢价：{pct(candidate.current_premium)} "
+            f"10日均值：{pct(candidate.avg10_premium)} "
+            f"20日均值：{pct(candidate.avg20_premium)} "
+            f"30日均值：{pct(candidate.avg30_premium)} "
+            f"相对偏离：{pct_point(candidate.relative_deviation)} "
+            f"切换优势：{pct_point(candidate_advantage)}"
+        )
     print(f"切换优势：{pct_point(advantage)} 阈值：{pct_point(args.threshold)}")
 
     if advantage < args.threshold:
         print("结论：不推送，切换优势不足。")
         return
 
-    title, content = render_message(current, best, advantage)
+    title, content = render_message(current, top_candidates)
     if args.dry_run:
         print("DRY RUN：满足条件，但不推送。")
         print(title)
