@@ -1,0 +1,16 @@
+name: Test PushPlus
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-pushplus:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send PushPlus test message
+        env:
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+        run: |
+          curl -sS -X POST https://www.pushplus.plus/send \
+            -H "Content-Type: application/json" \
+            -d "{\"token\":\"${PUSHPLUS_TOKEN}\",\"title\":\"纳指ETF监控测试\",\"content\":\"这是一条 GitHub Actions 发出的 PushPlus 测试消息。收到这条，说明微信推送已经打通。\",\"template\":\"html\"}"
