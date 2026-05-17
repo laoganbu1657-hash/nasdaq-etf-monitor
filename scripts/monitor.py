@@ -4,9 +4,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import smtplib
 import time
 from dataclasses import dataclass
 from datetime import datetime, time as dtime
+from email.message import EmailMessage
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -59,7 +61,11 @@ def pct_point(value: float, digits: int = 2) -> str:
 
 
 def amount_text(amount_wan: float) -> str:
-    return f"{amount_wan / 10000:.2f}亿" if amount_wan >= 10000 else f"{amount_wan:.0f}万"
+    return f"{amount_wan / 10000:.2f}亿" if amount_wan >= 10000 else f"{amount_wan:.2f}万"
+
+
+def fee_text(value: float | None) -> str:
+    return pct(value) if value is not None else "-"
 
 
 def in_a_share_time(now: datetime | None = None) -> bool:
@@ -67,7 +73,7 @@ def in_a_share_time(now: datetime | None = None) -> bool:
     if current.weekday() >= 5:
         return False
     t = current.time()
-    return (dtime(9, 45) <= t <= dtime(11, 30)) or (dtime(13, 0) <= t <= dtime(14, 55))
+    return dtime(9, 31) <= t <= dtime(14, 55)
 
 
 def secid(code: str) -> str:
@@ -202,27 +208,62 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
 def render_message(current: FundSignal, candidate: FundSignal, switch_advantage: float) -> tuple[str, str]:
     title = f"纳指ETF切换提醒：{current.name} → {candidate.name}"
     content = f"""
-<h3>纳指ETF持仓切换提醒</h3>
-<p><b>当前持有：{current.name} {current.code}</b><br>
-当前溢价：{pct(current.current_premium)}<br>
-20日均值：{pct(current.avg20_premium)}<br>
-相对偏离：{pct_point(current.relative_deviation)}</p>
+## 纳指ETF持仓切换提醒
 
-<p><b>候选切换：{candidate.name} {candidate.code}</b><br>
-当前溢价：{pct(candidate.current_premium)}<br>
-20日均值：{pct(candidate.avg20_premium)}<br>
-相对偏离：{pct_point(candidate.relative_deviation)}</p>
+**当前持有：{current.name} {current.code}**
+> 当前溢价：{pct(current.current_premium)}
+> 20日均值：{pct(current.avg20_premium)}
+> 相对偏离：{pct_point(current.relative_deviation)}
+> 7日日均成交额：{amount_text(current.avg7_amount_wan)}
+> 运作费率：{fee_text(current.operating_fee)}
 
-<p><b>切换优势：{pct_point(switch_advantage)}</b></p>
+**候选切换：{candidate.name} {candidate.code}**
+> 当前溢价：{pct(candidate.current_premium)}
+> 20日均值：{pct(candidate.avg20_premium)}
+> 相对偏离：{pct_point(candidate.relative_deviation)}
+> 7日日均成交额：{amount_text(candidate.avg7_amount_wan)}
+> 运作费率：{fee_text(candidate.operating_fee)}
 
-<p><b>结论：可以考虑从 {current.name} 切到 {candidate.name}。</b><br>
-候选7日日均成交额：{amount_text(candidate.avg7_amount_wan)}<br>
-候选运作费：{pct(candidate.operating_fee) if candidate.operating_fee is not None else "-"}<br>
-候选使用净值日：{candidate.nav_date}</p>
+**切换优势：{pct_point(switch_advantage)}**
 
-<p>执行建议：不要开盘前10分钟硬切；用限价单，单笔资金可分2-3次成交。</p>
+**结论：可以考虑从 {current.name} 切到 {candidate.name}。**
+> 候选使用净值日：{candidate.nav_date}
+
+执行建议：不要开盘前10分钟硬切；用限价单，单笔资金可分2-3次成交。
 """
     return title, content
+
+
+def send_wecom(webhook: str, content: str) -> dict:
+    response = requests.post(
+        webhook,
+        json={"msgtype": "markdown", "markdown": {"content": content}},
+        headers={"Content-Type": "application/json"},
+        timeout=15,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def send_email(subject: str, content: str) -> None:
+    smtp_host = os.getenv("EMAIL_SMTP_HOST", "smtp.qq.com")
+    smtp_port = int(os.getenv("EMAIL_SMTP_PORT", "465"))
+    email_from = os.getenv("EMAIL_FROM", "")
+    email_password = os.getenv("EMAIL_PASSWORD", "")
+    email_to = os.getenv("EMAIL_TO", email_from)
+
+    if not email_from or not email_password or not email_to:
+        raise ValueError("邮件配置不完整，需要 EMAIL_FROM、EMAIL_PASSWORD、EMAIL_TO")
+
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = email_from
+    message["To"] = email_to
+    message.set_content(content)
+
+    with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=20) as smtp:
+        smtp.login(email_from, email_password)
+        smtp.send_message(message)
 
 
 def send_pushplus(title: str, content: str, token: str) -> dict:
@@ -242,7 +283,7 @@ def main() -> None:
     parser.add_argument("--threshold", type=float, default=float(os.getenv("SWITCH_THRESHOLD", "1.2")))
     parser.add_argument("--min-amount-wan", type=float, default=float(os.getenv("MIN_AVG7_AMOUNT_WAN", "10000")))
     parser.add_argument("--max-candidate-premium", type=float, default=float(os.getenv("MAX_CANDIDATE_PREMIUM", "3.0")))
-    parser.add_argument("--cooldown-minutes", type=int, default=int(os.getenv("PUSH_COOLDOWN_MINUTES", "60")))
+    parser.add_argument("--cooldown-minutes", type=int, default=int(os.getenv("PUSH_COOLDOWN_MINUTES", "120")))
     parser.add_argument("--ignore-market-time", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -283,9 +324,13 @@ def main() -> None:
         print(content)
         return
 
-    token = os.getenv("PUSHPLUS_TOKEN")
-    if not token:
-        print("满足条件，但未设置 PUSHPLUS_TOKEN。")
+    email_from = os.getenv("EMAIL_FROM")
+    email_password = os.getenv("EMAIL_PASSWORD")
+    email_to = os.getenv("EMAIL_TO")
+    wecom_webhook = os.getenv("WECOM_WEBHOOK")
+    pushplus_token = os.getenv("PUSHPLUS_TOKEN")
+    if not ((email_from and email_password and email_to) or wecom_webhook or pushplus_token):
+        print("满足条件，但未设置邮件、WECOM_WEBHOOK 或 PUSHPLUS_TOKEN。")
         return
 
     key = f"{current.code}->{best.code}"
@@ -295,10 +340,17 @@ def main() -> None:
         print(f"满足条件，但仍在冷却期内，未重复推送：{key}")
         return
 
-    result = send_pushplus(title, content, token)
+    if email_from and email_password and email_to:
+        send_email(title, content)
+        print(f"邮件已发送到：{email_to}")
+    elif wecom_webhook:
+        result = send_wecom(wecom_webhook, content)
+        print("企业微信返回：", result)
+    else:
+        result = send_pushplus(title, content, pushplus_token or "")
+        print("PushPlus返回：", result)
     state[key] = now
     save_state(state)
-    print("PushPlus返回：", result)
 
 
 if __name__ == "__main__":
