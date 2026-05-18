@@ -189,33 +189,49 @@ def number_or_none(value) -> float | None:
 
 
 def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
+    holding_code = str(holding_code).strip().zfill(6)
     history = pd.read_csv(DATA_CSV, dtype={"code": str})
-    latest_date = history["date"].max()
-    latest = history[history["date"] == latest_date].copy()
+    history["code"] = history["code"].astype(str).str.zfill(6)
     web_metrics = load_web_metrics()
+    history_by_code = {code: group.sort_values("date").reset_index(drop=True) for code, group in history.sort_values("date").groupby("code")}
 
     fees: dict[str, float] = {}
     if FEE_CSV.exists():
         fee_df = pd.read_csv(FEE_CSV, dtype={"code": str})
+        fee_df["code"] = fee_df["code"].astype(str).str.zfill(6)
         fees = dict(zip(fee_df["code"], fee_df["operating_fee_total"]))
 
     prices = fetch_realtime_prices(sorted(FUNDS))
     signals: list[FundSignal] = []
-    for code, group in history.sort_values("date").groupby("code"):
-        group = group.sort_values("date").reset_index(drop=True)
-        latest_row = latest[latest["code"] == code].iloc[0]
+    monitor_codes = sorted(set(FUNDS).intersection(set(history_by_code) | set(web_metrics)))
+    for code in monitor_codes:
+        group = history_by_code.get(code)
         metrics = web_metrics.get(code, {})
-        current_price = prices.get(code, float(latest_row["close"]))
-        nav_for_premium = number_or_none(metrics.get("navForPremium")) or float(latest_row["nav"])
-        nav_for_premium_date = metrics.get("navForPremiumDate") or str(latest_row["nav_date"])
+        latest_row = group.iloc[-1] if group is not None and not group.empty else None
+
+        latest_close = number_or_none(metrics.get("latestClose"))
+        if latest_close is None and latest_row is not None:
+            latest_close = float(latest_row["close"])
+        if latest_close is None:
+            continue
+
+        current_price = prices.get(code, latest_close)
+        nav_for_premium = number_or_none(metrics.get("navForPremium"))
+        if nav_for_premium is None and latest_row is not None:
+            nav_for_premium = float(latest_row["nav"])
+        if nav_for_premium in (None, 0):
+            continue
+
+        nav_for_premium_date = metrics.get("navForPremiumDate")
+        if not nav_for_premium_date and latest_row is not None:
+            nav_for_premium_date = str(latest_row["nav_date"])
         nav_for_premium_source = metrics.get("navForPremiumSource")
         current_premium = (current_price / nav_for_premium - 1) * 100
-        last7 = group.iloc[-7:]
         avg10 = number_or_none(metrics.get("avg10Premium"))
         avg20 = number_or_none(metrics.get("avg20Premium"))
         avg30 = number_or_none(metrics.get("avg30Premium"))
-        if avg10 is None or avg20 is None or avg30 is None:
-            latest_premium = (float(latest_row["close"]) / nav_for_premium - 1) * 100
+        if (avg10 is None or avg20 is None or avg30 is None) and group is not None and not group.empty:
+            latest_premium = (latest_close / nav_for_premium - 1) * 100
             premium_history = group.copy()
             premium_history["premium_for_mean"] = premium_history["live_premium_pct"]
             premium_history.loc[premium_history.index[-1], "premium_for_mean"] = latest_premium
@@ -223,6 +239,15 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
             avg10 = float(premium_history.iloc[-10:]["premium_for_mean"].mean())
             avg20 = float(premium_history.iloc[-20:]["premium_for_mean"].mean())
             avg30 = float(premium_history.iloc[-30:]["premium_for_mean"].mean())
+        if avg10 is None or avg20 is None or avg30 is None:
+            continue
+
+        avg7_amount_wan = number_or_none(metrics.get("avg7AmountWan"))
+        if avg7_amount_wan is None and group is not None and not group.empty:
+            avg7_amount_wan = float(group.iloc[-7:]["amount_wan"].mean())
+        if avg7_amount_wan is None:
+            avg7_amount_wan = 0.0
+
         nav_label = str(nav_for_premium_date)
         if nav_for_premium_source == "estimated":
             nav_label += "估"
@@ -238,14 +263,15 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
                 avg20_premium=avg20,
                 avg30_premium=avg30,
                 relative_deviation=current_premium - avg20,
-                avg7_amount_wan=float(last7["amount_wan"].mean()),
-                operating_fee=fees.get(code),
+                avg7_amount_wan=avg7_amount_wan,
+                operating_fee=number_or_none(metrics.get("operatingFee")) or fees.get(code),
             )
         )
 
     by_code = {signal.code: signal for signal in signals}
     if holding_code not in by_code:
-        raise ValueError(f"当前持仓代码 {holding_code} 不在监控池中")
+        available = "、".join(sorted(by_code)) or "空"
+        raise ValueError(f"当前持仓代码 {holding_code} 不在监控池中；当前可用代码：{available}")
     return by_code[holding_code], signals
 
 
