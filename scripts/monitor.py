@@ -19,6 +19,7 @@ import requests
 ROOT = Path(__file__).resolve().parents[1]
 DATA_CSV = ROOT / "data" / "nasdaq_qdii_live_premium.csv"
 FEE_CSV = ROOT / "data" / "nasdaq_etf_fee.csv"
+WEB_DATA_JSON = ROOT / "docs" / "data" / "funds.json"
 STATE_FILE = ROOT / "data" / "push_state.json"
 
 FUNDS = {
@@ -166,10 +167,32 @@ def fetch_realtime_prices(codes: list[str]) -> dict[str, float]:
     return prices
 
 
+def load_web_metrics() -> dict[str, dict]:
+    if not WEB_DATA_JSON.exists():
+        return {}
+    try:
+        data = json.loads(WEB_DATA_JSON.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    funds = data.get("funds", [])
+    if not isinstance(funds, list):
+        return {}
+    return {str(fund.get("code")).zfill(6): fund for fund in funds if fund.get("code")}
+
+
+def number_or_none(value) -> float | None:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if pd.notna(number) else None
+
+
 def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
     history = pd.read_csv(DATA_CSV, dtype={"code": str})
     latest_date = history["date"].max()
     latest = history[history["date"] == latest_date].copy()
+    web_metrics = load_web_metrics()
 
     fees: dict[str, float] = {}
     if FEE_CSV.exists():
@@ -181,22 +204,35 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
     for code, group in history.sort_values("date").groupby("code"):
         group = group.sort_values("date").reset_index(drop=True)
         latest_row = latest[latest["code"] == code].iloc[0]
+        metrics = web_metrics.get(code, {})
         current_price = prices.get(code, float(latest_row["close"]))
-        current_premium = (current_price / float(latest_row["nav"]) - 1) * 100
-        prev10 = group.iloc[-11:-1] if len(group) >= 11 else group.iloc[:-1]
-        prev20 = group.iloc[-21:-1] if len(group) >= 21 else group.iloc[:-1]
-        prev30 = group.iloc[-31:-1] if len(group) >= 31 else group.iloc[:-1]
+        nav_for_premium = number_or_none(metrics.get("navForPremium")) or float(latest_row["nav"])
+        nav_for_premium_date = metrics.get("navForPremiumDate") or str(latest_row["nav_date"])
+        nav_for_premium_source = metrics.get("navForPremiumSource")
+        current_premium = (current_price / nav_for_premium - 1) * 100
         last7 = group.iloc[-7:]
-        avg10 = float(prev10["live_premium_pct"].mean())
-        avg20 = float(prev20["live_premium_pct"].mean())
-        avg30 = float(prev30["live_premium_pct"].mean())
+        avg10 = number_or_none(metrics.get("avg10Premium"))
+        avg20 = number_or_none(metrics.get("avg20Premium"))
+        avg30 = number_or_none(metrics.get("avg30Premium"))
+        if avg10 is None or avg20 is None or avg30 is None:
+            latest_premium = (float(latest_row["close"]) / nav_for_premium - 1) * 100
+            premium_history = group.copy()
+            premium_history["premium_for_mean"] = premium_history["live_premium_pct"]
+            premium_history.loc[premium_history.index[-1], "premium_for_mean"] = latest_premium
+            premium_history = premium_history.dropna(subset=["premium_for_mean"])
+            avg10 = float(premium_history.iloc[-10:]["premium_for_mean"].mean())
+            avg20 = float(premium_history.iloc[-20:]["premium_for_mean"].mean())
+            avg30 = float(premium_history.iloc[-30:]["premium_for_mean"].mean())
+        nav_label = str(nav_for_premium_date)
+        if nav_for_premium_source == "estimated":
+            nav_label += "估"
         signals.append(
             FundSignal(
                 code=code,
                 name=FUNDS.get(code, str(latest_row["name"])),
                 price=current_price,
-                nav=float(latest_row["nav"]),
-                nav_date=str(latest_row["nav_date"]),
+                nav=nav_for_premium,
+                nav_date=nav_label,
                 current_premium=current_premium,
                 avg10_premium=avg10,
                 avg20_premium=avg20,
@@ -248,7 +284,7 @@ def render_message(current: FundSignal, candidates: list[FundSignal]) -> tuple[s
 **切换优势：{pct_point(switch_advantage)}**
 
 **结论：可以考虑从 {current.name} 切到 {best.name}。**
-> 使用净值日：{best.nav_date}
+> 溢价净值日：{best.nav_date}
 
 **前5个最佳候选**
 {candidate_blocks}
