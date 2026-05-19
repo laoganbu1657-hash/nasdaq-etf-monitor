@@ -18,18 +18,22 @@ NAV_START = "2024-12-01"
 END = date.today().isoformat()
 
 FUNDS = [
-    ("159501", "纳指ETF嘉实"),
-    ("159513", "纳斯达克100ETF大成"),
-    ("159632", "纳斯达克ETF华安"),
-    ("159659", "纳斯达克100ETF招商"),
-    ("159660", "纳指ETF汇添富"),
-    ("159696", "纳指ETF易方达"),
-    ("159941", "纳指ETF广发"),
-    ("513100", "纳指ETF国泰"),
-    ("513110", "纳指ETF华泰柏瑞"),
-    ("513300", "纳斯达克ETF华夏"),
-    ("513390", "纳指100ETF博时"),
-    ("513870", "纳指ETF富国"),
+    {"code": "159501", "name": "纳指ETF嘉实", "group": "nasdaq100"},
+    {"code": "159513", "name": "纳斯达克100ETF大成", "group": "nasdaq100"},
+    {"code": "159632", "name": "纳斯达克ETF华安", "group": "nasdaq100"},
+    {"code": "159659", "name": "纳斯达克100ETF招商", "group": "nasdaq100"},
+    {"code": "159660", "name": "纳指ETF汇添富", "group": "nasdaq100"},
+    {"code": "159696", "name": "纳指ETF易方达", "group": "nasdaq100"},
+    {"code": "159941", "name": "纳指ETF广发", "group": "nasdaq100"},
+    {"code": "513100", "name": "纳指ETF国泰", "group": "nasdaq100"},
+    {"code": "513110", "name": "纳指ETF华泰柏瑞", "group": "nasdaq100"},
+    {"code": "513300", "name": "纳斯达克ETF华夏", "group": "nasdaq100"},
+    {"code": "513390", "name": "纳指100ETF博时", "group": "nasdaq100"},
+    {"code": "513870", "name": "纳指ETF富国", "group": "nasdaq100"},
+    {"code": "513500", "name": "标普500ETF博时", "group": "sp500"},
+    {"code": "159612", "name": "标普500ETF国泰", "group": "sp500"},
+    {"code": "513650", "name": "标普500ETF南方", "group": "sp500"},
+    {"code": "159655", "name": "标普500ETF华夏", "group": "sp500"},
 ]
 
 
@@ -68,7 +72,7 @@ def fetch_nav_df(code: str) -> pd.DataFrame:
     return df.dropna(subset=["nav_date", "nav"]).sort_values("nav_date")
 
 
-def build_one(code: str, name: str) -> pd.DataFrame:
+def build_one(code: str, name: str, group: str) -> pd.DataFrame:
     prices = fetch_price_df(code)
     navs = fetch_nav_df(code)
     merged = pd.merge_asof(
@@ -79,6 +83,7 @@ def build_one(code: str, name: str) -> pd.DataFrame:
         direction="backward",
         allow_exact_matches=False,
     )
+    merged.insert(0, "group", group)
     merged.insert(0, "name", name)
     merged.insert(0, "code", code)
     merged["amount_wan"] = merged["amount"] / 10000
@@ -89,6 +94,7 @@ def build_one(code: str, name: str) -> pd.DataFrame:
         [
             "code",
             "name",
+            "group",
             "date",
             "close",
             "amount",
@@ -113,14 +119,18 @@ def main() -> None:
     frames = []
     summary_rows = []
 
-    for code, name in FUNDS:
+    for fund in FUNDS:
+        code = fund["code"]
+        name = fund["name"]
+        group = fund["group"]
         print(f"Fetching {code} {name}")
-        df = build_one(code, name)
+        df = build_one(code, name, group)
         frames.append(df)
         summary_rows.append(
             {
                 "code": code,
                 "name": name,
+                "group": group,
                 "start_date": df["date"].iloc[0] if len(df) else "",
                 "end_date": df["date"].iloc[-1] if len(df) else "",
                 "trading_days": len(df),
