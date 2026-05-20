@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>QDII ETF实时监控</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #172033;
+        --muted: #64748b;
+        --line: #d8e0eb;
+        --head: #edf2f8;
+        --green: #047857;
+        --green-bg: #d9f7e8;
+        --amber: #a35308;
+        --red: #b42318;
+        --blue: #2563eb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid var(--line);
+        background: rgba(246, 248, 251, 0.96);
+        backdrop-filter: blur(12px);
+      }
+
+      .bar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 18px 24px 14px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        letter-spacing: 0;
+      }
+
+      .sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      button,
+      select,
+      input {
+        height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        color: var(--ink);
+        font: inherit;
+      }
+
+      button {
+        padding: 0 14px;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      select {
+        padding: 0 32px 0 12px;
+      }
+
+      input {
+        width: 180px;
+        padding: 0 12px;
+      }
+
+      .holding-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 38px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+      }
+
+      .holding-control span {
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .holding-control input {
+        width: 86px;
+        height: 30px;
+        border: 0;
+        padding: 0;
+        font-weight: 800;
+      }
+
+      .group-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 0 24px 14px;
+      }
+
+      .group-tab {
+        border-color: var(--line);
+        background: var(--panel);
+      }
+
+      .group-tab.active {
+        border-color: #2563eb;
+        background: #2563eb;
+        color: #ffffff;
+      }
+
+      main {
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 18px 24px 36px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        padding: 14px 16px;
+      }
+
+      .stat b {
+        display: block;
+        font-size: 22px;
+        margin-bottom: 4px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .table-wrap {
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+      }
+
+      table {
+        width: 100%;
+        min-width: 1660px;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        border-right: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 12px 10px;
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--head);
+        color: #334155;
+        font-weight: 800;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      th:first-child,
+      td:first-child,
+      th:nth-child(2),
+      td:nth-child(2) {
+        text-align: left;
+      }
+
+      tbody tr:hover {
+        background: #f8fafc;
+      }
+
+      .rank {
+        color: #64748b;
+        font-weight: 800;
+      }
+
+      .name {
+        font-weight: 850;
+        line-height: 1.28;
+      }
+
+      .code {
+        color: #64748b;
+        font-size: 12px;
+      }
+
+      .positive {
+        color: var(--green);
+        font-weight: 850;
+      }
+
+      .negative {
+        color: var(--red);
+        font-weight: 850;
+      }
+
+      .cheap {
+        background: var(--green-bg);
+        color: var(--green);
+        font-weight: 850;
+      }
+
+      .warn {
+        color: var(--amber);
+        font-weight: 850;
+      }
+
+      .heat-top {
+        background: #dcfce7;
+        color: #047857;
+        font-weight: 850;
+      }
+
+      .heat-mid {
+        background: #eef6ff;
+        color: #1d4ed8;
+        font-weight: 850;
+      }
+
+      .heat-low {
+        background: #fff7ed;
+        color: #c2410c;
+        font-weight: 850;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 54px;
+        height: 24px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: #eef6ff;
+        color: var(--blue);
+        font-weight: 800;
+      }
+
+      .status {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 760px) {
+        .bar {
+          grid-template-columns: 1fr;
+          padding: 14px;
+        }
+
+        .toolbar {
+          justify-content: stretch;
+        }
+
+        button,
+        select,
+        input {
+          flex: 1 1 140px;
+        }
+
+        main {
+          padding: 14px;
+        }
+
+        .stats {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        h1 {
+          font-size: 21px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <div>
+          <h1>QDII ETF实时监控</h1>
+          <div class="sub" id="subtitle">正在读取数据...</div>
+        </div>
+        <div class="toolbar">
+          <label class="holding-control">
+            <span>当前持有</span>
+            <input id="holdingCode" type="text" inputmode="numeric" maxlength="6" placeholder="代码" />
+          </label>
+          <input id="search" type="search" placeholder="搜索名称/代码" />
+          <select id="sortBy" aria-label="排序">
+            <option value="relativeDeviation">按均值差排序</option>
+            <option value="switchAdvantage">按切换优势排序</option>
+            <option value="currentPremium">按当前溢价排序</option>
+            <option value="adjustedPremium">按真实溢价排序</option>
+            <option value="trackingDiff2026">按2026跟踪差排序</option>
+            <option value="navReturn2026">按2026净值收益排序</option>
+            <option value="changePct">按今日涨跌排序</option>
+            <option value="avg7AmountWan">按7日成交排序</option>
+          </select>
+          <button id="refresh">刷新行情</button>
+        </div>
+      </div>
+      <div class="group-tabs" id="groupTabs" aria-label="ETF分组"></div>
+    </header>
+
+    <main>
+      <section class="stats" aria-label="概览">
+        <div class="stat"><b id="count">-</b><span>监控标的</span></div>
+        <div class="stat"><b id="holding">-</b><span>当前持有</span></div>
+        <div class="stat"><b id="best">-</b><span>当前相对最便宜</span></div>
+        <div class="stat"><b id="premiumRange">-</b><span>当前溢价区间</span></div>
+        <div class="stat"><b id="usdCny">-</b><span>实时汇率影响</span></div>
+        <div class="stat"><b id="nqFuture">-</b><span id="futureLabel">实时期货</span></div>
+        <div class="stat"><b id="updated">-</b><span>行情刷新时间</span></div>
+      </section>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-key="rank">#</th>
+              <th data-key="name">基金名称</th>
+              <th data-key="navReturn2026">2026净值收益</th>
+              <th data-key="trackingDiff2026">2026跟踪差</th>
+              <th data-key="navReturn2025">2025净值收益</th>
+              <th data-key="trackingDiff2025">2025跟踪差</th>
+              <th data-key="changePct">今日实时涨跌幅</th>
+              <th id="currentPremiumHead" data-key="currentPremium">当前溢价率</th>
+              <th data-key="usdCnyChangePct">实时汇率影响</th>
+              <th data-key="nqFutureChangePct">实时对应期货</th>
+              <th data-key="adjustedPremium">真实溢价率</th>
+              <th data-key="operatingFee">运作费率</th>
+              <th data-key="avg7AmountWan">7日日均成交额</th>
+              <th data-key="avg10Premium">10日均值</th>
+              <th data-key="avg20Premium">20日均值</th>
+              <th data-key="avg30Premium">30日均值</th>
+              <th data-key="relativeDeviation">均值差</th>
+              <th data-key="switchAdvantage">切换优势</th>
+              <th data-key="latestPremium">最近收盘溢价</th>
+              <th data-key="navForPremiumDate">溢价净值日</th>
+              <th data-key="subscribeStatus">申购状态</th>
+              <th data-key="navDate">净值日</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="status" id="status">-</div>
+    </main>
+
+    <script>
+      const state = {
+        funds: [],
+        groups: {},
+        quotes: new Map(),
+        sortBy: "relativeDeviation",
+        sortDir: 1,
+        activeGroup: "nasdaq100",
+        holdingCodes: {
+          nasdaq100: "159660",
+          sp500: "513500",
+        },
+        generatedAt: "",
+        latestDate: "",
+        macro: {
+          usdCny: null,
+          usdCnyChangePct: null,
+          futures: {},
+        },
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const ACTIVE_GROUP_STORAGE_KEY = "qdii-etf-monitor-active-group";
+      const HOLDING_STORAGE_PREFIX = "qdii-etf-monitor-holding-code-";
+
+      function loadActiveGroup() {
+        try {
+          return localStorage.getItem(ACTIVE_GROUP_STORAGE_KEY) || state.activeGroup;
+        } catch {
+          return state.activeGroup;
+        }
+      }
+
+      function saveActiveGroup(group) {
+        try {
+          localStorage.setItem(ACTIVE_GROUP_STORAGE_KEY, group);
+        } catch {
+          // 本地文件模式下如果浏览器限制存储，页面仍可临时使用当前值。
+        }
+      }
+
+      function loadHoldingCode(group) {
+        try {
+          return localStorage.getItem(`${HOLDING_STORAGE_PREFIX}${group}`) || state.holdingCodes[group] || "";
+        } catch {
+          return state.holdingCodes[group] || "";
+        }
+      }
+
+      function saveHoldingCode(group, code) {
+        try {
+          localStorage.setItem(`${HOLDING_STORAGE_PREFIX}${group}`, code);
+        } catch {
+          // 本地文件模式下如果浏览器限制存储，页面仍可临时使用输入值。
+        }
+      }
+
+      function normalizeCode(code) {
+        const digits = String(code || "").replace(/\D/g, "").slice(0, 6);
+        return digits.length === 6 ? digits : digits;
+      }
+
+      function fmtPct(value) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "-";
+        return `${Number(value).toFixed(2)}%`;
+      }
+
+      function fmtPctPoint(value) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "-";
+        const sign = value > 0 ? "+" : "";
+        return `${sign}${Number(value).toFixed(2)}pct`;
+      }
+
+      function fmtAmount(wan) {
+        if (wan === null || wan === undefined || Number.isNaN(wan)) return "-";
+        return wan >= 10000 ? `${(wan / 10000).toFixed(2)}亿` : `${wan.toFixed(2)}万`;
+      }
+
+      function classForSigned(value, inverse = false) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "";
+        const good = inverse ? value < 0 : value > 0;
+        const bad = inverse ? value > 0 : value < 0;
+        if (good) return "positive";
+        if (bad) return "negative";
+        return "";
+      }
+
+      function classForRank(value, values, inverse = false) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "";
+        const clean = values.filter((item) => Number.isFinite(item)).sort((a, b) => a - b);
+        if (clean.length < 3) return classForSigned(value, inverse);
+        const low = clean[Math.floor((clean.length - 1) * 0.33)];
+        const high = clean[Math.floor((clean.length - 1) * 0.67)];
+        const isTop = inverse ? value <= low : value >= high;
+        const isLow = inverse ? value >= high : value <= low;
+        if (isTop) return "heat-top";
+        if (isLow) return "heat-low";
+        return "heat-mid";
+      }
+
+      function secidFor(code) {
+        return `${code.startsWith("5") ? "1" : "0"}.${code}`;
+      }
+
+      function sinaSymbolFor(code) {
+        return `${code.startsWith("5") ? "sh" : "sz"}${code}`;
+      }
+
+      function getLivePrice(fund) {
+        return state.quotes.get(fund.code)?.price || fund.latestClose;
+      }
+
+      function getLiveChangePct(fund) {
+        const quote = state.quotes.get(fund.code);
+        if (quote && Number.isFinite(quote.changePct)) return quote.changePct;
+        if (quote && Number.isFinite(quote.price) && Number.isFinite(fund.latestClose) && fund.latestClose > 0) {
+          return (quote.price / fund.latestClose - 1) * 100;
+        }
+        return Number.isFinite(fund.latestChangePct) ? fund.latestChangePct : null;
+      }
+
+      function enrich(fund) {
+        const price = getLivePrice(fund);
+        const changePct = getLiveChangePct(fund);
+        const hasEtfComPremium = Number.isFinite(fund.etfComPremiumRate);
+        const etfComIopv =
+          hasEtfComPremium && Number.isFinite(fund.etfComLastPrice) && fund.etfComLastPrice > 0
+            ? fund.etfComLastPrice / (1 + fund.etfComPremiumRate / 100)
+            : null;
+        const premiumNav = fund.navForReturn || fund.navForPremium || fund.nav;
+        const calculatedPremium = premiumNav > 0 ? (price / premiumNav - 1) * 100 : null;
+        const currentPremium = calculatedPremium;
+        const future = state.macro.futures[fund.group] || {};
+        const macroImpact =
+          (Number.isFinite(state.macro.usdCnyChangePct) ? state.macro.usdCnyChangePct : 0) +
+          (Number.isFinite(future.changePct) ? future.changePct : 0);
+        const adjustedNav = premiumNav * (1 + macroImpact / 100);
+        const adjustedPremium = adjustedNav > 0 ? (price / adjustedNav - 1) * 100 : calculatedPremium;
+        return {
+          ...fund,
+          livePrice: price,
+          changePct,
+          premiumNav,
+          etfComIopv,
+          etfComPremium: hasEtfComPremium ? fund.etfComPremiumRate : null,
+          calculatedPremium,
+          currentPremium,
+          currentPremiumSource: "估算当前溢价率（含汇率）",
+          usdCnyChangePct: state.macro.usdCnyChangePct,
+          nqFutureChangePct: future.changePct,
+          adjustedPremium,
+          relativeDeviation: currentPremium - fund.avg20Premium,
+        };
+      }
+
+      function activeFunds() {
+        return state.funds.filter((fund) => fund.group === state.activeGroup);
+      }
+
+      function enrichedFunds() {
+        const all = activeFunds().map(enrich);
+        const holdingCode = state.holdingCodes[state.activeGroup];
+        const holding = all.find((fund) => fund.code === holdingCode);
+        return all.map((fund) => ({
+          ...fund,
+          switchAdvantage:
+            holding && Number.isFinite(holding.relativeDeviation) && Number.isFinite(fund.relativeDeviation)
+              ? holding.relativeDeviation - fund.relativeDeviation
+              : null,
+          isHolding: holding ? fund.code === holding.code : false,
+        }));
+      }
+
+      function sortedFunds() {
+        const keyword = $("search").value.trim().toLowerCase();
+        return enrichedFunds()
+          .filter((fund) => !keyword || fund.name.toLowerCase().includes(keyword) || fund.code.includes(keyword))
+          .sort((a, b) => {
+            const key = state.sortBy;
+            const av = a[key];
+            const bv = b[key];
+            if (typeof av === "string" || typeof bv === "string") {
+              return String(av || "").localeCompare(String(bv || ""), "zh-Hans-CN") * state.sortDir;
+            }
+            return ((av ?? -999999) - (bv ?? -999999)) * state.sortDir;
+          });
+      }
+
+      function render() {
+        const funds = sortedFunds();
+        const allForScale = enrichedFunds();
+        const navReturn2026Values = allForScale.map((fund) => fund.navReturn2026);
+        const navReturn2025Values = allForScale.map((fund) => fund.navReturn2025);
+        $("tbody").innerHTML = funds
+          .map((fund, index) => {
+            const cheapClass = fund.relativeDeviation <= -1 ? "cheap" : classForSigned(fund.relativeDeviation, true);
+            const switchClass = fund.switchAdvantage >= 1.5 ? "positive" : classForSigned(fund.switchAdvantage);
+            return `
+              <tr>
+                <td class="rank">${index + 1}</td>
+                <td><div class="name">${fund.name}${fund.isHolding ? "（持有）" : ""}</div><div class="code">${fund.code}</div></td>
+                <td class="${classForRank(fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026)}</td>
+                <td class="${classForSigned(fund.trackingDiff2026, true)}">${fmtPctPoint(fund.trackingDiff2026)}</td>
+                <td class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
+                <td class="${classForSigned(fund.trackingDiff2025, true)}">${fmtPctPoint(fund.trackingDiff2025)}</td>
+                <td class="${classForSigned(fund.changePct)}">${fmtPct(fund.changePct)}</td>
+                <td title="${fund.currentPremiumSource}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
+                <td class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
+                <td class="${classForSigned(fund.nqFutureChangePct)}">${fmtPct(fund.nqFutureChangePct)}</td>
+                <td class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
+                <td>${fmtPct(fund.operatingFee)}</td>
+                <td>${fmtAmount(fund.avg7AmountWan)}</td>
+                <td>${fmtPct(fund.avg10Premium)}</td>
+                <td>${fmtPct(fund.avg20Premium)}</td>
+                <td>${fmtPct(fund.avg30Premium)}</td>
+                <td class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
+                <td class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
+                <td>${fmtPct(fund.latestPremium)}</td>
+                <td>${fund.navForPremiumDate || fund.navDate}${fund.navForPremiumSource === "estimated" ? "估" : ""}</td>
+                <td><span class="pill">${fund.subscribeStatus || "-"}</span></td>
+                <td>${fund.navDate}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        const all = enrichedFunds();
+        const groupMeta = state.groups[state.activeGroup] || {};
+        $("currentPremiumHead").textContent = "估算当前溢价率";
+        const holdingCode = state.holdingCodes[state.activeGroup] || "";
+        const holding = all.find((fund) => fund.code === holdingCode);
+        const cheapest = [...all].sort((a, b) => a.relativeDeviation - b.relativeDeviation)[0];
+        const premiums = all.map((f) => f.currentPremium).filter((v) => Number.isFinite(v));
+        $("count").textContent = String(all.length);
+        $("holding").textContent = holding ? `${holding.name} ${holding.code}` : `${holdingCode || "-"} 未匹配`;
+        $("best").textContent = cheapest ? `${cheapest.name} ${fmtPctPoint(cheapest.relativeDeviation)}` : "-";
+        $("premiumRange").textContent = premiums.length ? `${fmtPct(Math.min(...premiums))} - ${fmtPct(Math.max(...premiums))}` : "-";
+        $("usdCny").textContent =
+          state.macro.usdCny === null ? "-" : `${Number(state.macro.usdCny).toFixed(4)} / ${fmtPct(state.macro.usdCnyChangePct)}`;
+        const future = state.macro.futures[state.activeGroup] || {};
+        $("nqFuture").textContent =
+          future.price === null || future.price === undefined ? "-" : `${Number(future.price).toFixed(2)} / ${fmtPct(future.changePct)}`;
+        $("futureLabel").textContent = `实时${groupMeta.name || ""}期货`;
+        $("updated").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+        const etfComTimes = [...new Set(all.map((fund) => fund.etfComServerTime).filter(Boolean))];
+        const etfComText = etfComTimes.length ? `ETF.com.cn参考时间：${etfComTimes[0]}` : "ETF.com.cn参考数据：未取到";
+        $("subtitle").textContent = `当前分组：${groupMeta.name || state.activeGroup}；基础数据：${state.latestDate}；估算当前溢价率=场内实时价格/含隔夜指数与汇率变化的估算人民币净值；${etfComText}。`;
+      }
+
+      function renderGroupTabs() {
+        const groups = Object.entries(state.groups);
+        $("groupTabs").innerHTML = groups
+          .map(([key, meta]) => `<button class="group-tab ${key === state.activeGroup ? "active" : ""}" data-group="${key}">${meta.name || key}</button>`)
+          .join("");
+        document.querySelectorAll(".group-tab").forEach((button) => {
+          button.addEventListener("click", () => {
+            state.activeGroup = button.dataset.group;
+            saveActiveGroup(state.activeGroup);
+            $("holdingCode").value = state.holdingCodes[state.activeGroup] || "";
+            renderGroupTabs();
+            render();
+          });
+        });
+      }
+
+      function loadJsonp(url, callbackName) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error("行情接口超时"));
+          }, 9000);
+          function cleanup() {
+            clearTimeout(timer);
+            script.remove();
+            delete window[callbackName];
+          }
+          window[callbackName] = (data) => {
+            cleanup();
+            resolve(data);
+          };
+          script.onerror = () => {
+            cleanup();
+            reject(new Error("行情接口加载失败"));
+          };
+          script.src = url;
+          document.body.appendChild(script);
+        });
+      }
+
+      function loadScript(url, errorMessage) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error(errorMessage || "脚本加载超时"));
+          }, 9000);
+          function cleanup() {
+            clearTimeout(timer);
+            script.remove();
+          }
+          script.onload = () => {
+            cleanup();
+            resolve();
+          };
+          script.onerror = () => {
+            cleanup();
+            reject(new Error(errorMessage || "脚本加载失败"));
+          };
+          script.src = url;
+          document.body.appendChild(script);
+        });
+      }
+
+      async function refreshSinaQuotes() {
+        const symbols = state.funds.map((fund) => sinaSymbolFor(fund.code));
+        await loadScript(`https://hq.sinajs.cn/list=${symbols.join(",")}`, "新浪行情接口加载失败");
+        state.funds.forEach((fund) => {
+          const symbol = sinaSymbolFor(fund.code);
+          const raw = window[`hq_str_${symbol}`];
+          if (!raw) return;
+          const fields = raw.split(",");
+          const prevClose = Number(fields[2]);
+          const price = Number(fields[3]);
+          const amount = Number(fields[9]);
+          if (!Number.isFinite(price) || price <= 0) return;
+          state.quotes.set(fund.code, {
+            price,
+            changePct: Number.isFinite(prevClose) && prevClose > 0 ? (price / prevClose - 1) * 100 : fund.latestChangePct,
+            amount: Number.isFinite(amount) ? amount : null,
+          });
+          delete window[`hq_str_${symbol}`];
+        });
+      }
+
+      async function refreshTencentQuotes(funds) {
+        const symbols = funds.map((fund) => sinaSymbolFor(fund.code));
+        await loadScript(`https://qt.gtimg.cn/q=${symbols.join(",")}`, "腾讯行情接口加载失败");
+        funds.forEach((fund) => {
+          const symbol = sinaSymbolFor(fund.code);
+          const raw = window[`v_${symbol}`];
+          if (!raw) return;
+          const fields = raw.split("~");
+          const price = Number(fields[3]);
+          const prevClose = Number(fields[4]);
+          const changePct = Number(fields[32]);
+          if (!Number.isFinite(price) || price <= 0) return;
+          state.quotes.set(fund.code, {
+            price,
+            changePct:
+              Number.isFinite(changePct) ? changePct : Number.isFinite(prevClose) && prevClose > 0 ? (price / prevClose - 1) * 100 : fund.latestChangePct,
+            amount: null,
+          });
+          delete window[`v_${symbol}`];
+        });
+      }
+
+      async function loadTencentFuture(symbol) {
+        await loadScript(`https://qt.gtimg.cn/q=${symbol}`, "腾讯期货行情接口加载失败");
+        const raw = window[`v_${symbol}`];
+        delete window[`v_${symbol}`];
+        if (!raw) throw new Error(`${symbol} 无行情数据`);
+        const fields = raw.split(",");
+        const price = Number(fields[0]);
+        const changePct = Number(fields[1]);
+        if (!Number.isFinite(price)) throw new Error(`${symbol} 行情格式异常`);
+        return {
+          price,
+          changePct: Number.isFinite(changePct) ? changePct : null,
+        };
+      }
+
+      async function refreshEastmoneySingleQuotes(funds) {
+        await Promise.all(
+          funds.map(async (fund) => {
+            try {
+              const quote = await loadEastmoneyQuote(secidFor(fund.code));
+              state.quotes.set(fund.code, {
+                price: quote.price,
+                changePct: quote.changePct,
+                amount: null,
+              });
+            } catch (error) {
+              console.warn(`${fund.code} 单只行情刷新失败`, error);
+            }
+          })
+        );
+      }
+
+      async function refreshQuotes() {
+        $("status").textContent = "正在刷新盘中行情...";
+        state.quotes.clear();
+        const chunks = [];
+        const secids = state.funds.map((fund) => secidFor(fund.code));
+        for (let i = 0; i < secids.length; i += 8) chunks.push(secids.slice(i, i + 8));
+
+        try {
+          for (const chunk of chunks) {
+            const callbackName = `emQuote${Date.now()}${Math.floor(Math.random() * 10000)}`;
+            const fields = "f12,f14,f2,f3,f5,f6";
+            const url =
+              `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=${fields}` +
+              `&secids=${chunk.join(",")}&cb=${callbackName}`;
+            const data = await loadJsonp(url, callbackName);
+            const list = data?.data?.diff || [];
+            list.forEach((item) => {
+              if (item.f12 && item.f2 && item.f2 !== "-") {
+                state.quotes.set(String(item.f12).padStart(6, "0"), {
+                  price: Number(item.f2),
+                  changePct: Number(item.f3),
+                  amount: Number(item.f6),
+                });
+              }
+            });
+          }
+          if (state.quotes.size < state.funds.length) {
+            const missingFunds = state.funds.filter((fund) => !state.quotes.has(fund.code));
+            await refreshEastmoneySingleQuotes(missingFunds);
+          }
+          if (state.quotes.size < state.funds.length) {
+            const missingFunds = state.funds.filter((fund) => !state.quotes.has(fund.code));
+            await refreshTencentQuotes(missingFunds);
+          }
+          if (state.quotes.size < state.funds.length) {
+            await refreshSinaQuotes();
+          }
+          $("status").textContent = `行情已刷新：${new Date().toLocaleString("zh-CN", { hour12: false })}`;
+        } catch (error) {
+          try {
+            await refreshEastmoneySingleQuotes(state.funds);
+            if (state.quotes.size < state.funds.length) {
+              const missingFunds = state.funds.filter((fund) => !state.quotes.has(fund.code));
+              await refreshTencentQuotes(missingFunds);
+            }
+            if (state.quotes.size < state.funds.length) {
+              await refreshSinaQuotes();
+            }
+            $("status").textContent = `行情已刷新：${new Date().toLocaleString("zh-CN", { hour12: false })}（备用行情）`;
+          } catch (fallbackError) {
+            $("status").textContent = `实时行情刷新失败，已回退到最近收盘价：${error.message}`;
+          }
+        }
+        render();
+      }
+
+      async function refreshMacro() {
+        try {
+          const usdCny = await loadEastmoneyQuote("120.USDCNYC");
+
+          state.macro.usdCny = usdCny.price;
+          state.macro.usdCnyChangePct = usdCny.changePct;
+        } catch (error) {
+          state.macro.usdCny = null;
+          state.macro.usdCnyChangePct = null;
+        }
+        const entries = Object.entries(state.groups);
+        await Promise.all(
+          entries.map(async ([group, meta]) => {
+            try {
+              const quote = await loadEastmoneyQuote(meta.future_secid);
+              state.macro.futures[group] = {
+                price: quote.price,
+                changePct: quote.changePct,
+              };
+            } catch (error) {
+              if (meta.tencent_future_symbol) {
+                try {
+                  state.macro.futures[group] = await loadTencentFuture(meta.tencent_future_symbol);
+                  return;
+                } catch (fallbackError) {
+                  // 保留空值，页面仍可使用当前溢价率和历史均值。
+                }
+              }
+              state.macro.futures[group] = state.macro.futures[group] || { price: null, changePct: null };
+            }
+          })
+        );
+      }
+
+      async function loadEastmoneyQuote(secid) {
+        const callbackName = `emMacro${Date.now()}${Math.floor(Math.random() * 10000)}`;
+        const url =
+          `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}` +
+          `&fields=f43,f57,f58,f59,f60,f170&cb=${callbackName}`;
+        const data = await loadJsonp(url, callbackName);
+        const item = data?.data;
+        if (!item || item.f43 === "-" || item.f43 === undefined) {
+          throw new Error(`${secid} 无行情数据`);
+        }
+        const scale = 10 ** Number(item.f59 || 2);
+        const price = Number(item.f43) / scale;
+        const prev = Number(item.f60) / scale;
+        const changePct = Number.isFinite(Number(item.f170)) ? Number(item.f170) / 100 : (price / prev - 1) * 100;
+        return { price, prev, changePct };
+      }
+
+      function assertValidData(data) {
+        if (!Array.isArray(data?.funds) || data.funds.length === 0) {
+          throw new Error("基础数据为空，请检查 docs/data/funds.json 是否已上传");
+        }
+        return data;
+      }
+
+      function loadDataScript() {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.onload = () => {
+            try {
+              resolve(assertValidData(window.NASDAQ_ETF_FUNDS));
+            } catch (error) {
+              reject(error);
+            } finally {
+              script.remove();
+            }
+          };
+          script.onerror = () => {
+            script.remove();
+            reject(new Error("基础数据脚本读取失败，请检查 docs/data/funds.js 是否存在"));
+          };
+          script.src = `./data/funds.js?t=${Date.now()}`;
+          document.body.appendChild(script);
+        });
+      }
+
+      async function loadData() {
+        try {
+          const response = await fetch(`./data/funds.json?t=${Date.now()}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`基础数据读取失败：HTTP ${response.status}`);
+          return assertValidData(await response.json());
+        } catch (error) {
+          console.warn("JSON 数据读取失败，改用 JS 数据文件", error);
+          return loadDataScript();
+        }
+      }
+
+      async function init() {
+        const data = await loadData();
+        state.funds = data.funds;
+        state.groups = data.groups || {
+          nasdaq100: { name: "纳指100", default_holding: "159660", future_secid: "103.NQ00Y" },
+        };
+        Object.entries(state.groups).forEach(([group, meta]) => {
+          state.holdingCodes[group] = normalizeCode(loadHoldingCode(group)) || meta.default_holding || "";
+        });
+        state.activeGroup = state.groups[loadActiveGroup()] ? loadActiveGroup() : Object.keys(state.groups)[0];
+        $("holdingCode").value = state.holdingCodes[state.activeGroup] || "";
+        state.generatedAt = data.generatedAt;
+        state.latestDate = data.latestDate;
+        renderGroupTabs();
+        render();
+        await refreshMacro();
+        await refreshQuotes();
+        setInterval(async () => {
+          await refreshMacro();
+          await refreshQuotes();
+        }, 60 * 1000);
+      }
+
+      $("refresh").addEventListener("click", async () => {
+        await refreshMacro();
+        await refreshQuotes();
+      });
+      $("holdingCode").addEventListener("input", (event) => {
+        const code = normalizeCode(event.target.value);
+        event.target.value = code;
+        state.holdingCodes[state.activeGroup] = code;
+        if (code.length === 6) saveHoldingCode(state.activeGroup, code);
+        render();
+      });
+      $("search").addEventListener("input", render);
+      $("sortBy").addEventListener("change", (event) => {
+        state.sortBy = event.target.value;
+        state.sortDir = state.sortBy === "relativeDeviation" ? 1 : -1;
+        render();
+      });
+      document.querySelectorAll("th[data-key]").forEach((th) => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.key;
+          if (state.sortBy === key) state.sortDir *= -1;
+          else {
+            state.sortBy = key;
+            state.sortDir = key === "relativeDeviation" ? 1 : -1;
+            $("sortBy").value = Array.from($("sortBy").options).some((option) => option.value === key)
+              ? key
+              : state.sortBy;
+          }
+          render();
+        });
+      });
+
+      if ("serviceWorker" in navigator && location.protocol === "https:") {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      }
+
+      init().catch((error) => {
+        $("subtitle").textContent = "数据读取失败";
+        $("status").textContent = error.message;
+        $("tbody").innerHTML = `<tr><td colspan="22" class="warn">数据读取失败：${error.message}</td></tr>`;
+      });
+    </script>
+  </body>
+</html>
