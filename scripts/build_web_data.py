@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import json
 import math
+import subprocess
 import time
+from urllib.parse import urlencode
 from pathlib import Path
 
 import akshare as ak
@@ -19,6 +21,7 @@ OUT_JS = ROOT / "docs" / "data" / "funds.js"
 
 DISPLAY_NAMES = {
     "159501": "嘉实纳指100",
+    "159509": "景顺长城纳指科技",
     "159513": "大成纳指100",
     "159632": "华安纳指100",
     "159659": "招商纳指100",
@@ -36,6 +39,8 @@ DISPLAY_NAMES = {
     "159655": "华夏标普500",
 }
 
+FUND_INDEX_SYMBOLS = {}
+
 GROUPS = {
     "nasdaq100": {
         "name": "纳指100",
@@ -43,6 +48,8 @@ GROUPS = {
         "benchmark_symbol": "QQQ",
         "future_secid": "103.NQ00Y",
         "tencent_future_symbol": "",
+        "sina_future_symbol": "hf_NQ",
+        "etfcom_index_codes": ["NDX"],
         "default_holding": "159660",
     },
     "sp500": {
@@ -51,6 +58,8 @@ GROUPS = {
         "benchmark_symbol": "SPY",
         "future_secid": "103.ES00Y",
         "tencent_future_symbol": "hf_ES",
+        "sina_future_symbol": "hf_ES",
+        "etfcom_index_codes": ["SPX", "SPTR500N"],
         "default_holding": "513500",
     },
 }
@@ -74,6 +83,22 @@ def clean_number(value) -> float | None:
     return number if math.isfinite(number) else None
 
 
+def clean_json_value(value):
+    if isinstance(value, dict):
+        return {key: clean_json_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [clean_json_value(item) for item in value]
+    if isinstance(value, tuple):
+        return [clean_json_value(item) for item in value]
+    if value is pd.NA:
+        return None
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, (pd.Timestamp,)):
+        return value.isoformat()
+    return value
+
+
 def retry_fetch(label: str, fetcher, attempts: int = 4):
     last_error = None
     for attempt in range(1, attempts + 1):
@@ -84,6 +109,114 @@ def retry_fetch(label: str, fetcher, attempts: int = 4):
             print(f"{label} 第 {attempt} 次获取失败：{error}")
             time.sleep(attempt)
     raise last_error
+
+
+def fetch_etfcom_list(index_code: str) -> dict:
+    url = "https://www.etf.com.cn/api/etf-api-service/pc/etf-funds/list"
+    payload = {
+        "page": 1,
+        "pageSize": 100,
+        "sortField": "changeRate",
+        "sortOrder": "desc",
+        "filters": {"indexCode": [index_code]},
+        "listed": True,
+    }
+    response = requests.post(
+        url,
+        json=payload,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Origin": "https://www.etf.com.cn",
+            "Referer": "https://www.etf.com.cn/searchETF.html",
+            "Content-Type": "application/json;charset=utf-8",
+        },
+        timeout=20,
+    )
+    response.raise_for_status()
+    data = response.json()
+    if not data.get("success"):
+        raise RuntimeError(f"ETF.com.cn 返回异常：{data.get('message') or data.get('code')}")
+    return data.get("data") or {}
+
+
+def load_etfcom_premium_map() -> dict[str, dict]:
+    result: dict[str, dict] = {}
+    for group_key, meta in GROUPS.items():
+        for index_code in meta.get("etfcom_index_codes", []):
+            try:
+                data = retry_fetch(
+                    f"ETF.com.cn {meta['name']}实时溢折率 {index_code}",
+                    lambda code=index_code: fetch_etfcom_list(code),
+                    attempts=2,
+                )
+            except Exception as error:
+                print(f"ETF.com.cn {meta['name']}实时溢折率获取失败：{error}")
+                continue
+            server_time = data.get("serverTime")
+            for item in data.get("data") or []:
+                code = str(item.get("trdCode") or "").zfill(6)
+                if not code:
+                    continue
+                result[code] = {
+                    "etfComServerTime": server_time,
+                    "etfComIndexCode": item.get("indexCode"),
+                    "etfComName": item.get("extdSecuSht") or item.get("fundName"),
+                    "etfComPremiumRate": clean_number(item.get("premiumRate")),
+                    "etfComLastPrice": clean_number(item.get("lastPrice")),
+                    "etfComChangeRate": clean_number(item.get("changeRate")),
+                    "etfComDealBalance": clean_number(item.get("dealBalance")),
+                    "etfComUnitNav": clean_number(item.get("unitNav")),
+                    "etfComNavDate": str(item.get("pubDt") or ""),
+                }
+    return result
+
+
+def fetch_sina_future_quote(symbol: str) -> dict | None:
+    if not symbol:
+        return None
+    response = requests.get(
+        "https://hq.sinajs.cn/list=" + symbol,
+        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn"},
+        timeout=20,
+    )
+    response.raise_for_status()
+    text = response.text
+    marker = '="'
+    if marker not in text:
+        return None
+    raw = text.split(marker, 1)[1].split('";', 1)[0]
+    if not raw:
+        return None
+    fields = raw.split(",")
+    price = clean_number(fields[0] if len(fields) > 0 else None)
+    prev = clean_number(fields[7] if len(fields) > 7 else None)
+    time_text = fields[6] if len(fields) > 6 else ""
+    date_text = fields[12] if len(fields) > 12 else ""
+    if price is None:
+        return None
+    change_pct = (price / prev - 1) * 100 if prev not in (None, 0) else None
+    return {
+        "fallbackFuturePrice": price,
+        "fallbackFutureChangePct": clean_number(change_pct),
+        "fallbackFutureTime": f"{date_text} {time_text}".strip(),
+        "fallbackFutureSource": "新浪期货",
+    }
+
+
+def load_future_fallbacks() -> dict[str, dict]:
+    result = {}
+    for group_key, meta in GROUPS.items():
+        try:
+            quote = retry_fetch(
+                f"{meta['name']}新浪期货备用行情",
+                lambda symbol=meta.get("sina_future_symbol", ""): fetch_sina_future_quote(symbol),
+                attempts=2,
+            )
+            if quote:
+                result[group_key] = quote
+        except Exception as error:
+            print(f"{meta['name']}新浪期货备用行情获取失败：{error}")
+    return result
 
 
 def fetch_us_index_history(symbol: str) -> pd.DataFrame:
@@ -101,6 +234,11 @@ def load_estimation_series() -> tuple[dict[str, pd.DataFrame], pd.DataFrame | No
                 f"{meta['name']}历史行情",
                 lambda symbol=meta["index_symbol"]: fetch_us_index_history(symbol),
             )
+        for code, symbol in FUND_INDEX_SYMBOLS.items():
+            fetcher = (lambda symbol=symbol: fetch_yahoo_daily(symbol, adjusted=False)) if symbol.startswith("^") else (
+                lambda symbol=symbol: fetch_us_index_history(symbol)
+            )
+            index_map[code] = retry_fetch(f"{code}历史行情 {symbol}", fetcher)
 
         try:
             fx = retry_fetch("美元人民币中间价历史行情", fetch_usdcnyc_history).copy()
@@ -128,14 +266,25 @@ def fetch_usdcnyc_history() -> pd.DataFrame:
         "ut": "f057cbcbce2a86e2866ab8877db1d059",
         "forcect": 1,
     }
-    response = requests.get(
-        url,
-        params=params,
-        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/"},
-        timeout=20,
-    )
-    response.raise_for_status()
-    data = response.json()["data"]["klines"]
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            headers={"User-Agent": "Mozilla/5.0", "Referer": "https://quote.eastmoney.com/"},
+            timeout=20,
+        )
+        response.raise_for_status()
+        data = response.json()["data"]["klines"]
+    except Exception:
+        curl_url = f"{url}?{urlencode(params)}"
+        completed = subprocess.run(
+            ["curl", "-L", "-s", curl_url],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=25,
+        )
+        data = json.loads(completed.stdout)["data"]["klines"]
     rows = [item.split(",") for item in data]
     df = pd.DataFrame(rows)
     return pd.DataFrame(
@@ -184,7 +333,7 @@ def estimate_nav(
         "estimateNdxReturn": None,
         "estimateFxReturn": None,
     }
-    if index_series is None or fx is None:
+    if index_series is None:
         return result
 
     nav_date = pd.to_datetime(official_nav_date)
@@ -195,23 +344,27 @@ def estimate_nav(
             return None
         return clean_number(values.iloc[-1]["close"])
 
-    target_dates = [d for d in index_series.index if d > nav_date and value_at_or_before(fx, d) is not None]
+    target_dates = [d for d in index_series.index if d > nav_date]
     index_start = value_at_or_before(index_series, nav_date)
-    fx_start = value_at_or_before(fx, nav_date)
-    if not target_dates or index_start is None or fx_start is None:
+    if not target_dates or index_start is None:
         return result
 
     target_date = target_dates[-1]
     index_end = value_at_or_before(index_series, target_date)
-    fx_end = value_at_or_before(fx, target_date)
-    if index_end is None or fx_end is None:
+    if index_end is None:
         return result
     index_ret = float(index_end / index_start - 1)
-    fx_ret = float(fx_end / fx_start - 1)
     fee_days = max((target_date - nav_date).days, 1)
     fee_drag = ((operating_fee or 0) / 100) / 365 * fee_days
     estimated_nav_for_premium = official_nav * (1 + index_ret) * (1 - fee_drag)
-    estimated_nav_for_return = official_nav * (1 + index_ret) * (1 + fx_ret) * (1 - fee_drag)
+    fx_ret = None
+    estimated_nav_for_return = estimated_nav_for_premium
+    if fx is not None:
+        fx_start = value_at_or_before(fx, nav_date)
+        fx_end = value_at_or_before(fx, target_date)
+        if fx_start is not None and fx_end is not None:
+            fx_ret = float(fx_end / fx_start - 1)
+            estimated_nav_for_return = official_nav * (1 + index_ret) * (1 + fx_ret) * (1 - fee_drag)
 
     result.update(
         {
@@ -220,7 +373,7 @@ def estimate_nav(
             "navForPremiumDate": target_date.strftime("%Y-%m-%d"),
             "navForPremiumSource": "estimated",
             "estimateNdxReturn": index_ret * 100,
-            "estimateFxReturn": fx_ret * 100,
+            "estimateFxReturn": fx_ret * 100 if fx_ret is not None else None,
         }
     )
     return result
@@ -319,6 +472,8 @@ def main() -> None:
     if "group" not in history.columns:
         history["group"] = "nasdaq100"
     index_map, fx = load_estimation_series()
+    etfcom_map = load_etfcom_premium_map()
+    future_fallbacks = load_future_fallbacks()
     benchmark_map = {}
     for group_key, meta in GROUPS.items():
         try:
@@ -355,7 +510,7 @@ def main() -> None:
             official_nav=float(official_nav_row["nav"]),
             official_nav_date=str(official_nav_row["nav_date"]),
             operating_fee=operating_fee,
-            index_series=index_map.get(group_key),
+            index_series=index_map[code] if code in index_map else index_map.get(group_key),
             fx=fx,
         )
         latest_accum = estimate_accum_value(nav_info, official_nav_row)
@@ -371,8 +526,10 @@ def main() -> None:
             fx,
         )
         latest_premium = None
-        if clean_number(latest["close"]) is not None and clean_number(nav_info["navForPremium"]) not in (None, 0):
-            latest_premium = (float(latest["close"]) / float(nav_info["navForPremium"]) - 1) * 100
+        estimated_nav_for_premium = nav_info.get("navForReturn") or nav_info.get("navForPremium")
+        if clean_number(latest["close"]) is not None and clean_number(estimated_nav_for_premium) not in (None, 0):
+            latest_premium = (float(latest["close"]) / float(estimated_nav_for_premium) - 1) * 100
+        etfcom = etfcom_map.get(code, {})
 
         premium_history = group.copy()
         premium_history["premium_for_mean"] = premium_history["live_premium_pct"]
@@ -399,6 +556,15 @@ def main() -> None:
                 "navDate": str(official_nav_row["nav_date"]),
                 **nav_info,
                 "latestPremium": clean_number(latest_premium),
+                "etfComServerTime": etfcom.get("etfComServerTime"),
+                "etfComIndexCode": etfcom.get("etfComIndexCode"),
+                "etfComName": etfcom.get("etfComName"),
+                "etfComPremiumRate": clean_number(etfcom.get("etfComPremiumRate")),
+                "etfComLastPrice": clean_number(etfcom.get("etfComLastPrice")),
+                "etfComChangeRate": clean_number(etfcom.get("etfComChangeRate")),
+                "etfComDealBalance": clean_number(etfcom.get("etfComDealBalance")),
+                "etfComUnitNav": clean_number(etfcom.get("etfComUnitNav")),
+                "etfComNavDate": etfcom.get("etfComNavDate"),
                 "avg10Premium": clean_number(prev10["premium_for_mean"].mean()),
                 "avg20Premium": clean_number(prev20["premium_for_mean"].mean()),
                 "avg30Premium": clean_number(prev30["premium_for_mean"].mean()),
@@ -425,11 +591,12 @@ def main() -> None:
     payload = {
         "generatedAt": pd.Timestamp.now(tz="Asia/Shanghai").isoformat(),
         "latestDate": latest_date.strftime("%Y-%m-%d"),
-        "groups": GROUPS,
+        "groups": {key: {**value, **future_fallbacks.get(key, {})} for key, value in GROUPS.items()},
         "funds": funds,
     }
+    clean_payload = clean_json_value(payload)
     json_text = json.dumps(
-        payload,
+        clean_payload,
         ensure_ascii=False,
         indent=2,
         allow_nan=False,
