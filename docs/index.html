@@ -211,7 +211,19 @@
 
       th:first-child,
       td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 3;
+        min-width: 170px;
+        max-width: 190px;
+        background: var(--panel);
         text-align: left;
+        box-shadow: 1px 0 0 var(--line);
+      }
+
+      th:first-child {
+        z-index: 4;
+        background: var(--head);
       }
 
       th:nth-child(2),
@@ -381,27 +393,159 @@
       }
 
       @media (max-width: 760px) {
+        body {
+          background: #eef3f8;
+        }
+
+        header {
+          position: static;
+        }
+
         .bar {
           grid-template-columns: 1fr;
-          padding: 14px;
+          gap: 10px;
+          padding: max(12px, env(safe-area-inset-top)) 12px 10px;
+        }
+
+        .sub {
+          display: -webkit-box;
+          margin-top: 5px;
+          overflow: hidden;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          font-size: 12px;
+          line-height: 1.45;
         }
 
         .toolbar {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
           justify-content: stretch;
+          gap: 8px;
+        }
+
+        .holding-control {
+          grid-column: 1 / -1;
+          height: 42px;
+        }
+
+        .holding-control input {
+          width: 100%;
         }
 
         button,
         select,
         input {
-          flex: 1 1 140px;
+          width: 100%;
+          min-width: 0;
+          height: 42px;
+          font-size: 14px;
+        }
+
+        .group-tabs {
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          padding: 0 12px 10px;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .group-tab {
+          flex: 0 0 auto;
         }
 
         main {
-          padding: 14px;
+          padding: 12px 10px 28px;
         }
 
         .stats {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 8px;
+          margin-bottom: 10px;
+        }
+
+        .stat {
+          min-height: 76px;
+          padding: 10px 12px;
+          border-radius: 7px;
+        }
+
+        .stat b {
+          font-size: 18px;
+          line-height: 1.2;
+          word-break: break-word;
+        }
+
+        .stat span {
+          font-size: 12px;
+        }
+
+        .table-wrap {
+          overflow: auto;
+          border: 1px solid var(--line);
+          background: var(--panel);
+          -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+          min-width: 1500px;
+          font-size: 12px;
+        }
+
+        th,
+        td {
+          padding: 9px 8px;
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 132px;
+          max-width: 132px;
+        }
+
+        td.fund-cell {
+          background: var(--panel);
+        }
+
+        .name {
+          overflow: hidden;
+          font-size: 13px;
+          text-overflow: ellipsis;
+        }
+
+        .code {
+          margin-top: 2px;
+          font-size: 12px;
+        }
+
+        .trend-cell {
+          min-width: 72px;
+          width: 72px;
+        }
+
+        .trend-box {
+          width: 66px;
+          height: 28px;
+        }
+
+        .trend-line svg {
+          width: 66px;
+        }
+
+        .quote-stack {
+          align-items: flex-end;
+        }
+
+        .quote-price {
+          font-size: 15px;
+        }
+
+        .quote-change {
+          font-size: 14px;
+        }
+
+        .status {
+          padding: 0 4px;
+          font-size: 12px;
         }
 
         h1 {
@@ -747,28 +891,28 @@
             const switchClass = fund.switchAdvantage >= 1.5 ? "positive" : classForSigned(fund.switchAdvantage);
             return `
               <tr>
-                <td><div class="name">${fund.name}${fund.isHolding ? "（持有）" : ""}</div><div class="code">${fund.code}</div></td>
-                <td class="trend-cell">${trendBars(fund.changePct)}</td>
-                <td>${quoteStack(fund)}</td>
-                <td title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNav)}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
-                <td class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
-                <td class="${classForSigned(fund.nqFutureChangePct)}">${fmtPct(fund.nqFutureChangePct)}</td>
-                <td>${fmtAmount(fund.avg7AmountWan)}</td>
-                <td class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
-                <td class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
-                <td class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
-                <td>${fmtPct(fund.operatingFee)}</td>
-                <td>${fmtPct(fund.avg10Premium)}</td>
-                <td>${fmtPct(fund.avg20Premium)}</td>
-                <td>${fmtPct(fund.avg30Premium)}</td>
-                <td class="${classForRank(fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026)}</td>
-                <td class="${classForSigned(fund.trackingDiff2026, true)}">${fmtPctPoint(fund.trackingDiff2026)}</td>
-                <td class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
-                <td class="${classForSigned(fund.trackingDiff2025, true)}">${fmtPctPoint(fund.trackingDiff2025)}</td>
-                <td>${fmtPct(fund.latestPremium)}</td>
-                <td>${fund.navForPremiumDate || fund.navDate}${fund.navForPremiumSource === "estimated" ? "估" : ""}</td>
-                <td><span class="pill">${fund.subscribeStatus || "-"}</span></td>
-                <td>${fund.navDate}</td>
+                <td class="fund-cell" data-label="基金名称"><div class="name">${fund.name}${fund.isHolding ? "（持有）" : ""}</div><div class="code">${fund.code}</div></td>
+                <td class="trend-cell" data-label="今日趋势">${trendBars(fund.changePct)}</td>
+                <td data-label="实时价格 / 涨跌">${quoteStack(fund)}</td>
+                <td data-label="估算当前溢价率" title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNav)}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
+                <td data-label="实时汇率影响" class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
+                <td data-label="实时对应期货" class="${classForSigned(fund.nqFutureChangePct)}">${fmtPct(fund.nqFutureChangePct)}</td>
+                <td data-label="7日日均成交额">${fmtAmount(fund.avg7AmountWan)}</td>
+                <td data-label="均值差" class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
+                <td data-label="切换优势" class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
+                <td data-label="真实溢价率" class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
+                <td data-label="运作费率">${fmtPct(fund.operatingFee)}</td>
+                <td data-label="10日均值">${fmtPct(fund.avg10Premium)}</td>
+                <td data-label="20日均值">${fmtPct(fund.avg20Premium)}</td>
+                <td data-label="30日均值">${fmtPct(fund.avg30Premium)}</td>
+                <td data-label="2026净值收益" class="${classForRank(fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026)}</td>
+                <td data-label="2026跟踪差" class="${classForSigned(fund.trackingDiff2026, true)}">${fmtPctPoint(fund.trackingDiff2026)}</td>
+                <td data-label="2025净值收益" class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
+                <td data-label="2025跟踪差" class="${classForSigned(fund.trackingDiff2025, true)}">${fmtPctPoint(fund.trackingDiff2025)}</td>
+                <td data-label="最近收盘溢价">${fmtPct(fund.latestPremium)}</td>
+                <td data-label="溢价净值日">${fund.navForPremiumDate || fund.navDate}${fund.navForPremiumSource === "estimated" ? "估" : ""}</td>
+                <td data-label="申购状态"><span class="pill">${fund.subscribeStatus || "-"}</span></td>
+                <td data-label="净值日">${fund.navDate}</td>
               </tr>
             `;
           })
