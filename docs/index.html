@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="zh-CN">
   <head>
@@ -183,7 +184,7 @@
 
       table {
         width: 100%;
-        min-width: 1660px;
+        min-width: 1780px;
         border-collapse: collapse;
         font-size: 14px;
       }
@@ -209,10 +210,13 @@
       }
 
       th:first-child,
-      td:first-child,
+      td:first-child {
+        text-align: left;
+      }
+
       th:nth-child(2),
       td:nth-child(2) {
-        text-align: left;
+        text-align: center;
       }
 
       tbody tr:hover {
@@ -242,6 +246,90 @@
       .negative {
         color: var(--red);
         font-weight: 850;
+      }
+
+      .market-up {
+        color: var(--red);
+        font-weight: 850;
+      }
+
+      .market-down {
+        color: var(--green);
+        font-weight: 850;
+      }
+
+      .trend-cell {
+        width: 98px;
+        min-width: 98px;
+      }
+
+      .trend-box {
+        position: relative;
+        display: inline-flex;
+        width: 76px;
+        height: 38px;
+        overflow: hidden;
+        border-radius: 0;
+        background: transparent;
+      }
+
+      .trend-line {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .trend-line svg {
+        width: 76px;
+        height: 100%;
+        display: block;
+      }
+
+      .trend-box path.area {
+        display: none;
+      }
+
+      .trend-box polyline {
+        fill: none;
+        stroke-width: 1.25;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .trend-box circle {
+        display: none;
+      }
+
+      .trend-box.up {
+        color: #f87171;
+      }
+
+      .trend-box.down {
+        color: #34d399;
+      }
+
+      .trend-box.flat {
+        color: #94a3b8;
+      }
+
+      .quote-stack {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 3px;
+        line-height: 1.1;
+      }
+
+      .quote-price {
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 850;
+      }
+
+      .quote-change {
+        font-size: 13px;
+        font-weight: 900;
       }
 
       .cheap {
@@ -345,7 +433,7 @@
             <option value="changePct">按今日涨跌排序</option>
             <option value="avg7AmountWan">按7日成交排序</option>
           </select>
-          <button id="refresh">刷新行情</button>
+          <button id="refresh">刷新数据/行情</button>
         </div>
       </div>
       <div class="group-tabs" id="groupTabs" aria-label="ETF分组"></div>
@@ -366,24 +454,24 @@
         <table>
           <thead>
             <tr>
-              <th data-key="rank">#</th>
               <th data-key="name">基金名称</th>
-              <th data-key="navReturn2026">2026净值收益</th>
-              <th data-key="trackingDiff2026">2026跟踪差</th>
-              <th data-key="navReturn2025">2025净值收益</th>
-              <th data-key="trackingDiff2025">2025跟踪差</th>
+              <th data-key="changePct">今日涨幅趋势</th>
               <th data-key="changePct">今日实时涨跌幅</th>
               <th id="currentPremiumHead" data-key="currentPremium">当前溢价率</th>
               <th data-key="usdCnyChangePct">实时汇率影响</th>
               <th data-key="nqFutureChangePct">实时对应期货</th>
+              <th data-key="avg7AmountWan">7日日均成交额</th>
+              <th data-key="relativeDeviation">均值差</th>
+              <th data-key="switchAdvantage">切换优势</th>
               <th data-key="adjustedPremium">真实溢价率</th>
               <th data-key="operatingFee">运作费率</th>
-              <th data-key="avg7AmountWan">7日日均成交额</th>
               <th data-key="avg10Premium">10日均值</th>
               <th data-key="avg20Premium">20日均值</th>
               <th data-key="avg30Premium">30日均值</th>
-              <th data-key="relativeDeviation">均值差</th>
-              <th data-key="switchAdvantage">切换优势</th>
+              <th data-key="navReturn2026">2026净值收益</th>
+              <th data-key="trackingDiff2026">2026跟踪差</th>
+              <th data-key="navReturn2025">2025净值收益</th>
+              <th data-key="trackingDiff2025">2025跟踪差</th>
               <th data-key="latestPremium">最近收盘溢价</th>
               <th data-key="navForPremiumDate">溢价净值日</th>
               <th data-key="subscribeStatus">申购状态</th>
@@ -474,6 +562,16 @@
         return wan >= 10000 ? `${(wan / 10000).toFixed(2)}亿` : `${wan.toFixed(2)}万`;
       }
 
+      function fmtPrice(value) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "-";
+        return Number(value).toFixed(4);
+      }
+
+      function fmtLivePrice(value) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "-";
+        return Number(value).toFixed(3);
+      }
+
       function classForSigned(value, inverse = false) {
         if (value === null || value === undefined || Number.isNaN(value)) return "";
         const good = inverse ? value < 0 : value > 0;
@@ -481,6 +579,54 @@
         if (good) return "positive";
         if (bad) return "negative";
         return "";
+      }
+
+      function classForMarketChange(value) {
+        if (value === null || value === undefined || Number.isNaN(value)) return "";
+        if (value > 0) return "market-up";
+        if (value < 0) return "market-down";
+        return "";
+      }
+
+      function tradingProgressRatio(now = new Date()) {
+        const minutes = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+        const morningStart = 9 * 60 + 30;
+        const morningEnd = 11 * 60 + 30;
+        const afternoonStart = 13 * 60;
+        const afternoonEnd = 15 * 60;
+        if (minutes <= morningStart) return 0.04;
+        if (minutes <= morningEnd) return Math.max(0.04, (minutes - morningStart) / 240);
+        if (minutes <= afternoonStart) return 0.5;
+        if (minutes <= afternoonEnd) return 0.5 + (minutes - afternoonStart) / 240;
+        return 1;
+      }
+
+      function trendBars(value) {
+        const clean = Number.isFinite(value) ? value : 0;
+        const direction = clean > 0 ? "up" : clean < 0 ? "down" : "flat";
+        const strength = Math.min(Math.abs(clean), 4) / 4;
+        const progressPct = Math.round(tradingProgressRatio() * 100);
+        const upShape = [24, 18, 21, 13, 16, 11, 14, 10, 12, 8, 9, 7];
+        const downShape = [8, 13, 11, 18, 16, 22, 20, 25, 23, 28, 26, 29];
+        const flatShape = [19, 18, 20, 19, 18, 19, 20, 18, 19, 18, 19, 19];
+        const base = direction === "up" ? upShape : direction === "down" ? downShape : flatShape;
+        const points = base
+          .map((y, index) => {
+            const x = 6 + index * 5.8;
+            const centerPull = (1 - strength) * 0.35;
+            const adjustedY = y * (1 - centerPull) + 19 * centerPull;
+            return `${x.toFixed(1)},${adjustedY.toFixed(1)}`;
+          })
+          .join(" ");
+        const area = `M ${points.split(" ")[0]} L ${points} L 69,34 L 6,34 Z`;
+        const last = points.split(" ").at(-1);
+        const [lastX, lastY] = last.split(",");
+        return `<div class="trend-box ${direction}" title="今日涨跌幅：${fmtPct(clean)}；交易时段进度：${progressPct}%"><div class="trend-line" style="width:${progressPct}%"><svg viewBox="0 0 76 38" aria-hidden="true"><path class="area" d="${area}" fill="currentColor"></path><polyline points="${points}" stroke="currentColor"></polyline><circle cx="${lastX}" cy="${lastY}" r="2.2" fill="currentColor"></circle></svg></div></div>`;
+      }
+
+      function quoteStack(fund) {
+        const marketClass = classForMarketChange(fund.changePct);
+        return `<div class="quote-stack"><span class="quote-price">${fmtLivePrice(fund.livePrice)}</span><span class="quote-change ${marketClass}">${fmtPct(fund.changePct)}</span></div>`;
       }
 
       function classForRank(value, values, inverse = false) {
@@ -517,6 +663,11 @@
         return Number.isFinite(fund.latestChangePct) ? fund.latestChangePct : null;
       }
 
+      function fallbackFxChangePct(funds = activeFunds()) {
+        const found = funds.find((fund) => Number.isFinite(fund.estimateFxReturn));
+        return found ? found.estimateFxReturn : null;
+      }
+
       function enrich(fund) {
         const price = getLivePrice(fund);
         const changePct = getLiveChangePct(fund);
@@ -529,8 +680,9 @@
         const calculatedPremium = premiumNav > 0 ? (price / premiumNav - 1) * 100 : null;
         const currentPremium = calculatedPremium;
         const future = state.macro.futures[fund.group] || {};
+        const usdCnyChangePct = Number.isFinite(state.macro.usdCnyChangePct) ? state.macro.usdCnyChangePct : fallbackFxChangePct([fund]);
         const macroImpact =
-          (Number.isFinite(state.macro.usdCnyChangePct) ? state.macro.usdCnyChangePct : 0) +
+          (Number.isFinite(usdCnyChangePct) ? usdCnyChangePct : 0) +
           (Number.isFinite(future.changePct) ? future.changePct : 0);
         const adjustedNav = premiumNav * (1 + macroImpact / 100);
         const adjustedPremium = adjustedNav > 0 ? (price / adjustedNav - 1) * 100 : calculatedPremium;
@@ -544,7 +696,7 @@
           calculatedPremium,
           currentPremium,
           currentPremiumSource: "估算当前溢价率（含汇率）",
-          usdCnyChangePct: state.macro.usdCnyChangePct,
+          usdCnyChangePct,
           nqFutureChangePct: future.changePct,
           adjustedPremium,
           relativeDeviation: currentPremium - fund.avg20Premium,
@@ -595,24 +747,24 @@
             const switchClass = fund.switchAdvantage >= 1.5 ? "positive" : classForSigned(fund.switchAdvantage);
             return `
               <tr>
-                <td class="rank">${index + 1}</td>
                 <td><div class="name">${fund.name}${fund.isHolding ? "（持有）" : ""}</div><div class="code">${fund.code}</div></td>
+                <td class="trend-cell">${trendBars(fund.changePct)}</td>
+                <td>${quoteStack(fund)}</td>
+                <td title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNav)}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
+                <td class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
+                <td class="${classForSigned(fund.nqFutureChangePct)}">${fmtPct(fund.nqFutureChangePct)}</td>
+                <td>${fmtAmount(fund.avg7AmountWan)}</td>
+                <td class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
+                <td class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
+                <td class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
+                <td>${fmtPct(fund.operatingFee)}</td>
+                <td>${fmtPct(fund.avg10Premium)}</td>
+                <td>${fmtPct(fund.avg20Premium)}</td>
+                <td>${fmtPct(fund.avg30Premium)}</td>
                 <td class="${classForRank(fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026)}</td>
                 <td class="${classForSigned(fund.trackingDiff2026, true)}">${fmtPctPoint(fund.trackingDiff2026)}</td>
                 <td class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
                 <td class="${classForSigned(fund.trackingDiff2025, true)}">${fmtPctPoint(fund.trackingDiff2025)}</td>
-                <td class="${classForSigned(fund.changePct)}">${fmtPct(fund.changePct)}</td>
-                <td title="${fund.currentPremiumSource}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
-                <td class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
-                <td class="${classForSigned(fund.nqFutureChangePct)}">${fmtPct(fund.nqFutureChangePct)}</td>
-                <td class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
-                <td>${fmtPct(fund.operatingFee)}</td>
-                <td>${fmtAmount(fund.avg7AmountWan)}</td>
-                <td>${fmtPct(fund.avg10Premium)}</td>
-                <td>${fmtPct(fund.avg20Premium)}</td>
-                <td>${fmtPct(fund.avg30Premium)}</td>
-                <td class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
-                <td class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
                 <td>${fmtPct(fund.latestPremium)}</td>
                 <td>${fund.navForPremiumDate || fund.navDate}${fund.navForPremiumSource === "estimated" ? "估" : ""}</td>
                 <td><span class="pill">${fund.subscribeStatus || "-"}</span></td>
@@ -633,8 +785,13 @@
         $("holding").textContent = holding ? `${holding.name} ${holding.code}` : `${holdingCode || "-"} 未匹配`;
         $("best").textContent = cheapest ? `${cheapest.name} ${fmtPctPoint(cheapest.relativeDeviation)}` : "-";
         $("premiumRange").textContent = premiums.length ? `${fmtPct(Math.min(...premiums))} - ${fmtPct(Math.max(...premiums))}` : "-";
+        const fallbackFx = fallbackFxChangePct(all);
         $("usdCny").textContent =
-          state.macro.usdCny === null ? "-" : `${Number(state.macro.usdCny).toFixed(4)} / ${fmtPct(state.macro.usdCnyChangePct)}`;
+          state.macro.usdCny === null
+            ? Number.isFinite(fallbackFx)
+              ? `估算 / ${fmtPct(fallbackFx)}`
+              : "-"
+            : `${Number(state.macro.usdCny).toFixed(4)} / ${fmtPct(state.macro.usdCnyChangePct)}`;
         const future = state.macro.futures[state.activeGroup] || {};
         $("nqFuture").textContent =
           future.price === null || future.price === undefined ? "-" : `${Number(future.price).toFixed(2)} / ${fmtPct(future.changePct)}`;
@@ -768,6 +925,38 @@
         };
       }
 
+      async function loadSinaFuture(symbol) {
+        await loadScript(`https://hq.sinajs.cn/list=${symbol}`, "新浪期货行情接口加载失败");
+        const raw = window[`hq_str_${symbol}`];
+        delete window[`hq_str_${symbol}`];
+        if (!raw) throw new Error(`${symbol} 无行情数据`);
+        const fields = raw.split(",");
+        const price = Number(fields[0]);
+        const prev = Number(fields[7]);
+        if (!Number.isFinite(price) || price <= 0) throw new Error(`${symbol} 行情格式异常`);
+        return {
+          price,
+          changePct: Number.isFinite(prev) && prev > 0 ? (price / prev - 1) * 100 : null,
+        };
+      }
+
+      async function loadSinaUsdCny() {
+        const symbol = "fx_susdcny";
+        await loadScript(`https://hq.sinajs.cn/list=${symbol}`, "新浪美元人民币行情接口加载失败");
+        const raw = window[`hq_str_${symbol}`];
+        delete window[`hq_str_${symbol}`];
+        if (!raw) throw new Error("新浪美元人民币无行情数据");
+        const fields = raw.split(",");
+        const price = Number(fields[1]);
+        const changePct = Number(fields[10]);
+        if (!Number.isFinite(price) || price <= 0) throw new Error("新浪美元人民币行情格式异常");
+        return {
+          price,
+          prev: Number.isFinite(changePct) ? price / (1 + changePct / 100) : null,
+          changePct: Number.isFinite(changePct) ? changePct : null,
+        };
+      }
+
       async function refreshEastmoneySingleQuotes(funds) {
         await Promise.all(
           funds.map(async (fund) => {
@@ -848,8 +1037,14 @@
           state.macro.usdCny = usdCny.price;
           state.macro.usdCnyChangePct = usdCny.changePct;
         } catch (error) {
-          state.macro.usdCny = null;
-          state.macro.usdCnyChangePct = null;
+          try {
+            const usdCny = await loadSinaUsdCny();
+            state.macro.usdCny = usdCny.price;
+            state.macro.usdCnyChangePct = usdCny.changePct;
+          } catch (fallbackError) {
+            state.macro.usdCny = null;
+            state.macro.usdCnyChangePct = null;
+          }
         }
         const entries = Object.entries(state.groups);
         await Promise.all(
@@ -868,6 +1063,23 @@
                 } catch (fallbackError) {
                   // 保留空值，页面仍可使用当前溢价率和历史均值。
                 }
+              }
+              if (meta.sina_future_symbol) {
+                try {
+                  state.macro.futures[group] = await loadSinaFuture(meta.sina_future_symbol);
+                  return;
+                } catch (fallbackError) {
+                  // 保留空值，页面仍可使用当前溢价率和历史均值。
+                }
+              }
+              if (Number.isFinite(meta.fallbackFuturePrice) || Number.isFinite(meta.fallbackFutureChangePct)) {
+                state.macro.futures[group] = {
+                  price: Number.isFinite(meta.fallbackFuturePrice) ? meta.fallbackFuturePrice : null,
+                  changePct: Number.isFinite(meta.fallbackFutureChangePct) ? meta.fallbackFutureChangePct : null,
+                  source: meta.fallbackFutureSource || "备用期货",
+                  time: meta.fallbackFutureTime || "",
+                };
+                return;
               }
               state.macro.futures[group] = state.macro.futures[group] || { price: null, changePct: null };
             }
@@ -931,14 +1143,15 @@
         }
       }
 
-      async function init() {
+      async function refreshBaseData({ silent = false } = {}) {
+        if (!silent) $("status").textContent = "正在刷新基础数据...";
         const data = await loadData();
         state.funds = data.funds;
         state.groups = data.groups || {
           nasdaq100: { name: "纳指100", default_holding: "159660", future_secid: "103.NQ00Y" },
         };
         Object.entries(state.groups).forEach(([group, meta]) => {
-          state.holdingCodes[group] = normalizeCode(loadHoldingCode(group)) || meta.default_holding || "";
+          state.holdingCodes[group] = normalizeCode(loadHoldingCode(group)) || state.holdingCodes[group] || meta.default_holding || "";
         });
         state.activeGroup = state.groups[loadActiveGroup()] ? loadActiveGroup() : Object.keys(state.groups)[0];
         $("holdingCode").value = state.holdingCodes[state.activeGroup] || "";
@@ -946,15 +1159,30 @@
         state.latestDate = data.latestDate;
         renderGroupTabs();
         render();
+        if (!silent) $("status").textContent = `基础数据已刷新：${new Date().toLocaleString("zh-CN", { hour12: false })}`;
+      }
+
+      async function init() {
+        await refreshBaseData();
         await refreshMacro();
         await refreshQuotes();
         setInterval(async () => {
           await refreshMacro();
           await refreshQuotes();
         }, 60 * 1000);
+        setInterval(async () => {
+          try {
+            await refreshBaseData({ silent: true });
+            await refreshMacro();
+            await refreshQuotes();
+          } catch (error) {
+            console.warn("基础数据自动刷新失败", error);
+          }
+        }, 5 * 60 * 1000);
       }
 
       $("refresh").addEventListener("click", async () => {
+        await refreshBaseData();
         await refreshMacro();
         await refreshQuotes();
       });
