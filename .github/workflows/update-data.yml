@@ -3,13 +3,17 @@ name: Update QDII ETF Premium Data
 on:
   workflow_dispatch:
   schedule:
-    # 08:35, 09:00, 09:20 and 19:30 Asia/Shanghai, Monday-Friday.
-    # 09:00 updates the prior US trading day's estimated NAV before A-share open.
-    # 09:20 is a retry window for US index data providers that publish the prior US close later.
-    - cron: "35 0 * * 1-5"
-    - cron: "0 1 * * 1-5"
-    - cron: "20 1 * * 1-5"
-    - cron: "30 11 * * 1-5"
+    # Asia/Shanghai, Monday-Friday. Use off-hour retries because GitHub
+    # scheduled workflows can be delayed or occasionally skipped.
+    # Morning runs estimate the prior US trading day's NAV before/around A-share open.
+    - cron: "37 0 * * 1-5"   # 08:37
+    - cron: "7 1 * * 1-5"    # 09:07
+    - cron: "27 1 * * 1-5"   # 09:27
+    - cron: "7 2 * * 1-5"    # 10:07
+    - cron: "7 3 * * 1-5"    # 11:07
+    - cron: "7 7 * * 1-5"    # 15:07
+    - cron: "15 10 * * 1-5"  # 18:15
+    - cron: "35 11 * * 1-5"  # 19:35
 
 jobs:
   update-data:
