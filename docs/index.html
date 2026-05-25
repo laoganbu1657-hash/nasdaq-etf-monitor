@@ -395,15 +395,21 @@
       @media (max-width: 760px) {
         body {
           background: #eef3f8;
+          width: 100%;
+          overflow-x: hidden;
         }
 
         header {
           position: static;
+          max-width: 100vw;
+          overflow: hidden;
         }
 
         .bar {
           grid-template-columns: 1fr;
           gap: 10px;
+          width: 100%;
+          max-width: 100vw;
           padding: max(12px, env(safe-area-inset-top)) 12px 10px;
         }
 
@@ -443,17 +449,26 @@
         }
 
         .group-tabs {
-          flex-wrap: nowrap;
-          overflow-x: auto;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 8px;
+          width: 100vw;
+          max-width: none;
+          overflow: hidden;
           padding: 0 12px 10px;
-          -webkit-overflow-scrolling: touch;
         }
 
         .group-tab {
-          flex: 0 0 auto;
+          width: 100%;
+          min-width: 0;
+          padding: 0 8px;
+          font-size: 14px;
         }
 
         main {
+          width: 100%;
+          max-width: 100vw;
+          overflow: hidden;
           padding: 12px 10px 28px;
         }
 
@@ -481,6 +496,7 @@
 
         .table-wrap {
           overflow: auto;
+          max-width: 100%;
           border: 1px solid var(--line);
           background: var(--panel);
           -webkit-overflow-scrolling: touch;
@@ -650,6 +666,7 @@
       };
 
       const $ = (id) => document.getElementById(id);
+      const REMOTE_DATA_BASE = "https://laoganbu1657-hash.github.io/nasdaq-etf-monitor";
       const ACTIVE_GROUP_STORAGE_KEY = "qdii-etf-monitor-active-group";
       const HOLDING_STORAGE_PREFIX = "qdii-etf-monitor-holding-code-";
 
@@ -1277,6 +1294,15 @@
       }
 
       async function loadData() {
+        if (location.protocol === "file:") {
+          try {
+            const remoteResponse = await fetch(`${REMOTE_DATA_BASE}/data/funds.json?t=${Date.now()}`, { cache: "no-store" });
+            if (!remoteResponse.ok) throw new Error(`线上基础数据读取失败：HTTP ${remoteResponse.status}`);
+            return assertValidData(await remoteResponse.json());
+          } catch (remoteError) {
+            console.warn("线上数据读取失败，改用本地数据文件", remoteError);
+          }
+        }
         try {
           const response = await fetch(`./data/funds.json?t=${Date.now()}`, { cache: "no-store" });
           if (!response.ok) throw new Error(`基础数据读取失败：HTTP ${response.status}`);
