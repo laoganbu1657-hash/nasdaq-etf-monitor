@@ -271,15 +271,15 @@
       }
 
       .trend-cell {
-        width: 98px;
-        min-width: 98px;
+        width: 140px;
+        min-width: 140px;
       }
 
       .trend-box {
         position: relative;
         display: inline-flex;
-        width: 76px;
-        height: 38px;
+        width: 118px;
+        height: 42px;
         overflow: hidden;
         border-radius: 0;
         background: transparent;
@@ -293,7 +293,7 @@
       }
 
       .trend-line svg {
-        width: 76px;
+        width: 118px;
         height: 100%;
         display: block;
       }
@@ -304,7 +304,7 @@
 
       .trend-box polyline {
         fill: none;
-        stroke-width: 1.25;
+        stroke-width: 1.05;
         stroke-linecap: round;
         stroke-linejoin: round;
       }
@@ -534,17 +534,17 @@
         }
 
         .trend-cell {
-          min-width: 72px;
-          width: 72px;
+          min-width: 116px;
+          width: 116px;
         }
 
         .trend-box {
-          width: 66px;
-          height: 28px;
+          width: 108px;
+          height: 34px;
         }
 
         .trend-line svg {
-          width: 66px;
+          width: 108px;
         }
 
         .quote-stack {
@@ -649,6 +649,7 @@
         funds: [],
         groups: {},
         quotes: new Map(),
+        trends: new Map(),
         sortBy: "relativeDeviation",
         sortDir: 1,
         activeGroup: "nasdaq100",
@@ -762,27 +763,70 @@
         return 1;
       }
 
-      function trendBars(value) {
-        const clean = Number.isFinite(value) ? value : 0;
+      function sampledTrend(points, stepMinutes = 2) {
+        const result = [];
+        let lastBucket = null;
+        points.forEach((point) => {
+          const bucket = Math.floor(point.minutes / stepMinutes);
+          if (bucket !== lastBucket) {
+            result.push(point);
+            lastBucket = bucket;
+          } else {
+            result[result.length - 1] = point;
+          }
+        });
+        return result;
+      }
+
+      function trendBars(fund) {
+        const clean = Number.isFinite(fund.changePct) ? fund.changePct : 0;
         const direction = clean > 0 ? "up" : clean < 0 ? "down" : "flat";
-        const strength = Math.min(Math.abs(clean), 4) / 4;
         const progressPct = Math.round(tradingProgressRatio() * 100);
+        const rawTrend = state.trends.get(fund.code) || [];
+        const trend = sampledTrend(rawTrend).filter((point) => Number.isFinite(point.changePct));
+
+        if (trend.length >= 2) {
+          const values = trend.map((point) => point.changePct);
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const center = (min + max) / 2;
+          const halfRange = Math.max((max - min) / 2, 0.18);
+          const yMin = center - halfRange;
+          const yMax = center + halfRange;
+          const minMinute = 9 * 60 + 30;
+          const maxMinute = 15 * 60;
+          const width = 118;
+          const height = 42;
+          const padX = 4;
+          const padY = 5;
+          const points = trend
+            .map((point) => {
+              const x = padX + ((point.minutes - minMinute) / (maxMinute - minMinute)) * (width - padX * 2);
+              const y = padY + ((yMax - point.changePct) / (yMax - yMin)) * (height - padY * 2);
+              return `${x.toFixed(1)},${y.toFixed(1)}`;
+            })
+            .join(" ");
+          const area = `M ${points.split(" ")[0]} L ${points} L ${width - padX},${height - padY} L ${padX},${height - padY} Z`;
+          const latest = trend.at(-1);
+          const title = `今日涨跌幅：${fmtPct(clean)}；2分钟趋势；区间：${fmtPct(min)} ~ ${fmtPct(max)}；最新点：${latest.time}`;
+          return `<div class="trend-box ${direction}" title="${title}"><div class="trend-line" style="width:100%"><svg viewBox="0 0 ${width} ${height}" aria-hidden="true"><path class="area" d="${area}" fill="currentColor"></path><polyline points="${points}" stroke="currentColor"></polyline></svg></div></div>`;
+        }
+
+        const strength = Math.min(Math.abs(clean), 4) / 4;
         const upShape = [24, 18, 21, 13, 16, 11, 14, 10, 12, 8, 9, 7];
         const downShape = [8, 13, 11, 18, 16, 22, 20, 25, 23, 28, 26, 29];
         const flatShape = [19, 18, 20, 19, 18, 19, 20, 18, 19, 18, 19, 19];
         const base = direction === "up" ? upShape : direction === "down" ? downShape : flatShape;
         const points = base
           .map((y, index) => {
-            const x = 6 + index * 5.8;
+            const x = 6 + index * 9.6;
             const centerPull = (1 - strength) * 0.35;
             const adjustedY = y * (1 - centerPull) + 19 * centerPull;
             return `${x.toFixed(1)},${adjustedY.toFixed(1)}`;
           })
           .join(" ");
-        const area = `M ${points.split(" ")[0]} L ${points} L 69,34 L 6,34 Z`;
-        const last = points.split(" ").at(-1);
-        const [lastX, lastY] = last.split(",");
-        return `<div class="trend-box ${direction}" title="今日涨跌幅：${fmtPct(clean)}；交易时段进度：${progressPct}%"><div class="trend-line" style="width:${progressPct}%"><svg viewBox="0 0 76 38" aria-hidden="true"><path class="area" d="${area}" fill="currentColor"></path><polyline points="${points}" stroke="currentColor"></polyline><circle cx="${lastX}" cy="${lastY}" r="2.2" fill="currentColor"></circle></svg></div></div>`;
+        const area = `M ${points.split(" ")[0]} L ${points} L 114,36 L 6,36 Z`;
+        return `<div class="trend-box ${direction}" title="今日涨跌幅：${fmtPct(clean)}；正在等待2分钟趋势数据"><div class="trend-line" style="width:${progressPct}%"><svg viewBox="0 0 118 42" aria-hidden="true"><path class="area" d="${area}" fill="currentColor"></path><polyline points="${points}" stroke="currentColor"></polyline></svg></div></div>`;
       }
 
       function quoteStack(fund) {
@@ -815,6 +859,12 @@
         return state.quotes.get(fund.code)?.price || fund.latestClose;
       }
 
+      function getLiveIopv(fund) {
+        const quote = state.quotes.get(fund.code);
+        if (quote && Number.isFinite(quote.iopv) && quote.iopv > 0) return quote.iopv;
+        return null;
+      }
+
       function getLiveChangePct(fund) {
         const quote = state.quotes.get(fund.code);
         if (quote && Number.isFinite(quote.changePct)) return quote.changePct;
@@ -832,14 +882,23 @@
       function enrich(fund) {
         const price = getLivePrice(fund);
         const changePct = getLiveChangePct(fund);
+        const liveIopv = getLiveIopv(fund);
         const hasEtfComPremium = Number.isFinite(fund.etfComPremiumRate);
         const etfComIopv =
           hasEtfComPremium && Number.isFinite(fund.etfComLastPrice) && fund.etfComLastPrice > 0
             ? fund.etfComLastPrice / (1 + fund.etfComPremiumRate / 100)
             : null;
-        const premiumNav = fund.navForReturn || fund.navForPremium || fund.nav;
+        const premiumNav = fund.navForReturn || fund.navForPremium || fund.nav || liveIopv || fund.etfComUnitNav || etfComIopv;
         const calculatedPremium = premiumNav > 0 ? (price / premiumNav - 1) * 100 : null;
         const currentPremium = calculatedPremium;
+        const currentPremiumSource =
+          fund.navForReturn || fund.navForPremium || fund.nav
+            ? "估算当前溢价率（含汇率）"
+            : liveIopv
+              ? "估算当前溢价率（腾讯IOPV兜底）"
+              : fund.etfComUnitNav
+                ? "估算当前溢价率（ETF.com.cn净值兜底）"
+                : "估算当前溢价率（ETF.com.cn溢价反推）";
         const future = state.macro.futures[fund.group] || {};
         const usdCnyChangePct = Number.isFinite(state.macro.usdCnyChangePct) ? state.macro.usdCnyChangePct : fallbackFxChangePct([fund]);
         const macroImpact =
@@ -856,11 +915,12 @@
           etfComPremium: hasEtfComPremium ? fund.etfComPremiumRate : null,
           calculatedPremium,
           currentPremium,
-          currentPremiumSource: "估算当前溢价率（含汇率）",
+          currentPremiumSource,
           usdCnyChangePct,
           nqFutureChangePct: future.changePct,
           adjustedPremium,
-          relativeDeviation: currentPremium - fund.avg20Premium,
+          relativeDeviation:
+            Number.isFinite(currentPremium) && Number.isFinite(fund.avg20Premium) ? currentPremium - fund.avg20Premium : null,
         };
       }
 
@@ -909,7 +969,7 @@
             return `
               <tr>
                 <td class="fund-cell" data-label="基金名称"><div class="name">${fund.name}${fund.isHolding ? "（持有）" : ""}</div><div class="code">${fund.code}</div></td>
-                <td class="trend-cell" data-label="今日趋势">${trendBars(fund.changePct)}</td>
+                <td class="trend-cell" data-label="今日趋势">${trendBars(fund)}</td>
                 <td data-label="实时价格 / 涨跌">${quoteStack(fund)}</td>
                 <td data-label="估算当前溢价率" title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNav)}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
                 <td data-label="实时汇率影响" class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
@@ -969,12 +1029,13 @@
           .map(([key, meta]) => `<button class="group-tab ${key === state.activeGroup ? "active" : ""}" data-group="${key}">${meta.name || key}</button>`)
           .join("");
         document.querySelectorAll(".group-tab").forEach((button) => {
-          button.addEventListener("click", () => {
+          button.addEventListener("click", async () => {
             state.activeGroup = button.dataset.group;
             saveActiveGroup(state.activeGroup);
             $("holdingCode").value = state.holdingCodes[state.activeGroup] || "";
             renderGroupTabs();
             render();
+            await refreshTrendData();
           });
         });
       }
@@ -1065,6 +1126,7 @@
             price,
             changePct:
               Number.isFinite(changePct) ? changePct : Number.isFinite(prevClose) && prevClose > 0 ? (price / prevClose - 1) * 100 : fund.latestChangePct,
+            iopv: Number(fields[78]),
             amount: null,
           });
           delete window[`v_${symbol}`];
@@ -1116,6 +1178,51 @@
           prev: Number.isFinite(changePct) ? price / (1 + changePct / 100) : null,
           changePct: Number.isFinite(changePct) ? changePct : null,
         };
+      }
+
+      function parseTrendItem(raw, prevClose) {
+        const fields = String(raw || "").split(",");
+        const timeText = fields[0] || "";
+        const timePart = timeText.split(" ")[1] || timeText;
+        const [hour, minute] = timePart.split(":").map(Number);
+        const close = Number(fields[2]);
+        if (!Number.isFinite(hour) || !Number.isFinite(minute) || !Number.isFinite(close) || close <= 0 || !Number.isFinite(prevClose) || prevClose <= 0) {
+          return null;
+        }
+        return {
+          time: timePart.slice(0, 5),
+          minutes: hour * 60 + minute,
+          changePct: (close / prevClose - 1) * 100,
+        };
+      }
+
+      async function loadIntradayTrend(fund) {
+        const callbackName = `emTrend${Date.now()}${Math.floor(Math.random() * 10000)}`;
+        const url =
+          `https://push2his.eastmoney.com/api/qt/stock/trends2/get?secid=${secidFor(fund.code)}` +
+          "&fields1=f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13" +
+          "&fields2=f51,f52,f53,f54,f55,f56,f57,f58&iscr=0&iscca=0&ndays=1" +
+          `&cb=${callbackName}`;
+        const data = await loadJsonp(url, callbackName);
+        const prevClose = Number(data?.data?.preClose || data?.data?.prePrice || state.quotes.get(fund.code)?.prev || fund.latestClose);
+        const trend = (data?.data?.trends || []).map((item) => parseTrendItem(item, prevClose)).filter(Boolean);
+        if (trend.length >= 2) {
+          state.trends.set(fund.code, trend);
+        }
+      }
+
+      async function refreshTrendData() {
+        const funds = activeFunds();
+        await Promise.all(
+          funds.map(async (fund) => {
+            try {
+              await loadIntradayTrend(fund);
+            } catch (error) {
+              console.warn(`${fund.code} 2分钟趋势刷新失败`, error);
+            }
+          })
+        );
+        render();
       }
 
       async function refreshEastmoneySingleQuotes(funds) {
@@ -1336,15 +1443,20 @@
         await refreshBaseData();
         await refreshMacro();
         await refreshQuotes();
+        await refreshTrendData();
         setInterval(async () => {
           await refreshMacro();
           await refreshQuotes();
         }, 60 * 1000);
         setInterval(async () => {
+          await refreshTrendData();
+        }, 2 * 60 * 1000);
+        setInterval(async () => {
           try {
             await refreshBaseData({ silent: true });
             await refreshMacro();
             await refreshQuotes();
+            await refreshTrendData();
           } catch (error) {
             console.warn("基础数据自动刷新失败", error);
           }
@@ -1355,6 +1467,7 @@
         await refreshBaseData();
         await refreshMacro();
         await refreshQuotes();
+        await refreshTrendData();
       });
       $("holdingCode").addEventListener("input", (event) => {
         const code = normalizeCode(event.target.value);
