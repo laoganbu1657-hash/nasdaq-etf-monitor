@@ -5,13 +5,14 @@ on:
   schedule:
     # Asia/Shanghai, Monday-Friday. Use off-hour retries because GitHub
     # scheduled workflows can be delayed or occasionally skipped.
-    # Morning runs estimate the prior US trading day's NAV before/around A-share open.
-    - cron: "37 0 * * 1-5"   # 08:37
-    - cron: "7 1 * * 1-5"    # 09:07
-    - cron: "27 1 * * 1-5"   # 09:27
-    - cron: "7 2 * * 1-5"    # 10:07
-    - cron: "7 3 * * 1-5"    # 11:07
-    - cron: "7 7 * * 1-5"    # 15:07
+    # US market usually closes around 04:00/05:00 Asia/Shanghai depending on
+    # daylight saving time. Start early, then retry roughly every 2 hours.
+    - cron: "17 21 * * 0-4"  # 05:17
+    - cron: "17 23 * * 0-4"  # 07:17
+    - cron: "17 1 * * 1-5"   # 09:17
+    - cron: "17 3 * * 1-5"   # 11:17
+    - cron: "17 5 * * 1-5"   # 13:17
+    - cron: "17 7 * * 1-5"   # 15:17
     - cron: "15 10 * * 1-5"  # 18:15
     - cron: "35 11 * * 1-5"  # 19:35
 
