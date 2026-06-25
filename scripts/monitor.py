@@ -24,6 +24,7 @@ STATE_FILE = ROOT / "data" / "push_state.json"
 
 FUNDS = {
     "159501": "嘉实纳指100",
+    "159509": "景顺长城纳指科技",
     "159513": "大成纳指100",
     "159632": "华安纳指100",
     "159659": "招商纳指100",
@@ -35,6 +36,7 @@ FUNDS = {
     "513300": "华夏纳指100",
     "513390": "博时纳指100",
     "513870": "富国纳指100",
+    "161128": "易方达标普信息科技",
 }
 
 
@@ -216,7 +218,9 @@ def build_signals(holding_code: str) -> tuple[FundSignal, list[FundSignal]]:
             continue
 
         current_price = prices.get(code, latest_close)
-        nav_for_premium = number_or_none(metrics.get("navForPremium"))
+        nav_for_premium = number_or_none(metrics.get("navForReturn"))
+        if nav_for_premium is None:
+            nav_for_premium = number_or_none(metrics.get("navForPremium"))
         if nav_for_premium is None and latest_row is not None:
             nav_for_premium = float(latest_row["nav"])
         if nav_for_premium in (None, 0):
