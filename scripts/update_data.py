@@ -19,6 +19,7 @@ END = date.today().isoformat()
 
 FUNDS = [
     {"code": "159501", "name": "纳指ETF嘉实", "group": "nasdaq100"},
+    {"code": "159509", "name": "纳指科技ETF景顺", "group": "nasdaq100"},
     {"code": "159513", "name": "纳斯达克100ETF大成", "group": "nasdaq100"},
     {"code": "159632", "name": "纳斯达克ETF华安", "group": "nasdaq100"},
     {"code": "159659", "name": "纳斯达克100ETF招商", "group": "nasdaq100"},
@@ -34,6 +35,17 @@ FUNDS = [
     {"code": "159612", "name": "标普500ETF国泰", "group": "sp500"},
     {"code": "513650", "name": "标普500ETF南方", "group": "sp500"},
     {"code": "159655", "name": "标普500ETF华夏", "group": "sp500"},
+    {"code": "161128", "name": "标普信息科技LOF", "group": "nasdaq100"},
+]
+
+FILL_FROM_EXISTING_COLS = [
+    "nav_date",
+    "nav",
+    "live_premium_pct",
+    "accum_nav",
+    "nav_growth_pct",
+    "subscribe_status",
+    "redeem_status",
 ]
 
 
@@ -114,8 +126,33 @@ def build_one(code: str, name: str, group: str) -> pd.DataFrame:
     ]
 
 
+def fill_missing_from_existing(df: pd.DataFrame, existing: pd.DataFrame, code: str) -> pd.DataFrame:
+    if existing.empty:
+        return df
+    old = existing[existing["code"].astype(str).str.zfill(6) == code].copy()
+    if old.empty:
+        return df
+    keep_cols = ["date"] + [col for col in FILL_FROM_EXISTING_COLS if col in old.columns and col in df.columns]
+    old = old[keep_cols].drop_duplicates("date", keep="last").add_suffix("_old")
+    old = old.rename(columns={"date_old": "date"})
+    merged = df.merge(old, on="date", how="left")
+    for col in FILL_FROM_EXISTING_COLS:
+        old_col = f"{col}_old"
+        if col not in merged.columns or old_col not in merged.columns:
+            continue
+        if col in {"nav", "live_premium_pct", "accum_nav", "nav_growth_pct"}:
+            merged[col] = pd.to_numeric(merged[col], errors="coerce")
+            merged[old_col] = pd.to_numeric(merged[old_col], errors="coerce")
+        else:
+            merged[col] = merged[col].replace({"": pd.NA, "nan": pd.NA, "NaT": pd.NA})
+            merged[old_col] = merged[old_col].replace({"": pd.NA, "nan": pd.NA, "NaT": pd.NA})
+        merged[col] = merged[col].combine_first(merged[old_col])
+    return merged[[col for col in df.columns]]
+
+
 def main() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    existing = pd.read_csv(OUT_CSV, dtype={"code": str}) if OUT_CSV.exists() else pd.DataFrame()
     frames = []
     summary_rows = []
 
@@ -125,6 +162,7 @@ def main() -> None:
         group = fund["group"]
         print(f"Fetching {code} {name}")
         df = build_one(code, name, group)
+        df = fill_missing_from_existing(df, existing, code)
         frames.append(df)
         summary_rows.append(
             {
