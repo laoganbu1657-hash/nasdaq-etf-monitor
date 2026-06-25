@@ -37,14 +37,18 @@ DISPLAY_NAMES = {
     "159612": "国泰标普500",
     "513650": "南方标普500",
     "159655": "华夏标普500",
+    "161128": "易方达标普信息科技",
 }
 
-FUND_INDEX_SYMBOLS = {}
+FUND_INDEX_SYMBOLS = {
+    "161128": "XLK",
+}
 
 GROUPS = {
     "nasdaq100": {
         "name": "纳指100",
         "index_symbol": ".NDX",
+        "yahoo_index_symbol": "^NDX",
         "benchmark_symbol": "QQQ",
         "future_secid": "103.NQ00Y",
         "tencent_future_symbol": "",
@@ -55,6 +59,7 @@ GROUPS = {
     "sp500": {
         "name": "标普500",
         "index_symbol": ".INX",
+        "yahoo_index_symbol": "^GSPC",
         "benchmark_symbol": "SPY",
         "future_secid": "103.ES00Y",
         "tencent_future_symbol": "hf_ES",
@@ -226,17 +231,45 @@ def fetch_us_index_history(symbol: str) -> pd.DataFrame:
     return df.dropna(subset=["date", "close"]).sort_values("date").set_index("date")
 
 
+def fetch_group_index_history(meta: dict) -> pd.DataFrame:
+    sources = []
+    if meta.get("index_symbol"):
+        sources.append((f"{meta['name']}新浪指数 {meta['index_symbol']}", lambda: fetch_us_index_history(meta["index_symbol"])))
+    if meta.get("yahoo_index_symbol"):
+        sources.append(
+            (f"{meta['name']}Yahoo指数 {meta['yahoo_index_symbol']}", lambda: fetch_yahoo_daily(meta["yahoo_index_symbol"], adjusted=False))
+        )
+    if meta.get("benchmark_symbol"):
+        sources.append(
+            (f"{meta['name']}Yahoo ETF {meta['benchmark_symbol']}", lambda: fetch_yahoo_daily(meta["benchmark_symbol"], adjusted=False))
+        )
+    errors = []
+    for label, fetcher in sources:
+        try:
+            df = retry_fetch(label, fetcher, attempts=2).copy()
+            if df.empty:
+                raise RuntimeError("返回空数据")
+            latest_date = df.index.max()
+            if latest_date < pd.Timestamp.now().normalize() - pd.Timedelta(days=7):
+                raise RuntimeError(f"最新日期过旧：{latest_date.date()}")
+            print(f"{meta['name']}估算净值采用：{label}，最新日期 {latest_date.date()}")
+            return df
+        except Exception as error:
+            errors.append(f"{label}: {error}")
+            print(f"{label} 不可用，尝试下一个数据源：{error}")
+    raise RuntimeError("；".join(errors))
+
+
 def load_estimation_series() -> tuple[dict[str, pd.DataFrame], pd.DataFrame | None]:
     try:
         index_map = {}
         for group_key, meta in GROUPS.items():
-            index_map[group_key] = retry_fetch(
-                f"{meta['name']}历史行情",
-                lambda symbol=meta["index_symbol"]: fetch_us_index_history(symbol),
-            )
+            index_map[group_key] = fetch_group_index_history(meta)
         for code, symbol in FUND_INDEX_SYMBOLS.items():
-            fetcher = (lambda symbol=symbol: fetch_yahoo_daily(symbol, adjusted=False)) if symbol.startswith("^") else (
-                lambda symbol=symbol: fetch_us_index_history(symbol)
+            fetcher = (
+                (lambda symbol=symbol: fetch_us_index_history(symbol))
+                if symbol.startswith(".")
+                else (lambda symbol=symbol: fetch_yahoo_daily(symbol, adjusted=False))
             )
             index_map[code] = retry_fetch(f"{code}历史行情 {symbol}", fetcher)
 
@@ -505,10 +538,16 @@ def main() -> None:
             latest_change_pct = pct_return(float(group.iloc[-2]["close"]), float(group.iloc[-1]["close"]))
 
         last7 = group.iloc[-7:]
+        etfcom = etfcom_map.get(code, {})
         operating_fee = float(fee_map[code]) if code in fee_map else None
+        official_nav = clean_number(official_nav_row["nav"])
+        official_nav_date = str(official_nav_row["nav_date"])
+        if official_nav in (None, 0) and clean_number(etfcom.get("etfComUnitNav")) not in (None, 0):
+            official_nav = clean_number(etfcom.get("etfComUnitNav"))
+            official_nav_date = etfcom.get("etfComNavDate") or latest["date"].strftime("%Y-%m-%d")
         nav_info = estimate_nav(
-            official_nav=float(official_nav_row["nav"]),
-            official_nav_date=str(official_nav_row["nav_date"]),
+            official_nav=float(official_nav) if official_nav is not None else float("nan"),
+            official_nav_date=official_nav_date,
             operating_fee=operating_fee,
             index_series=index_map[code] if code in index_map else index_map.get(group_key),
             fx=fx,
@@ -529,7 +568,8 @@ def main() -> None:
         estimated_nav_for_premium = nav_info.get("navForReturn") or nav_info.get("navForPremium")
         if clean_number(latest["close"]) is not None and clean_number(estimated_nav_for_premium) not in (None, 0):
             latest_premium = (float(latest["close"]) / float(estimated_nav_for_premium) - 1) * 100
-        etfcom = etfcom_map.get(code, {})
+        if clean_number(latest_premium) is None and clean_number(etfcom.get("etfComPremiumRate")) is not None:
+            latest_premium = clean_number(etfcom.get("etfComPremiumRate"))
 
         premium_history = group.copy()
         premium_history["premium_for_mean"] = premium_history["live_premium_pct"]
@@ -552,8 +592,8 @@ def main() -> None:
                 "latestDate": latest["date"].strftime("%Y-%m-%d"),
                 "latestClose": clean_number(latest["close"]),
                 "latestChangePct": clean_number(latest_change_pct),
-                "nav": clean_number(official_nav_row["nav"]),
-                "navDate": str(official_nav_row["nav_date"]),
+                "nav": clean_number(official_nav),
+                "navDate": official_nav_date,
                 **nav_info,
                 "latestPremium": clean_number(latest_premium),
                 "etfComServerTime": etfcom.get("etfComServerTime"),
