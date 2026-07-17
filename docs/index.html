@@ -61,9 +61,7 @@
       }
 
       .sub {
-        margin-top: 6px;
-        color: var(--muted);
-        font-size: 13px;
+        display: none;
       }
 
       .toolbar {
@@ -97,6 +95,10 @@
       input {
         width: 180px;
         padding: 0 12px;
+      }
+
+      input[type="number"] {
+        appearance: textfield;
       }
 
       .holding-control {
@@ -411,16 +413,6 @@
           width: 100%;
           max-width: 100vw;
           padding: max(12px, env(safe-area-inset-top)) 12px 10px;
-        }
-
-        .sub {
-          display: -webkit-box;
-          margin-top: 5px;
-          overflow: hidden;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          font-size: 12px;
-          line-height: 1.45;
         }
 
         .toolbar {
@@ -767,15 +759,28 @@
         const result = [];
         let lastBucket = null;
         points.forEach((point) => {
-          const bucket = Math.floor(point.minutes / stepMinutes);
+          const tradeMinute = tradeMinuteOfDay(point.minutes);
+          if (tradeMinute === null) return;
+          const bucket = Math.floor(tradeMinute / stepMinutes);
           if (bucket !== lastBucket) {
-            result.push(point);
+            result.push({ ...point, tradeMinute });
             lastBucket = bucket;
           } else {
-            result[result.length - 1] = point;
+            result[result.length - 1] = { ...point, tradeMinute };
           }
         });
         return result;
+      }
+
+      function tradeMinuteOfDay(minutes) {
+        const morningStart = 9 * 60 + 30;
+        const morningEnd = 11 * 60 + 30;
+        const afternoonStart = 13 * 60;
+        const afternoonEnd = 15 * 60;
+        if (minutes < morningStart || minutes > afternoonEnd) return null;
+        if (minutes <= morningEnd) return minutes - morningStart;
+        if (minutes < afternoonStart) return null;
+        return morningEnd - morningStart + (minutes - afternoonStart);
       }
 
       function trendBars(fund) {
@@ -793,15 +798,14 @@
           const halfRange = Math.max((max - min) / 2, 0.18);
           const yMin = center - halfRange;
           const yMax = center + halfRange;
-          const minMinute = 9 * 60 + 30;
-          const maxMinute = 15 * 60;
+          const totalTradeMinutes = 4 * 60;
           const width = 118;
           const height = 42;
           const padX = 4;
           const padY = 5;
           const points = trend
             .map((point) => {
-              const x = padX + ((point.minutes - minMinute) / (maxMinute - minMinute)) * (width - padX * 2);
+              const x = padX + (point.tradeMinute / totalTradeMinutes) * (width - padX * 2);
               const y = padY + ((yMax - point.changePct) / (yMax - yMin)) * (height - padY * 2);
               return `${x.toFixed(1)},${y.toFixed(1)}`;
             })
