@@ -1,5 +1,5 @@
-const CACHE_NAME = "nasdaq-etf-monitor-v16";
-const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon.svg", "./data/funds.json"];
+const CACHE_NAME = "nasdaq-etf-monitor-v19";
+const ASSETS = ["./", "./index.html", "./rotation.html", "./manifest.webmanifest", "./icon.svg", "./data/funds.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
