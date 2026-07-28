@@ -19,7 +19,7 @@ SUMMARY_CSV = DATA_DIR / "summary.csv"
 START = "2025-01-01"
 NAV_START = "2024-12-01"
 END = date.today().isoformat()
-SCRIPT_VERSION = "nav-fallback-v3-2026-07-28"
+SCRIPT_VERSION = "nav-fallback-v4-2026-07-28"
 
 FUNDS = [
     {"code": "159501", "name": "纳指ETF嘉实", "group": "nasdaq100"},
@@ -294,6 +294,35 @@ def fill_missing_from_existing(df: pd.DataFrame, existing: pd.DataFrame, code: s
     return merged[[col for col in df.columns]]
 
 
+def existing_fund_df(existing: pd.DataFrame, code: str, name: str, group: str) -> pd.DataFrame:
+    if existing.empty:
+        return pd.DataFrame()
+    df = existing[existing["code"].astype(str).str.zfill(6) == code].copy()
+    if df.empty:
+        return df
+    df["code"] = code
+    df["name"] = name
+    df["group"] = group
+    return df.sort_values("date")
+
+
+def summary_for_df(code: str, name: str, group: str, df: pd.DataFrame) -> dict:
+    live_premium = pd.to_numeric(df["live_premium_pct"], errors="coerce") if "live_premium_pct" in df else pd.Series(dtype="float64")
+    amount_wan = pd.to_numeric(df["amount_wan"], errors="coerce") if "amount_wan" in df else pd.Series(dtype="float64")
+    latest_premium = live_premium.dropna().iloc[-1] if not live_premium.dropna().empty else ""
+    return {
+        "code": code,
+        "name": name,
+        "group": group,
+        "start_date": df["date"].iloc[0] if len(df) and "date" in df else "",
+        "end_date": df["date"].iloc[-1] if len(df) and "date" in df else "",
+        "trading_days": len(df),
+        "latest_premium_pct": round(float(latest_premium), 4) if latest_premium != "" else "",
+        "avg_premium_pct": round(float(live_premium.mean()), 4) if not live_premium.dropna().empty else "",
+        "avg_amount_wan": round(float(amount_wan.mean()), 2) if not amount_wan.dropna().empty else "",
+    }
+
+
 def main() -> None:
     print(f"Update data script version: {SCRIPT_VERSION}")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -306,23 +335,20 @@ def main() -> None:
         name = fund["name"]
         group = fund["group"]
         print(f"Fetching {code} {name}")
-        df = build_one(code, name, group, existing)
-        df = fill_missing_from_existing(df, existing, code)
+        try:
+            df = build_one(code, name, group, existing)
+            df = fill_missing_from_existing(df, existing, code)
+        except Exception as error:
+            print(f"Warning: {code} {name} 更新失败，沿用本地已有数据：{error}")
+            df = existing_fund_df(existing, code, name, group)
+        if df.empty:
+            print(f"Warning: {code} {name} 没有可写入数据，跳过")
+            continue
         frames.append(df)
-        summary_rows.append(
-            {
-                "code": code,
-                "name": name,
-                "group": group,
-                "start_date": df["date"].iloc[0] if len(df) else "",
-                "end_date": df["date"].iloc[-1] if len(df) else "",
-                "trading_days": len(df),
-                "latest_premium_pct": round(df["live_premium_pct"].iloc[-1], 4) if len(df) else "",
-                "avg_premium_pct": round(df["live_premium_pct"].mean(), 4) if len(df) else "",
-                "avg_amount_wan": round(df["amount_wan"].mean(), 2) if len(df) else "",
-            }
-        )
+        summary_rows.append(summary_for_df(code, name, group, df))
 
+    if not frames:
+        raise RuntimeError("所有基金都没有可写入数据，请检查数据源或仓库内历史 CSV")
     all_df = pd.concat(frames, ignore_index=True).sort_values(["date", "code"])
     all_df.to_csv(OUT_CSV, index=False)
     pd.DataFrame(summary_rows).to_csv(SUMMARY_CSV, index=False)
