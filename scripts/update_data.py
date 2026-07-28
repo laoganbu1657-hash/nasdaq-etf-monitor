@@ -19,6 +19,7 @@ SUMMARY_CSV = DATA_DIR / "summary.csv"
 START = "2025-01-01"
 NAV_START = "2024-12-01"
 END = date.today().isoformat()
+SCRIPT_VERSION = "nav-fallback-v3-2026-07-28"
 
 FUNDS = [
     {"code": "159501", "name": "纳指ETF嘉实", "group": "nasdaq100"},
@@ -41,15 +42,16 @@ FUNDS = [
     {"code": "161128", "name": "标普信息科技LOF", "group": "nasdaq100"},
 ]
 
-FILL_FROM_EXISTING_COLS = [
+NAV_COLS = [
     "nav_date",
     "nav",
-    "live_premium_pct",
     "accum_nav",
     "nav_growth_pct",
     "subscribe_status",
     "redeem_status",
 ]
+
+FILL_FROM_EXISTING_COLS = ["live_premium_pct"] + NAV_COLS
 
 
 def market_symbol(code: str) -> str:
@@ -66,7 +68,91 @@ def fetch_price_df(code: str) -> pd.DataFrame:
     return df
 
 
-def fetch_nav_df(code: str) -> pd.DataFrame:
+def empty_nav_df() -> pd.DataFrame:
+    return pd.DataFrame(columns=NAV_COLS).astype(
+        {
+            "nav_date": "datetime64[ns]",
+            "nav": "float64",
+            "accum_nav": "float64",
+            "nav_growth_pct": "float64",
+            "subscribe_status": "object",
+            "redeem_status": "object",
+        }
+    )
+
+
+def nav_df_from_existing(existing: pd.DataFrame, code: str) -> pd.DataFrame:
+    if existing.empty:
+        return empty_nav_df()
+    old = existing[existing["code"].astype(str).str.zfill(6) == code].copy()
+    if old.empty:
+        return empty_nav_df()
+    for col in NAV_COLS:
+        if col not in old.columns:
+            old[col] = pd.NA
+    old = old[NAV_COLS].copy()
+    old["nav_date"] = pd.to_datetime(old["nav_date"], errors="coerce")
+    old["nav"] = pd.to_numeric(old["nav"], errors="coerce")
+    old["accum_nav"] = pd.to_numeric(old["accum_nav"], errors="coerce")
+    old["nav_growth_pct"] = pd.to_numeric(old["nav_growth_pct"], errors="coerce")
+    return old.dropna(subset=["nav_date", "nav"]).drop_duplicates("nav_date", keep="last").sort_values("nav_date")
+
+
+def normalize_nav_df(df: pd.DataFrame) -> pd.DataFrame:
+    for col in NAV_COLS:
+        if col not in df.columns:
+            df[col] = pd.NA
+    df = df[NAV_COLS].copy()
+    df["nav_date"] = pd.to_datetime(df["nav_date"], errors="coerce")
+    df["nav"] = pd.to_numeric(df["nav"], errors="coerce")
+    df["accum_nav"] = pd.to_numeric(df["accum_nav"], errors="coerce")
+    df["nav_growth_pct"] = pd.to_numeric(
+        df["nav_growth_pct"].astype(str).str.replace("%", "", regex=False),
+        errors="coerce",
+    )
+    return df.dropna(subset=["nav_date", "nav"]).drop_duplicates("nav_date", keep="last").sort_values("nav_date")
+
+
+def fetch_nav_api_df(code: str) -> pd.DataFrame:
+    rows = []
+    page = 1
+    while True:
+        response = requests.get(
+            "https://api.fund.eastmoney.com/f10/lsjz",
+            params={
+                "fundCode": code,
+                "pageIndex": page,
+                "pageSize": 200,
+                "startDate": NAV_START,
+                "endDate": END,
+            },
+            headers={"User-Agent": "Mozilla/5.0", "Referer": f"https://fundf10.eastmoney.com/jjjz_{code}.html"},
+            timeout=20,
+        )
+        response.raise_for_status()
+        data = response.json().get("Data") or {}
+        items = data.get("LSJZList") or []
+        if not items:
+            break
+        rows.extend(
+            {
+                "nav_date": item.get("FSRQ"),
+                "nav": item.get("DWJZ"),
+                "accum_nav": item.get("LJJZ"),
+                "nav_growth_pct": item.get("JZZZL"),
+                "subscribe_status": item.get("SGZT"),
+                "redeem_status": item.get("SHZT"),
+            }
+            for item in items
+        )
+        pages = int(data.get("Pages") or page)
+        if page >= pages:
+            break
+        page += 1
+    return normalize_nav_df(pd.DataFrame(rows)) if rows else empty_nav_df()
+
+
+def fetch_nav_table_df(code: str) -> pd.DataFrame:
     frames = []
     page = 1
     while True:
@@ -100,8 +186,7 @@ def fetch_nav_df(code: str) -> pd.DataFrame:
         page += 1
 
     if not frames:
-        raise RuntimeError(f"{code} 历史净值为空")
-
+        return empty_nav_df()
     df = pd.concat(frames, ignore_index=True).copy()
     df = df.rename(
         columns={
@@ -113,30 +198,47 @@ def fetch_nav_df(code: str) -> pd.DataFrame:
             "赎回状态": "redeem_status",
         }
     )
-    for col in ["accum_nav", "nav_growth_pct", "subscribe_status", "redeem_status"]:
-        if col not in df.columns:
-            df[col] = pd.NA
-    df["nav_date"] = pd.to_datetime(df["nav_date"])
-    df["nav"] = pd.to_numeric(df["nav"], errors="coerce")
-    df["accum_nav"] = pd.to_numeric(df["accum_nav"], errors="coerce")
-    df["nav_growth_pct"] = pd.to_numeric(
-        df["nav_growth_pct"].astype(str).str.replace("%", "", regex=False),
-        errors="coerce",
-    )
-    return df.dropna(subset=["nav_date", "nav"]).sort_values("nav_date")
+    return normalize_nav_df(df)
 
 
-def build_one(code: str, name: str, group: str) -> pd.DataFrame:
+def fetch_nav_df(code: str, existing: pd.DataFrame) -> pd.DataFrame:
+    for source_name, fetcher in [
+        ("东方财富 JSON", fetch_nav_api_df),
+        ("东方财富网页", fetch_nav_table_df),
+    ]:
+        try:
+            df = fetcher(code)
+        except Exception as error:
+            print(f"Warning: {code} {source_name}历史净值获取失败：{error}")
+            continue
+        if not df.empty:
+            return df
+
+    fallback = nav_df_from_existing(existing, code)
+    if not fallback.empty:
+        latest = fallback["nav_date"].iloc[-1].strftime("%Y-%m-%d")
+        print(f"Warning: {code} 历史净值接口为空，沿用本地已有净值到 {latest}")
+        return fallback
+    print(f"Warning: {code} 历史净值接口为空，且本地没有可沿用净值")
+    return empty_nav_df()
+
+
+def build_one(code: str, name: str, group: str, existing: pd.DataFrame) -> pd.DataFrame:
     prices = fetch_price_df(code)
-    navs = fetch_nav_df(code)
-    merged = pd.merge_asof(
-        prices.sort_values("date"),
-        navs.sort_values("nav_date"),
-        left_on="date",
-        right_on="nav_date",
-        direction="backward",
-        allow_exact_matches=False,
-    )
+    navs = fetch_nav_df(code, existing)
+    if navs.empty:
+        merged = prices.copy()
+        for col in NAV_COLS:
+            merged[col] = pd.NA
+    else:
+        merged = pd.merge_asof(
+            prices.sort_values("date"),
+            navs.sort_values("nav_date"),
+            left_on="date",
+            right_on="nav_date",
+            direction="backward",
+            allow_exact_matches=False,
+        )
     merged.insert(0, "group", group)
     merged.insert(0, "name", name)
     merged.insert(0, "code", code)
@@ -193,6 +295,7 @@ def fill_missing_from_existing(df: pd.DataFrame, existing: pd.DataFrame, code: s
 
 
 def main() -> None:
+    print(f"Update data script version: {SCRIPT_VERSION}")
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     existing = pd.read_csv(OUT_CSV, dtype={"code": str}) if OUT_CSV.exists() else pd.DataFrame()
     frames = []
@@ -203,7 +306,7 @@ def main() -> None:
         name = fund["name"]
         group = fund["group"]
         print(f"Fetching {code} {name}")
-        df = build_one(code, name, group)
+        df = build_one(code, name, group, existing)
         df = fill_missing_from_existing(df, existing, code)
         frames.append(df)
         summary_rows.append(
