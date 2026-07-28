@@ -2,10 +2,13 @@
 from __future__ import annotations
 
 from datetime import date
+from io import StringIO
 from pathlib import Path
+import re
 
 import akshare as ak
 import pandas as pd
+import requests
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -64,11 +67,42 @@ def fetch_price_df(code: str) -> pd.DataFrame:
 
 
 def fetch_nav_df(code: str) -> pd.DataFrame:
-    df = ak.fund_etf_fund_info_em(
-        fund=code,
-        start_date=NAV_START.replace("-", ""),
-        end_date=END.replace("-", ""),
-    ).copy()
+    frames = []
+    page = 1
+    while True:
+        params = {
+            "type": "lsjz",
+            "code": code,
+            "page": page,
+            "per": 200,
+            "sdate": NAV_START,
+            "edate": END,
+        }
+        response = requests.get(
+            "https://fundf10.eastmoney.com/F10DataApi.aspx",
+            params=params,
+            headers={"User-Agent": "Mozilla/5.0", "Referer": f"https://fundf10.eastmoney.com/jjjz_{code}.html"},
+            timeout=20,
+        )
+        response.raise_for_status()
+        response.encoding = "utf-8"
+        try:
+            tables = pd.read_html(StringIO(response.text))
+        except ValueError:
+            tables = []
+        if not tables:
+            break
+        frames.append(tables[0])
+        pages_match = re.search(r"pages:(\d+)", response.text)
+        pages = int(pages_match.group(1)) if pages_match else page
+        if page >= pages:
+            break
+        page += 1
+
+    if not frames:
+        raise RuntimeError(f"{code} 历史净值为空")
+
+    df = pd.concat(frames, ignore_index=True).copy()
     df = df.rename(
         columns={
             "净值日期": "nav_date",
@@ -79,8 +113,16 @@ def fetch_nav_df(code: str) -> pd.DataFrame:
             "赎回状态": "redeem_status",
         }
     )
+    for col in ["accum_nav", "nav_growth_pct", "subscribe_status", "redeem_status"]:
+        if col not in df.columns:
+            df[col] = pd.NA
     df["nav_date"] = pd.to_datetime(df["nav_date"])
     df["nav"] = pd.to_numeric(df["nav"], errors="coerce")
+    df["accum_nav"] = pd.to_numeric(df["accum_nav"], errors="coerce")
+    df["nav_growth_pct"] = pd.to_numeric(
+        df["nav_growth_pct"].astype(str).str.replace("%", "", regex=False),
+        errors="coerce",
+    )
     return df.dropna(subset=["nav_date", "nav"]).sort_values("nav_date")
 
 
