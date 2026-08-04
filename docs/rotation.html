@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="zh-CN">
   <head>
@@ -137,6 +136,27 @@
         overflow: hidden;
       }
 
+      .calc-rules {
+        display: grid;
+        gap: 8px;
+        padding: 14px 16px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.65;
+      }
+
+      .calc-rules b {
+        color: var(--ink);
+      }
+
+      .calc-cell {
+        min-width: 330px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+        white-space: nowrap;
+      }
+
       .panel-head {
         display: grid;
         grid-template-columns: 1fr auto;
@@ -184,7 +204,7 @@
 
       table {
         width: 100%;
-        min-width: 1180px;
+        min-width: 1680px;
         border-collapse: collapse;
         font-size: 13px;
       }
@@ -302,7 +322,7 @@
         }
 
         table {
-          min-width: 1320px;
+          min-width: 1680px;
         }
       }
     </style>
@@ -321,10 +341,21 @@
 
     <main>
       <section class="summary" aria-label="轮动汇总">
-        <div class="metric"><b id="totalExcess">-</b><span>按链路累计超额收益</span></div>
-        <div class="metric"><b id="totalRate">-</b><span>按链路累计超额收益率</span></div>
+        <div class="metric"><b id="totalExcess">-</b><span>累计轮动收益</span></div>
+        <div class="metric"><b id="totalRate">-</b><span>累计轮动收益率</span></div>
         <div class="metric"><b id="recordCount">0</b><span>历史轮动次数</span></div>
         <div class="metric"><b id="updated">-</b><span>行情刷新时间</span></div>
+      </section>
+
+      <section class="panel" aria-label="收益计算口径">
+        <div class="panel-head"><h2>收益计算口径</h2></div>
+        <div class="calc-rules">
+          <div><b>现金差额</b> = 卖出金额 - 卖出手续费 - 买入金额 - 买入手续费</div>
+          <div><b>已锁定收益</b> = 已换出部分的卖出金额 + 该部分保留现金 - 该部分换入时的资金基准</div>
+          <div><b>实时收益</b> = 未换出部分的当前市值 + 保留现金 - 该部分换入时的资金基准</div>
+          <div><b>本次轮动收益</b> = 已锁定收益 + 实时收益；累计轮动收益为全部历史轮动收益之和。</div>
+          <div><b>部分轮动</b>：按换出数量先进先出匹配。换出 80% 时锁定 80%，剩余 20% 继续按实时价格更新。</div>
+        </div>
       </section>
 
       <section class="panel" aria-label="新增轮动">
@@ -379,7 +410,7 @@
 
       <section class="panel" aria-label="历史轮动记录">
         <div class="panel-head">
-          <h2>历史记录与单笔快照收益</h2>
+          <h2>历史轮动与锁定收益</h2>
           <div class="hint" id="dataStatus">正在读取数据...</div>
         </div>
         <div id="historyWrap" class="table-wrap"></div>
@@ -666,6 +697,10 @@
         return `${String(code).startsWith("5") ? "1" : "0"}.${code}`;
       }
 
+      function sinaSymbolFor(code) {
+        return `${String(code).startsWith("5") ? "sh" : "sz"}${code}`;
+      }
+
       function loadJsonp(url, callbackName) {
         return new Promise((resolve, reject) => {
           const script = document.createElement("script");
@@ -685,6 +720,30 @@
           script.onerror = () => {
             cleanup();
             reject(new Error("接口加载失败"));
+          };
+          script.src = url;
+          document.body.appendChild(script);
+        });
+      }
+
+      function loadScript(url, errorMessage) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error(errorMessage || "行情接口超时"));
+          }, 9000);
+          function cleanup() {
+            clearTimeout(timer);
+            script.remove();
+          }
+          script.onload = () => {
+            cleanup();
+            resolve();
+          };
+          script.onerror = () => {
+            cleanup();
+            reject(new Error(errorMessage || "行情接口加载失败"));
           };
           script.src = url;
           document.body.appendChild(script);
@@ -788,7 +847,10 @@
       function currentPrice(code) {
         const fund = fundByCode(code);
         if (!fund) return null;
-        return state.quotes.get(code)?.price || fund.latestClose || null;
+        const quote = state.quotes.get(code)?.price;
+        if (Number.isFinite(quote)) return quote;
+        // Use the same latest close displayed by the monitoring homepage when live quotes are unavailable.
+        return Number.isFinite(fund.latestClose) ? fund.latestClose : null;
       }
 
       function tradeCashDiff(trade) {
@@ -868,17 +930,24 @@
 
         const activeLots = lots.filter((lot) => lot.qty > EPSILON || Math.abs(lot.cash) > EPSILON);
         const chains = new Map();
+        const unavailableCodes = new Set();
         activeLots.forEach((lot) => {
           const price = currentPrice(lot.code);
           const baselinePrice = currentPrice(lot.baselineCode);
-          if (!Number.isFinite(price) || !Number.isFinite(baselinePrice)) return;
-          const chain = chains.get(lot.chainId) || { actualValue: 0, benchmarkValue: 0 };
+          const chain = chains.get(lot.chainId) || { actualValue: 0, benchmarkValue: 0, unavailable: false };
+          if (!Number.isFinite(price) || !Number.isFinite(baselinePrice)) {
+            chain.unavailable = true;
+            if (!Number.isFinite(price)) unavailableCodes.add(lot.code);
+            if (!Number.isFinite(baselinePrice)) unavailableCodes.add(lot.baselineCode);
+            chains.set(lot.chainId, chain);
+            return;
+          }
           chain.actualValue += lot.qty * price + lot.cash;
           chain.benchmarkValue += lot.baselineQty * baselinePrice;
           chains.set(lot.chainId, chain);
         });
 
-        const values = Array.from(chains.values());
+        const values = Array.from(chains.values()).filter((chain) => !chain.unavailable);
         const actualValue = values.reduce((sum, chain) => sum + chain.actualValue, 0);
         const benchmarkValue = values.reduce((sum, chain) => sum + chain.benchmarkValue, 0);
         const excess = actualValue - benchmarkValue;
@@ -888,7 +957,146 @@
           benchmarkValue,
           excess,
           excessPct: benchmarkValue > 0 ? (excess / benchmarkValue) * 100 : null,
+          unavailableCodes: Array.from(unavailableCodes),
         };
+      }
+
+      function rotationProfitMetrics(trades) {
+        const EPSILON = 1e-8;
+        const lots = [];
+        const records = new Map();
+        const roots = new Map();
+        let nextRootId = 1;
+        const ordered = trades
+          .map((trade, index) => ({ trade, index }))
+          .sort((a, b) => String(a.trade.date || "").localeCompare(String(b.trade.date || "")) || a.index - b.index);
+
+        const ensureRecord = (trade) => {
+          if (!records.has(trade.id)) {
+            records.set(trade.id, {
+              locked: 0,
+              active: 0,
+              unavailable: false,
+              originalQty: Number(trade.toQty || 0),
+              lockedQty: 0,
+              lockedExitValue: 0,
+              lockedCash: 0,
+              lockedEntryValue: 0,
+              activeMarketValue: 0,
+              activeCash: 0,
+              activeEntryValue: 0,
+            });
+          }
+          return records.get(trade.id);
+        };
+
+        ordered.forEach(({ trade }) => {
+          const fromQty = Number(trade.fromQty || 0);
+          const toQty = Number(trade.toQty || 0);
+          if (!(fromQty > 0) || !(toQty > 0)) return;
+          ensureRecord(trade);
+          const cashDiff = tradeCashDiff(trade);
+          let remainingQty = fromQty;
+          const sourceLots = lots.filter((lot) => lot.code === trade.fromCode && lot.qty > EPSILON);
+
+          sourceLots.forEach((lot) => {
+            if (remainingQty <= EPSILON) return;
+            const usedQty = Math.min(remainingQty, lot.qty);
+            const lotShare = usedQty / lot.qty;
+            const tradeShare = usedQty / fromQty;
+            const carriedCash = lot.cash * lotShare;
+            const entryValue = lot.entryValue * lotShare;
+            const exitValue = usedQty * Number(trade.fromPrice || 0);
+
+            const sourceRecord = records.get(lot.originTradeId);
+            sourceRecord.locked += exitValue + carriedCash - entryValue;
+            sourceRecord.lockedQty += usedQty;
+            sourceRecord.lockedExitValue += exitValue;
+            sourceRecord.lockedCash += carriedCash;
+            sourceRecord.lockedEntryValue += entryValue;
+            lot.qty -= usedQty;
+            lot.cash -= carriedCash;
+            lot.entryValue -= entryValue;
+            remainingQty -= usedQty;
+            lots.push({
+              rootId: lot.rootId,
+              originTradeId: trade.id,
+              code: trade.toCode,
+              qty: toQty * tradeShare,
+              cash: carriedCash + cashDiff * tradeShare,
+              entryValue: exitValue + carriedCash,
+            });
+          });
+
+          if (remainingQty > EPSILON) {
+            const tradeShare = remainingQty / fromQty;
+            const rootId = nextRootId++;
+            const entryValue = remainingQty * Number(trade.fromPrice || 0);
+            roots.set(rootId, entryValue);
+            lots.push({
+              rootId,
+              originTradeId: trade.id,
+              code: trade.toCode,
+              qty: toQty * tradeShare,
+              cash: cashDiff * tradeShare,
+              entryValue,
+            });
+          }
+        });
+
+        lots.filter((lot) => lot.qty > EPSILON || Math.abs(lot.cash) > EPSILON).forEach((lot) => {
+          const record = records.get(lot.originTradeId);
+          const price = currentPrice(lot.code);
+          if (!Number.isFinite(price)) {
+            record.unavailable = true;
+            return;
+          }
+          const marketValue = lot.qty * price;
+          record.active += marketValue + lot.cash - lot.entryValue;
+          record.activeMarketValue += marketValue;
+          record.activeCash += lot.cash;
+          record.activeEntryValue += lot.entryValue;
+        });
+
+        let totalProfit = 0;
+        records.forEach((record) => {
+          totalProfit += record.locked + record.active;
+        });
+        const rootCapital = Array.from(roots.values()).reduce((sum, value) => sum + value, 0);
+        return {
+          totalProfit,
+          totalRate: rootCapital > 0 ? (totalProfit / rootCapital) * 100 : null,
+          byTrade: records,
+        };
+      }
+
+      function lockStatus(profit) {
+        const originalQty = Number(profit.originalQty || 0);
+        const lockedQty = Math.min(Number(profit.lockedQty || 0), originalQty);
+        if (!(originalQty > 0) || lockedQty <= 1e-8) return "实时中";
+        const lockedPct = (lockedQty / originalQty) * 100;
+        const lockedText = `${lockedPct.toFixed(1).replace(/\.0$/, "")}%`;
+        if (lockedPct >= 99.999) return "已锁定 100%";
+        const remainingText = `${(100 - lockedPct).toFixed(1).replace(/\.0$/, "")}%`;
+        return `已锁定 ${lockedText}，剩余 ${remainingText} 实时`;
+      }
+
+      function profitFormula(label, value, cash, entryValue, result) {
+        const cashSymbol = cash >= 0 ? "+" : "-";
+        return `${label}：${fmtPlainMoney(value)} ${cashSymbol} ${fmtPlainMoney(Math.abs(cash))} - ${fmtPlainMoney(entryValue)} = ${fmtMoney(result)}`;
+      }
+
+      function calculationLogic(profit) {
+        const lines = [];
+        if (Math.abs(profit.lockedQty || 0) > 1e-8) {
+          lines.push(profitFormula("锁定", profit.lockedExitValue, profit.lockedCash, profit.lockedEntryValue, profit.locked));
+        }
+        if (profit.unavailable) {
+          lines.push("实时：等待当前价格");
+        } else if (Math.abs(profit.activeMarketValue || 0) > 1e-8 || Math.abs(profit.activeEntryValue || 0) > 1e-8) {
+          lines.push(profitFormula("实时", profit.activeMarketValue, profit.activeCash, profit.activeEntryValue, profit.active));
+        }
+        return lines.length ? lines.join("<br>") : "暂无可计算金额";
       }
 
       function syncFundOptions() {
@@ -901,8 +1109,75 @@
         });
       }
 
+      async function loadEastmoneyQuote(code) {
+        const callbackName = `rotationSingle${Date.now()}${Math.floor(Math.random() * 10000)}`;
+        const url =
+          `https://push2.eastmoney.com/api/qt/stock/get?secid=${secidFor(code)}` +
+          `&fields=f43,f59,f60,f170&cb=${callbackName}`;
+        const data = await loadJsonp(url, callbackName);
+        const item = data?.data;
+        if (!item || item.f43 === "-" || item.f43 === undefined) throw new Error(`${code} 无行情数据`);
+        const scale = 10 ** Number(item.f59 || 2);
+        const price = Number(item.f43) / scale;
+        const prev = Number(item.f60) / scale;
+        const changePct = Number.isFinite(Number(item.f170)) ? Number(item.f170) / 100 : (price / prev - 1) * 100;
+        if (!Number.isFinite(price) || price <= 0) throw new Error(`${code} 行情无效`);
+        return { price, changePct };
+      }
+
+      async function refreshEastmoneySingleQuotes(funds, quotes) {
+        await Promise.all(
+          funds.map(async (fund) => {
+            try {
+              const quote = await loadEastmoneyQuote(fund.code);
+              quotes.set(fund.code, quote);
+            } catch {
+              // Try the next provider for this fund.
+            }
+          })
+        );
+      }
+
+      async function refreshTencentQuotes(funds, quotes) {
+        if (!funds.length) return;
+        const symbols = funds.map((fund) => sinaSymbolFor(fund.code));
+        await loadScript(`https://qt.gtimg.cn/q=${symbols.join(",")}`, "腾讯行情接口加载失败");
+        funds.forEach((fund) => {
+          const symbol = sinaSymbolFor(fund.code);
+          const raw = window[`v_${symbol}`];
+          if (!raw) return;
+          const fields = raw.split("~");
+          const price = Number(fields[3]);
+          const prevClose = Number(fields[4]);
+          const changePct = Number(fields[32]);
+          if (!Number.isFinite(price) || price <= 0) return;
+          quotes.set(fund.code, {
+            price,
+            changePct: Number.isFinite(changePct) ? changePct : (price / prevClose - 1) * 100,
+          });
+          delete window[`v_${symbol}`];
+        });
+      }
+
+      async function refreshSinaQuotes(funds, quotes) {
+        if (!funds.length) return;
+        const symbols = funds.map((fund) => sinaSymbolFor(fund.code));
+        await loadScript(`https://hq.sinajs.cn/list=${symbols.join(",")}`, "新浪行情接口加载失败");
+        funds.forEach((fund) => {
+          const symbol = sinaSymbolFor(fund.code);
+          const raw = window[`hq_str_${symbol}`];
+          if (!raw) return;
+          const fields = raw.split(",");
+          const prevClose = Number(fields[2]);
+          const price = Number(fields[3]);
+          if (!Number.isFinite(price) || price <= 0) return;
+          quotes.set(fund.code, { price, changePct: (price / prevClose - 1) * 100 });
+          delete window[`hq_str_${symbol}`];
+        });
+      }
+
       async function refreshQuotes() {
-        state.quotes.clear();
+        const nextQuotes = new Map();
         const secids = state.funds.map((fund) => secidFor(fund.code));
         for (let i = 0; i < secids.length; i += 8) {
           const chunk = secids.slice(i, i + 8);
@@ -910,16 +1185,35 @@
           const url =
             `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=f12,f14,f2,f3,f6` +
             `&secids=${chunk.join(",")}&cb=${callbackName}`;
-          const data = await loadJsonp(url, callbackName);
-          (data?.data?.diff || []).forEach((item) => {
-            if (item.f12 && item.f2 && item.f2 !== "-") {
-              state.quotes.set(String(item.f12).padStart(6, "0"), {
-                price: Number(item.f2),
-                changePct: Number(item.f3),
-              });
-            }
-          });
+          try {
+            const data = await loadJsonp(url, callbackName);
+            (data?.data?.diff || []).forEach((item) => {
+              if (item.f12 && item.f2 && item.f2 !== "-") {
+                nextQuotes.set(String(item.f12).padStart(6, "0"), {
+                  price: Number(item.f2),
+                  changePct: Number(item.f3),
+                });
+              }
+            });
+          } catch {
+            // The remaining providers below will fill any missing prices.
+          }
         }
+        let missingFunds = state.funds.filter((fund) => !nextQuotes.has(fund.code));
+        await refreshEastmoneySingleQuotes(missingFunds, nextQuotes);
+        missingFunds = state.funds.filter((fund) => !nextQuotes.has(fund.code));
+        try {
+          await refreshTencentQuotes(missingFunds, nextQuotes);
+        } catch {
+          // Continue to the final provider.
+        }
+        missingFunds = state.funds.filter((fund) => !nextQuotes.has(fund.code));
+        try {
+          await refreshSinaQuotes(missingFunds, nextQuotes);
+        } catch {
+          // Missing prices remain explicitly unavailable.
+        }
+        state.quotes = nextQuotes;
       }
 
       function render() {
@@ -935,12 +1229,16 @@
           };
         });
         const chainMetrics = rotationChainMetrics(state.trades);
-        $("totalExcess").textContent = state.trades.length ? fmtMoney(chainMetrics.excess) : "-";
-        $("totalExcess").className = signedClass(chainMetrics.excess);
-        $("totalRate").textContent = state.trades.length ? fmtPct(chainMetrics.excessPct) : "-";
-        $("totalRate").className = signedClass(chainMetrics.excessPct);
+        const profitMetrics = rotationProfitMetrics(state.trades);
+        $("totalExcess").textContent = state.trades.length ? fmtMoney(profitMetrics.totalProfit) : "-";
+        $("totalExcess").className = signedClass(profitMetrics.totalProfit);
+        $("totalRate").textContent = state.trades.length ? fmtPct(profitMetrics.totalRate) : "-";
+        $("totalRate").className = signedClass(profitMetrics.totalRate);
         $("recordCount").textContent = String(state.trades.length);
         $("updated").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+        if (chainMetrics.unavailableCodes.length) {
+          $("dataStatus").textContent = `${chainMetrics.unavailableCodes.join("、")} 暂无实时价格，相关轮动链暂不纳入累计收益`;
+        }
 
         if (!rows.length) {
           $("historyWrap").innerHTML = `<div class="empty">暂无历史轮动记录。保存第一条记录后，这里会展示每次轮动相对不操作的收益。</div>`;
@@ -961,16 +1259,25 @@
                 <th>换入当前价</th>
                 <th>不操作当前市值</th>
                 <th>轮动后当前市值</th>
-                <th>单笔快照收益</th>
-                <th>单笔快照收益率</th>
+                <th>已锁定收益</th>
+                <th>实时收益</th>
+                <th>本次轮动收益</th>
+                <th>锁定状态</th>
+                <th>计算逻辑</th>
                 <th>来源</th>
                 <th>操作</th>
               </tr>
             </thead>
             <tbody>
               ${rows
-                .map(
-                  (row) => `
+                .map((row) => {
+                  const profit = profitMetrics.byTrade.get(row.trade.id) || {
+                    locked: 0, active: 0, unavailable: false, originalQty: 0, lockedQty: 0,
+                    lockedExitValue: 0, lockedCash: 0, lockedEntryValue: 0,
+                    activeMarketValue: 0, activeCash: 0, activeEntryValue: 0,
+                  };
+                  const tradeProfit = profit.locked + profit.active;
+                  return `
                     <tr>
                       <td>${row.trade.date || "-"}</td>
                       <td><div class="name">${row.fromName}</div><div class="code">${row.trade.fromCode}</div></td>
@@ -982,13 +1289,16 @@
                       <td>${fmtPrice(row.toCurrent)}</td>
                       <td>${fmtMoney(row.fromNowValue)}</td>
                       <td>${fmtMoney(row.switchedNowValue)}</td>
-                      <td class="${signedClass(row.excess)}">${fmtMoney(row.excess)}</td>
-                      <td class="${signedClass(row.excessPct)}">${fmtPct(row.excessPct)}</td>
+                      <td class="${signedClass(profit.locked)}">${fmtMoney(profit.locked)}</td>
+                      <td class="${profit.unavailable ? "" : signedClass(profit.active)}">${profit.unavailable ? "暂无行情" : fmtMoney(profit.active)}</td>
+                      <td class="${profit.unavailable ? "" : signedClass(tradeProfit)}">${profit.unavailable ? "暂无行情" : fmtMoney(tradeProfit)}</td>
+                      <td>${lockStatus(profit)}</td>
+                      <td class="calc-cell">${calculationLogic(profit)}</td>
                       <td>${row.trade.source || "手动记录"}</td>
                       <td><button type="button" class="danger" data-delete="${row.trade.id}">删除</button></td>
                     </tr>
-                  `
-                )
+                  `;
+                })
                 .join("")}
             </tbody>
           </table>
@@ -1055,9 +1365,11 @@
       }
 
       function exportCsv() {
-        const rows = [["日期", "原持有代码", "原持有名称", "原数量", "卖出价", "卖出费用", "换入代码", "换入名称", "换入数量", "买入价", "买入费用", "现金差额", "原基金当前价", "换入当前价", "本次超额收益", "本次收益率", "来源"]];
+        const profitMetrics = rotationProfitMetrics(state.trades);
+        const rows = [["日期", "原持有代码", "原持有名称", "原数量", "卖出价", "卖出费用", "换入代码", "换入名称", "换入数量", "买入价", "买入费用", "现金差额", "原基金当前价", "换入当前价", "已锁定收益", "实时收益", "本次轮动收益", "锁定状态", "来源"]];
         state.trades.forEach((trade) => {
           const metrics = tradeMetrics(trade);
+          const profit = profitMetrics.byTrade.get(trade.id) || { locked: 0, active: 0, unavailable: false, originalQty: 0, lockedQty: 0 };
           rows.push([
             trade.date || "",
             trade.fromCode,
@@ -1073,8 +1385,10 @@
             Number.isFinite(metrics.cashDiff) ? metrics.cashDiff.toFixed(2) : "",
             Number.isFinite(metrics.fromCurrent) ? metrics.fromCurrent.toFixed(3) : "",
             Number.isFinite(metrics.toCurrent) ? metrics.toCurrent.toFixed(3) : "",
-            Number.isFinite(metrics.excess) ? metrics.excess.toFixed(2) : "",
-            Number.isFinite(metrics.excessPct) ? metrics.excessPct.toFixed(2) + "%" : "",
+            profit.locked.toFixed(2),
+            profit.unavailable ? "" : profit.active.toFixed(2),
+            profit.unavailable ? "" : (profit.locked + profit.active).toFixed(2),
+            lockStatus(profit),
             trade.source || "手动记录",
           ]);
         });
