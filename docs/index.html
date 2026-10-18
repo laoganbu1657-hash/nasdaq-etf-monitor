@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="zh-CN">
   <head>
@@ -10,17 +9,20 @@
     <style>
       :root {
         color-scheme: light;
-        --bg: #f6f8fb;
+        --bg: #f8fafc;
         --panel: #ffffff;
-        --ink: #172033;
+        --ink: #1e293b;
         --muted: #64748b;
-        --line: #d8e0eb;
-        --head: #edf2f8;
-        --green: #047857;
-        --green-bg: #d9f7e8;
-        --amber: #a35308;
-        --red: #b42318;
-        --blue: #2563eb;
+        --line: #dbe3ec;
+        --head: #eff4f9;
+        --accent: #334e68;
+        --accent-soft: #e9f0f7;
+        --surface-quiet: #f6f9fc;
+        --green: var(--accent);
+        --green-bg: var(--accent-soft);
+        --amber: var(--muted);
+        --red: var(--accent);
+        --blue: var(--accent);
       }
 
       * {
@@ -141,8 +143,8 @@
       }
 
       .group-tab.active {
-        border-color: #2563eb;
-        background: #2563eb;
+        border-color: var(--accent);
+        background: var(--accent);
         color: #ffffff;
       }
 
@@ -316,11 +318,11 @@
       }
 
       .trend-box.up {
-        color: #f87171;
+        color: #64748b;
       }
 
       .trend-box.down {
-        color: #34d399;
+        color: #64748b;
       }
 
       .trend-box.flat {
@@ -358,20 +360,20 @@
       }
 
       .heat-top {
-        background: #dcfce7;
-        color: #047857;
+        background: var(--accent-soft);
+        color: var(--accent);
         font-weight: 850;
       }
 
       .heat-mid {
-        background: #eef6ff;
-        color: #1d4ed8;
+        background: var(--surface-quiet);
+        color: var(--muted);
         font-weight: 850;
       }
 
       .heat-low {
-        background: #fff7ed;
-        color: #c2410c;
+        background: var(--bg);
+        color: var(--muted);
         font-weight: 850;
       }
 
@@ -383,7 +385,7 @@
         height: 24px;
         padding: 0 8px;
         border-radius: 999px;
-        background: #eef6ff;
+        background: var(--accent-soft);
         color: var(--blue);
         font-weight: 800;
       }
@@ -610,12 +612,14 @@
               <th data-key="changePct">今日涨幅趋势</th>
               <th data-key="changePct">今日实时涨跌幅</th>
               <th id="currentPremiumHead" data-key="currentPremium">当前溢价率</th>
+              <th data-key="currentPremiumChange">估算溢价较昨收</th>
               <th data-key="usdCnyChangePct">实时汇率影响</th>
               <th data-key="nqFutureChangePct">实时对应期货</th>
               <th data-key="avg7AmountWan">7日日均成交额</th>
               <th data-key="relativeDeviation">均值差</th>
               <th data-key="switchAdvantage">切换优势</th>
               <th data-key="adjustedPremium">真实溢价率</th>
+              <th data-key="adjustedPremiumChange">真实溢价较昨收</th>
               <th data-key="operatingFee">运作费率</th>
               <th data-key="avg10Premium">10日均值</th>
               <th data-key="avg20Premium">20日均值</th>
@@ -910,6 +914,10 @@
           (Number.isFinite(future.changePct) ? future.changePct : 0);
         const adjustedNav = premiumNav * (1 + macroImpact / 100);
         const adjustedPremium = adjustedNav > 0 ? (price / adjustedNav - 1) * 100 : calculatedPremium;
+        const currentPremiumChange =
+          Number.isFinite(currentPremium) && Number.isFinite(fund.latestPremium) ? currentPremium - fund.latestPremium : null;
+        const adjustedPremiumChange =
+          Number.isFinite(adjustedPremium) && Number.isFinite(fund.latestPremium) ? adjustedPremium - fund.latestPremium : null;
         return {
           ...fund,
           livePrice: price,
@@ -923,6 +931,8 @@
           usdCnyChangePct,
           nqFutureChangePct: future.changePct,
           adjustedPremium,
+          currentPremiumChange,
+          adjustedPremiumChange,
           relativeDeviation:
             Number.isFinite(currentPremium) && Number.isFinite(fund.avg20Premium) ? currentPremium - fund.avg20Premium : null,
         };
@@ -976,12 +986,14 @@
                 <td class="trend-cell" data-label="今日趋势">${trendBars(fund)}</td>
                 <td data-label="实时价格 / 涨跌">${quoteStack(fund)}</td>
                 <td data-label="估算当前溢价率" title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNav)}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
+                <td data-label="估算溢价较昨收" class="${classForSigned(fund.currentPremiumChange)}">${fmtPctPoint(fund.currentPremiumChange)}</td>
                 <td data-label="实时汇率影响" class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
                 <td data-label="实时对应期货" class="${classForSigned(fund.nqFutureChangePct)}">${fmtPct(fund.nqFutureChangePct)}</td>
                 <td data-label="7日日均成交额">${fmtAmount(fund.avg7AmountWan)}</td>
                 <td data-label="均值差" class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
                 <td data-label="切换优势" class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
                 <td data-label="真实溢价率" class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
+                <td data-label="真实溢价较昨收" class="${classForSigned(fund.adjustedPremiumChange)}">${fmtPctPoint(fund.adjustedPremiumChange)}</td>
                 <td data-label="运作费率">${fmtPct(fund.operatingFee)}</td>
                 <td data-label="10日均值">${fmtPct(fund.avg10Premium)}</td>
                 <td data-label="20日均值">${fmtPct(fund.avg20Premium)}</td>
