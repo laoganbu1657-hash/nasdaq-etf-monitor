@@ -226,11 +226,16 @@ def fetch_nav_df(code: str, existing: pd.DataFrame) -> pd.DataFrame:
 def build_one(code: str, name: str, group: str, existing: pd.DataFrame) -> pd.DataFrame:
     prices = fetch_price_df(code)
     navs = fetch_nav_df(code, existing)
+    # pandas 3 may infer different datetime precisions from the two sources.
+    # merge_asof requires exactly matching key dtypes.
+    prices["date"] = pd.to_datetime(prices["date"], errors="coerce").astype("datetime64[ns]")
     if navs.empty:
         merged = prices.copy()
         for col in NAV_COLS:
             merged[col] = pd.NA
     else:
+        navs = navs.copy()
+        navs["nav_date"] = pd.to_datetime(navs["nav_date"], errors="coerce").astype("datetime64[ns]")
         merged = pd.merge_asof(
             prices.sort_values("date"),
             navs.sort_values("nav_date"),
