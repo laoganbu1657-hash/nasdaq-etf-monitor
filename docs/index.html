@@ -584,7 +584,6 @@
             <option value="switchAdvantage">按切换优势排序</option>
             <option value="currentPremium">按当前溢价排序</option>
             <option value="adjustedPremium">按真实溢价排序</option>
-            <option value="trackingDiff2026">按2026跟踪差排序</option>
             <option value="navReturn2026">按2026净值收益排序</option>
             <option value="changePct">按今日涨跌排序</option>
             <option value="avg7AmountWan">按7日成交排序</option>
@@ -626,14 +625,17 @@
               <th data-key="avg10Premium">10日均值</th>
               <th data-key="avg20Premium">20日均值</th>
               <th data-key="avg30Premium">30日均值</th>
-              <th data-key="navReturn2026">2026净值收益</th>
-              <th data-key="trackingDiff2026">2026跟踪差</th>
-              <th data-key="navReturn2025">2025净值收益</th>
-              <th data-key="trackingDiff2025">2025跟踪差</th>
               <th data-key="latestPremium">最近收盘溢价</th>
+              <th data-key="priceDrawdown">最高价格回撤</th>
+              <th data-key="closePriceDrawdown">收盘价格回撤</th>
+              <th data-key="navDrawdown">净值回撤</th>
+              <th data-key="scaleAmount">规模</th>
+              <th data-key="subscriptionLimitShares">最新申购份额</th>
+              <th data-key="subscriptionLimitAmount">最新申购金额</th>
+              <th data-key="subscriptionAmountRatio">申购金额占比</th>
+              <th data-key="navReturn2026">2026净值收益</th>
+              <th data-key="navReturn2025">2025净值收益</th>
               <th data-key="navForPremiumDate">溢价净值日</th>
-              <th data-key="subscribeStatus">申购状态</th>
-              <th data-key="navDate">净值日</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -871,7 +873,9 @@
             ? fund.etfComLastPrice / (1 + fund.etfComPremiumRate / 100)
             : null;
         const premiumNav = fund.navForReturn || fund.navForPremium || fund.nav || liveIopv || fund.etfComUnitNav || etfComIopv;
-        const calculatedPremium = premiumNav > 0 ? (price / premiumNav - 1) * 100 : null;
+        const premiumNavDate = fund.navForPremiumDate || fund.navDate;
+        const premiumNavStale = Boolean(premiumNavDate && fund.latestDate && premiumNavDate < fund.latestDate);
+        const calculatedPremium = premiumNav > 0 && !premiumNavStale ? (price / premiumNav - 1) * 100 : null;
         const currentPremium = calculatedPremium;
         const currentPremiumSource =
           fund.navForReturn || fund.navForPremium || fund.nav
@@ -887,7 +891,7 @@
           (Number.isFinite(usdCnyChangePct) ? usdCnyChangePct : 0) +
           (Number.isFinite(future.changePct) ? future.changePct : 0);
         const adjustedNav = premiumNav * (1 + macroImpact / 100);
-        const adjustedPremium = adjustedNav > 0 ? (price / adjustedNav - 1) * 100 : calculatedPremium;
+        const adjustedPremium = adjustedNav > 0 && !premiumNavStale ? (price / adjustedNav - 1) * 100 : calculatedPremium;
         const chinaCloseFutureChangePct = Number.isFinite(fund.chinaCloseFutureChangePct) ? fund.chinaCloseFutureChangePct : 0;
         const priorCloseComparablePremium =
           Number.isFinite(fund.latestPremium) ? fund.latestPremium + chinaCloseFutureChangePct : null;
@@ -895,8 +899,16 @@
           Number.isFinite(adjustedPremium) && Number.isFinite(priorCloseComparablePremium)
             ? adjustedPremium - priorCloseComparablePremium
             : null;
+        const scaleAmount = Number.isFinite(fund.exchangeShares) && fund.nav > 0 ? fund.exchangeShares * fund.nav : null;
+        const subscriptionAmountRatio = Number.isFinite(fund.subscriptionLimitAmount) && scaleAmount > 0
+          ? (fund.subscriptionLimitAmount / scaleAmount) * 100 : null;
         return {
           ...fund,
+          priceDrawdown: fund.historyHighPrice > 0 ? (price / Math.max(price, fund.historyHighPrice) - 1) * 100 : null,
+          closePriceDrawdown: fund.historyHighClose > 0 ? (price / Math.max(price, fund.historyHighClose) - 1) * 100 : null,
+          navDrawdown: fund.historyHighNav > 0 && premiumNav > 0 ? (premiumNav / Math.max(premiumNav, fund.historyHighNav) - 1) * 100 : null,
+          scaleAmount,
+          subscriptionAmountRatio,
           livePrice: price,
           changePct,
           premiumNav,
@@ -904,6 +916,8 @@
           etfComPremium: hasEtfComPremium ? fund.etfComPremiumRate : null,
           calculatedPremium,
           currentPremium,
+          premiumNavStale,
+          premiumNavDate,
           currentPremiumSource,
           usdCnyChangePct,
           nqFutureChangePct: future.changePct,
@@ -984,14 +998,17 @@
                 <td data-label="10日均值">${fmtPct(fund.avg10Premium)}</td>
                 <td data-label="20日均值">${fmtPct(fund.avg20Premium)}</td>
                 <td data-label="30日均值">${fmtPct(fund.avg30Premium)}</td>
-                <td data-label="2026净值收益" class="${classForRank(fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026)}</td>
-                <td data-label="2026跟踪差" class="${classForSigned(fund.trackingDiff2026, true)}">${fmtPctPoint(fund.trackingDiff2026)}</td>
-                <td data-label="2025净值收益" class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
-                <td data-label="2025跟踪差" class="${classForSigned(fund.trackingDiff2025, true)}">${fmtPctPoint(fund.trackingDiff2025)}</td>
                 <td data-label="最近收盘溢价">${fmtPct(fund.latestPremium)}</td>
+                <td data-label="最高价格回撤" title="历史样本始于${fund.historyStartDate || '-'}；最高价${fmtPrice(fund.historyHighPrice)}">${fmtPct(fund.priceDrawdown)}</td>
+                <td data-label="收盘价格回撤" title="当前价格相对历史最高收盘价；样本始于${fund.historyStartDate || '-'}；最高收盘价${fmtPrice(fund.historyHighClose)}">${fmtPct(fund.closePriceDrawdown)}</td>
+                <td data-label="净值回撤" title="估算当前净值对比历史单位净值峰值；样本始于${fund.historyStartDate || '-'}">${fmtPct(fund.navDrawdown)}</td>
+                <td data-label="规模" title="场内份额×最近官方净值；份额日${fund.scaleDate || '-'}">${Number.isFinite(fund.scaleAmount) ? (fund.scaleAmount / 1e8).toFixed(2) + '亿元' : '-'}</td>
+                <td data-label="最新申购份额" title="${fund.subscriptionLimitDate || '-'}；${fund.subscriptionLimitNote || '暂无清单'}；额度上限，并非实际申购量">${Number.isFinite(fund.subscriptionLimitShares) ? (fund.subscriptionLimitShares / 1e4).toFixed(0) + '万份' : fund.code === '161128' ? '不适用' : fund.subscriptionLimitNote === '不设上限' ? '不设上限' : '-'}</td>
+                <td data-label="最新申购金额" title="清单额度×清单净值${fmtPrice(fund.subscriptionLimitNav)}；日期${fund.subscriptionLimitDate || '-'}">${Number.isFinite(fund.subscriptionLimitAmount) ? (fund.subscriptionLimitAmount / 1e4).toFixed(2) + '万元' : '-'}</td>
+                <td data-label="申购金额占比" title="最新申购金额 ÷ 规模；申购金额为额度上限对应金额">${fmtPct(fund.subscriptionAmountRatio)}</td>
+                <td data-label="2026净值收益" class="${classForRank(fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026)}</td>
+                <td data-label="2025净值收益" class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
                 <td data-label="溢价净值日">${fund.navForPremiumDate || fund.navDate}${fund.navForPremiumSource === "estimated" ? "估" : ""}</td>
-                <td data-label="申购状态"><span class="pill">${fund.subscribeStatus || "-"}</span></td>
-                <td data-label="净值日">${fund.navDate}</td>
               </tr>
             `;
           })
