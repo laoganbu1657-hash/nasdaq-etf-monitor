@@ -11,6 +11,7 @@ from pathlib import Path
 import akshare as ak
 import pandas as pd
 import requests
+from market_extras import enrich_payload
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +43,11 @@ DISPLAY_NAMES = {
 
 FUND_INDEX_SYMBOLS = {
     "161128": "XLK",
+}
+
+# 标普信息科技 LOF 的指数敞口按 95% 估算。
+FUND_INDEX_EXPOSURES = {
+    "161128": 0.95,
 }
 
 GROUPS = {
@@ -351,12 +357,54 @@ def fetch_yahoo_daily(symbol: str, adjusted: bool = True) -> pd.DataFrame:
     return df.dropna(subset=["date", "close"]).sort_values("date").set_index("date")
 
 
+def fetch_yahoo_minute_close_at_china_close(symbol: str, market_date: pd.Timestamp) -> float | None:
+    """Return the 15:00 Asia/Shanghai one-minute close for a futures symbol."""
+    target = pd.Timestamp(market_date).normalize() + pd.Timedelta(hours=7)
+    start = int((target - pd.Timedelta(minutes=10)).tz_localize("UTC").timestamp())
+    end = int((target + pd.Timedelta(minutes=11)).tz_localize("UTC").timestamp())
+    response = requests.get(
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+        params={"period1": start, "period2": end, "interval": "1m", "includePrePost": "true"},
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=20,
+    )
+    response.raise_for_status()
+    result = response.json().get("chart", {}).get("result") or []
+    if not result:
+        return None
+    payload = result[0]
+    timestamps = payload.get("timestamp") or []
+    closes = ((payload.get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
+    for timestamp, close in zip(timestamps, closes):
+        point = pd.Timestamp(timestamp, unit="s", tz="UTC").tz_convert(None)
+        if point == target:
+            return clean_number(close)
+    return None
+
+
+def china_close_future_change(index_series: pd.DataFrame | None, market_date: pd.Timestamp) -> float | None:
+    """Compare the China-close NQ quote with the same series' prior daily close."""
+    try:
+        futures_history = fetch_yahoo_daily("NQ=F", adjusted=False)
+        prior_index_close = value_on_or_before(futures_history, pd.Timestamp(market_date).normalize() - pd.Timedelta(days=1))
+        if prior_index_close in (None, 0):
+            return None
+        future_price = fetch_yahoo_minute_close_at_china_close("NQ%3DF", market_date)
+    except Exception as error:
+        print(f"北京时间15:00纳指期货获取失败：{error}")
+        return None
+    if future_price in (None, 0):
+        return None
+    return (future_price / prior_index_close - 1) * 100
+
+
 def estimate_nav(
     official_nav: float,
     official_nav_date: str,
     operating_fee: float | None,
     index_series: pd.DataFrame | None,
     fx: pd.DataFrame | None,
+    index_exposure: float = 1.0,
 ) -> dict:
     result = {
         "navForPremium": official_nav,
@@ -386,7 +434,7 @@ def estimate_nav(
     index_end = value_at_or_before(index_series, target_date)
     if index_end is None:
         return result
-    index_ret = float(index_end / index_start - 1)
+    index_ret = float(index_end / index_start - 1) * index_exposure
     fee_days = max((target_date - nav_date).days, 1)
     fee_drag = ((operating_fee or 0) / 100) / 365 * fee_days
     estimated_nav_for_premium = official_nav * (1 + index_ret) * (1 - fee_drag)
@@ -518,6 +566,12 @@ def main() -> None:
             print(f"{meta['benchmark_symbol']}历史行情获取失败，跟踪差将留空：{error}")
             benchmark_map[group_key] = None
     latest_date = history["date"].max()
+    china_close_future_changes = {
+        group_key: china_close_future_change(index_map.get(group_key), latest_date)
+        if group_key == "nasdaq100"
+        else None
+        for group_key in GROUPS
+    }
     funds = []
     for code, group in history.sort_values("date").groupby("code"):
         group = group.sort_values("date").reset_index(drop=True)
@@ -551,6 +605,7 @@ def main() -> None:
             operating_fee=operating_fee,
             index_series=index_map[code] if code in index_map else index_map.get(group_key),
             fx=fx,
+            index_exposure=FUND_INDEX_EXPOSURES.get(code, 1.0),
         )
         latest_accum = estimate_accum_value(nav_info, official_nav_row)
         end_2025_row = nav_row_on_or_before(group, pd.Timestamp("2025-12-31"))
@@ -564,9 +619,12 @@ def main() -> None:
             benchmark_map.get(group_key),
             fx,
         )
-        latest_premium = None
+        # Yesterday's close must use the premium observed at the China-market close.
+        # Do not recompute it with the same-date US index close, which is published
+        # after the domestic ETF has stopped trading and would distort the baseline.
+        latest_premium = clean_number(latest.get("live_premium_pct"))
         estimated_nav_for_premium = nav_info.get("navForReturn") or nav_info.get("navForPremium")
-        if clean_number(latest["close"]) is not None and clean_number(estimated_nav_for_premium) not in (None, 0):
+        if clean_number(latest_premium) is None and clean_number(latest["close"]) is not None and clean_number(estimated_nav_for_premium) not in (None, 0):
             latest_premium = (float(latest["close"]) / float(estimated_nav_for_premium) - 1) * 100
         if clean_number(latest_premium) is None and clean_number(etfcom.get("etfComPremiumRate")) is not None:
             latest_premium = clean_number(etfcom.get("etfComPremiumRate"))
@@ -596,6 +654,7 @@ def main() -> None:
                 "navDate": official_nav_date,
                 **nav_info,
                 "latestPremium": clean_number(latest_premium),
+                "chinaCloseFutureChangePct": clean_json_value(china_close_future_changes.get(group_key)),
                 "etfComServerTime": etfcom.get("etfComServerTime"),
                 "etfComIndexCode": etfcom.get("etfComIndexCode"),
                 "etfComName": etfcom.get("etfComName"),
@@ -634,7 +693,7 @@ def main() -> None:
         "groups": {key: {**value, **future_fallbacks.get(key, {})} for key, value in GROUPS.items()},
         "funds": funds,
     }
-    clean_payload = clean_json_value(payload)
+    clean_payload = clean_json_value(enrich_payload(payload))
     json_text = json.dumps(
         clean_payload,
         ensure_ascii=False,
