@@ -1,4 +1,4 @@
-const CACHE_NAME = "nasdaq-etf-monitor-v42";
+const CACHE_NAME = "nasdaq-etf-monitor-v48";
 const ASSETS = ["./", "./index.html", "./rotation.html", "./manifest.webmanifest", "./icon.svg", "./data/funds.json"];
 
 self.addEventListener("install", (event) => {
