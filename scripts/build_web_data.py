@@ -39,16 +39,40 @@ DISPLAY_NAMES = {
     "513650": "南方标普500",
     "159655": "华夏标普500",
     "161128": "易方达标普信息科技",
+    "161130": "易方达纳指100LOF",
+    "513850": "易方达美国50",
+    "159577": "汇添富美国50",
 }
 
 FUND_INDEX_SYMBOLS = {
-    "161128": "XLK",
+    # 易方达标普信息科技 LOF：跟踪标普500信息科技指数（雪球 .SP500-45）。
+    # Yahoo 只有最新点位、新浪无该代码，用窗口内真实指数比 XLK 代理准 4 倍
+    # （10 月 16 个交易日：锚误差 MAE 6.7bp vs XLK×0.95 的 28.2bp）。
+    "161128": ".SP500-45",
 }
 
-# 标普信息科技 LOF 的指数敞口按 95% 估算。
-FUND_INDEX_EXPOSURES = {
-    "161128": 0.95,
+XUEQIU_INDEX_SYMBOLS = {".SP500-45"}
+
+# 该指数没有对应期货，盘中 15:00 一段用相近期货模拟。
+FUND_FUTURE_PROXY = {
+    "161128": "nasdaq100",
+    # MSCI 美国50 无期货合约，用标普500期货（ES）代理；^OEX 对 ES 日收益
+    # beta 0.998（40 日）/1.010（60 日），基本 1:1，故不另设 beta。
+    "513850": "sp500",
+    "159577": "sp500",
 }
+
+# 期货代理的 beta：代理期货涨跌 × beta ≈ 该基金跟踪指数的当日涨跌。
+# 161128 跟踪的 S5INFT 无对应期货，只能用纳指期货代理，但 NQ 与 S5INFT
+# 不是 1:1——直接用 NQ 涨跌会把盘中净值预估放大或缩小。近 20 个交易日
+# （2026-10-01~10-30）日收益回归：beta=1.1366、corr=0.982、残差 MAE 0.267pct；
+# 15 日窗口 1.1480/0.983、25 日窗口 1.1299/0.977，系数稳定，取 20 日值。
+FUND_FUTURE_BETA = {
+    "161128": 1.1366,
+}
+
+# 指数敞口：默认 1.0（全额跟踪）；单只基金确需打折时才在此登记。
+FUND_INDEX_EXPOSURES: dict[str, float] = {}
 
 GROUPS = {
     "nasdaq100": {
@@ -72,6 +96,20 @@ GROUPS = {
         "sina_future_symbol": "hf_ES",
         "etfcom_index_codes": ["SPX", "SPTR500N"],
         "default_holding": "513500",
+    },
+    "usa50": {
+        # MSCI 美国50（W00659）没有免费指数源：用标普100（^OEX）做锚，
+        # 实测对两只基金净值的拟合 MAE 0.94bp（SPY 0.87bp、NDX 1.43bp，差异在噪声内），
+        # 而 S&P100 与 MSCI 美国50 同属「美国最头部大市值」集合，语义上也最贴近。
+        "name": "美国50",
+        "index_symbol": "",
+        "yahoo_index_symbol": "^OEX",
+        "benchmark_symbol": "SPY",
+        "future_secid": "103.ES00Y",
+        "tencent_future_symbol": "hf_ES",
+        "sina_future_symbol": "hf_ES",
+        "etfcom_index_codes": [],
+        "default_holding": "513850",
     },
 }
 
@@ -266,24 +304,71 @@ def fetch_group_index_history(meta: dict) -> pd.DataFrame:
     raise RuntimeError("；".join(errors))
 
 
+def fetch_xueqiu_index(symbol: str, count: int = 400) -> pd.DataFrame:
+    """雪球美股指数日线（返回 date 索引 + close）。
+
+    标普500信息科技指数（.SP500-45）在 Yahoo 只剩最新一个点位、新浪无此代码，
+    雪球是唯一能取到完整历史的免费源。需要先访问首页拿 xq_a_token。
+    """
+    session = requests.Session()
+    session.headers.update(
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+        }
+    )
+    session.get("https://xueqiu.com/", timeout=20)
+    response = session.get(
+        "https://stock.xueqiu.com/v5/stock/chart/kline.json",
+        params={
+            "symbol": symbol,
+            "begin": int(time.time() * 1000),
+            "period": "day",
+            "type": "before",
+            "count": -count,
+            "indicator": "kline",
+        },
+        timeout=20,
+    )
+    response.raise_for_status()
+    payload = (response.json() or {}).get("data") or {}
+    columns = payload.get("column") or []
+    items = payload.get("item") or []
+    if not columns or not items:
+        raise RuntimeError(f"雪球 {symbol} 返回空数据")
+    df = pd.DataFrame(items, columns=columns)
+    df["date"] = (
+        pd.to_datetime(df["timestamp"], unit="ms", utc=True)
+        .dt.tz_convert("America/New_York")
+        .dt.normalize()
+        .dt.tz_localize(None)
+    )
+    df["close"] = pd.to_numeric(df["close"], errors="coerce")
+    return df.dropna(subset=["date", "close"]).sort_values("date").set_index("date")[["close"]]
+
+
 def load_estimation_series() -> tuple[dict[str, pd.DataFrame], pd.DataFrame | None]:
     try:
         index_map = {}
         for group_key, meta in GROUPS.items():
             index_map[group_key] = fetch_group_index_history(meta)
         for code, symbol in FUND_INDEX_SYMBOLS.items():
-            fetcher = (
-                (lambda symbol=symbol: fetch_us_index_history(symbol))
-                if symbol.startswith(".")
-                else (lambda symbol=symbol: fetch_yahoo_daily(symbol, adjusted=False))
-            )
+            if symbol in XUEQIU_INDEX_SYMBOLS:
+                fetcher = lambda symbol=symbol: fetch_xueqiu_index(symbol)
+            elif symbol.startswith("."):
+                fetcher = lambda symbol=symbol: fetch_us_index_history(symbol)
+            else:
+                fetcher = lambda symbol=symbol: fetch_yahoo_daily(symbol, adjusted=False)
             index_map[code] = retry_fetch(f"{code}历史行情 {symbol}", fetcher)
 
         try:
-            fx = retry_fetch("美元人民币中间价历史行情", fetch_usdcnyc_history).copy()
+            fx = retry_fetch("新浪在岸美元人民币日线", fetch_sina_fx_daily).copy()
         except Exception as error:
-            print(f"美元人民币中间价获取失败，改用Yahoo CNY=X：{error}")
-            fx = retry_fetch("Yahoo美元人民币历史行情", lambda: fetch_yahoo_daily("CNY=X", adjusted=False).reset_index()).copy()
+            print(f"新浪在岸美元人民币日线获取失败，改用东财 USDCNYC：{error}")
+            try:
+                fx = retry_fetch("美元人民币中间价历史行情", fetch_usdcnyc_history).copy()
+            except Exception as fallback_error:
+                print(f"美元人民币中间价获取失败，改用Yahoo CNY=X：{fallback_error}")
+                fx = retry_fetch("Yahoo美元人民币历史行情", lambda: fetch_yahoo_daily("CNY=X", adjusted=False).reset_index()).copy()
         fx = fx.dropna(subset=["date", "close"]).sort_values("date").set_index("date")
         return index_map, fx
     except Exception as error:
@@ -334,7 +419,127 @@ def fetch_usdcnyc_history() -> pd.DataFrame:
     )
 
 
+SINA_FX_SYMBOL = "fx_susdcny"
+_SINA_FX_MIN_CACHE: dict[int, pd.DataFrame] = {}
+
+
+def _sina_forex_request(service: str, extra: str) -> str:
+    url = (
+        "https://vip.stock.finance.sina.com.cn/forex/api/jsonp.php/var%20t=/"
+        f"NewForexService.{service}?symbol={SINA_FX_SYMBOL}{extra}"
+    )
+    response = requests.get(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://finance.sina.com.cn",
+        },
+        timeout=20,
+    )
+    response.raise_for_status()
+    return response.text
+
+
+def fetch_sina_fx_daily() -> pd.DataFrame:
+    """在岸 USD/CNY 日线（收盘为当日 23:55 北京时间的最后一根）。
+
+    在岸人民币 09:30-23:30 交易、隔夜不连续交易，所以「前一日收盘」与「美股收盘那一刻」
+    本质是同一个价位。Yahoo 的 CNY=X 日线混了离岸/隔夜报价，分钟线还会在两个相差
+    约 0.15% 的价位群间跳动，会把 15:00 的汇率分量放大约 6 倍（10-30 实际 -0.05%，
+    Yahoo 算出 -0.29%），因此优先用新浪。
+    """
+    raw = _sina_forex_request("getDayKLine", "")
+    payload = raw.split("var t=(", 1)[1].rsplit(")", 1)[0].strip().strip('"')
+    dates, closes = [], []
+    for item in payload.split("|"):
+        parts = item.split(",")
+        if len(parts) < 5:
+            continue
+        dates.append(parts[0])
+        closes.append(parts[4])
+    df = pd.DataFrame(
+        {
+            "date": pd.to_datetime(dates, errors="coerce"),
+            "close": pd.to_numeric(closes, errors="coerce"),
+        }
+    )
+    return df.dropna(subset=["date", "close"])
+
+
+def fetch_pbc_fixing_daily(days: int = 30) -> pd.DataFrame | None:
+    """人民币兑美元中间价日线（中国货币网，每日 09:15 公布）。
+
+    QDII 基金估值用的汇率口径是中间价，而不是在岸即期。两者每天会随机出现
+    ±5bp 的基差漂移（例如 2026-10-29 即期贬 0.072%、中间价只贬 0.027%），
+    用即期推净值锚会带来 ~0.05% 的系统性误差；改用中间价后锚误差收敛到
+    ±0.6bp 以内（用 159501/513100/513870 近三个交易日官方净值验证）。
+    接口对脚本访问偶尔限流（返回空 records），失败时由调用方回退在岸即期。
+    """
+    end = pd.Timestamp.now().normalize()
+    start = end - pd.Timedelta(days=days)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+        "Referer": "https://www.chinamoney.com.cn/chinese/bkccpr/",
+    }
+    for attempt in range(3):
+        try:
+            response = requests.get(
+                "https://www.chinamoney.com.cn/ags/ms/cm-u-bk-ccpr/CcprHisNew",
+                params={
+                    "startDate": start.strftime("%Y-%m-%d"),
+                    "endDate": end.strftime("%Y-%m-%d"),
+                    "currency": "USD/CNY",
+                    "pageNum": 1,
+                    "pageSize": days,
+                },
+                headers=headers,
+                timeout=20,
+            )
+            response.raise_for_status()
+            records = ((response.json().get("data") or {}).get("records")) or []
+            if not records:
+                raise RuntimeError("中间价接口返回空 records")
+            df = pd.DataFrame(
+                {
+                    "date": pd.to_datetime([item["date"] for item in records], errors="coerce"),
+                    "close": pd.to_numeric([item["values"][0] for item in records], errors="coerce"),
+                }
+            )
+            df = df.dropna(subset=["date", "close"]).sort_values("date")
+            if df.empty:
+                raise RuntimeError("中间价数据为空")
+            return df
+        except Exception as error:
+            print(f"中间价获取失败（第 {attempt + 1} 次）：{error}")
+            time.sleep(2)
+    return None
+
+
+def fetch_sina_fx_minutes(scale: int = 5, datalen: int = 1200) -> pd.DataFrame:
+    """在岸 USD/CNY 分钟线（时间戳为北京时间，naive）。"""
+    if scale in _SINA_FX_MIN_CACHE:
+        return _SINA_FX_MIN_CACHE[scale]
+    raw = _sina_forex_request("getMinKline", f"&scale={scale}&datalen={datalen}")
+    payload = raw.split("var t=(", 1)[1].rsplit(")", 1)[0].strip()
+    rows = json.loads(payload)
+    df = pd.DataFrame(
+        {
+            "date": pd.to_datetime([row.get("d") for row in rows], errors="coerce"),
+            "close": pd.to_numeric([row.get("c") for row in rows], errors="coerce"),
+        }
+    ).dropna(subset=["date", "close"])
+    _SINA_FX_MIN_CACHE[scale] = df
+    return df
+
+
+_YAHOO_DAILY_CACHE: dict[tuple[str, bool], pd.DataFrame] = {}
+
+
 def fetch_yahoo_daily(symbol: str, adjusted: bool = True) -> pd.DataFrame:
+    # 同一次构建内会反复取同一符号（期货 15:00 逐日回溯、基准指数等），缓存避免重复请求
+    cache_key = (symbol, adjusted)
+    if cache_key in _YAHOO_DAILY_CACHE:
+        return _YAHOO_DAILY_CACHE[cache_key]
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
     params = {
         "period1": int(pd.Timestamp("2024-12-20", tz="UTC").timestamp()),
@@ -354,7 +559,9 @@ def fetch_yahoo_daily(symbol: str, adjusted: bool = True) -> pd.DataFrame:
             "close": pd.to_numeric(close, errors="coerce"),
         }
     )
-    return df.dropna(subset=["date", "close"]).sort_values("date").set_index("date")
+    df = df.dropna(subset=["date", "close"]).sort_values("date").set_index("date")
+    _YAHOO_DAILY_CACHE[cache_key] = df
+    return df
 
 
 def fetch_yahoo_minute_close_at_china_close(symbol: str, market_date: pd.Timestamp) -> float | None:
@@ -382,20 +589,99 @@ def fetch_yahoo_minute_close_at_china_close(symbol: str, market_date: pd.Timesta
     return None
 
 
-def china_close_future_change(index_series: pd.DataFrame | None, market_date: pd.Timestamp) -> float | None:
-    """Compare the China-close NQ quote with the same series' prior daily close."""
+GROUP_FUTURE_YAHOO_SYMBOLS = {
+    "nasdaq100": "NQ=F",
+    "sp500": "ES=F",
+}
+
+
+def china_close_future_change(market_date: pd.Timestamp, yahoo_symbol: str = "NQ=F") -> float | None:
+    """Compare the 15:00 Asia/Shanghai futures quote with the same contract's prior daily close.
+
+    This is the futures' own daily change at 15:00 (open-to-15:00 is NOT used),
+    measured against the previous settlement of the same contract and the same
+    data source.
+    """
     try:
-        futures_history = fetch_yahoo_daily("NQ=F", adjusted=False)
+        futures_history = fetch_yahoo_daily(yahoo_symbol, adjusted=False)
         prior_index_close = value_on_or_before(futures_history, pd.Timestamp(market_date).normalize() - pd.Timedelta(days=1))
         if prior_index_close in (None, 0):
             return None
-        future_price = fetch_yahoo_minute_close_at_china_close("NQ%3DF", market_date)
+        future_price = fetch_yahoo_minute_close_at_china_close(yahoo_symbol.replace("=", "%3D"), market_date)
     except Exception as error:
-        print(f"北京时间15:00纳指期货获取失败：{error}")
+        print(f"北京时间15:00{yahoo_symbol}获取失败：{error}")
         return None
     if future_price in (None, 0):
         return None
     return (future_price / prior_index_close - 1) * 100
+
+
+def fetch_yahoo_minute_median_at_china_close(symbol: str, market_date: pd.Timestamp, window_minutes: int = 5) -> float | None:
+    """Median of 1-minute closes in the few minutes ending at 15:00 Asia/Shanghai.
+
+    FX 1-minute bars regularly contain single-bar spikes that revert on the next
+    bar (for example USD/CNY printing 6.6672 between 6.6780 and 6.6781). Taking
+    the exact 15:00 bar would move the baseline premium by ~0.15pct at random,
+    so a median is used instead.
+    """
+    target = pd.Timestamp(market_date).normalize() + pd.Timedelta(hours=7)
+    start = int((target - pd.Timedelta(minutes=window_minutes)).tz_localize("UTC").timestamp())
+    end = int((target + pd.Timedelta(minutes=1)).tz_localize("UTC").timestamp())
+    response = requests.get(
+        f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+        params={"period1": start, "period2": end, "interval": "1m", "includePrePost": "true"},
+        headers={"User-Agent": "Mozilla/5.0"},
+        timeout=20,
+    )
+    response.raise_for_status()
+    result = response.json().get("chart", {}).get("result") or []
+    if not result:
+        return None
+    closes = ((result[0].get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
+    values = [clean_number(value) for value in closes]
+    values = [value for value in values if value not in (None, 0)]
+    if not values:
+        return None
+    return clean_number(pd.Series(values).median())
+
+
+def china_close_fx_change(market_date: pd.Timestamp) -> float | None:
+    """USD/CNY 在 15:00（北京时间）相对前一交易日收盘的涨幅。
+
+    主力口径用新浪在岸分钟线：两端取价同源，且新浪是在岸价、隔夜不交易，
+    前一交易日收盘（23:55）本身就是美股收盘那一刻的汇率，与锚的衔接一致。
+    """
+    market_date = pd.Timestamp(market_date).normalize()
+    try:
+        minutes = fetch_sina_fx_minutes()
+        day = minutes[minutes["date"].dt.normalize() == market_date]
+        clock = day["date"].dt.strftime("%H:%M")
+        window = day[(clock > "14:50") & (clock <= "15:00")]["close"]
+        if window.empty:
+            window = day["close"]
+        prior = minutes[minutes["date"].dt.normalize() < market_date]
+        if window.empty or prior.empty:
+            raise RuntimeError("新浪汇率分钟线未覆盖该交易日")
+        fx_price = clean_number(window.median())
+        prior_close = clean_number(prior.iloc[-1]["close"])
+        if fx_price in (None, 0) or prior_close in (None, 0):
+            return None
+        return (fx_price / prior_close - 1) * 100
+    except Exception as error:
+        print(f"新浪 USD/CNY 15:00 取数失败，回退 Yahoo：{error}")
+
+    try:
+        fx_history = fetch_yahoo_daily("CNY=X", adjusted=False)
+        prior_close = value_on_or_before(fx_history, pd.Timestamp(market_date).normalize() - pd.Timedelta(days=1))
+        if prior_close in (None, 0):
+            return None
+        fx_price = fetch_yahoo_minute_median_at_china_close("CNY%3DX", market_date)
+    except Exception as error:
+        print(f"北京时间15:00美元人民币获取失败：{error}")
+        return None
+    if fx_price in (None, 0):
+        return None
+    return (fx_price / prior_close - 1) * 100
 
 
 def estimate_nav(
@@ -405,6 +691,7 @@ def estimate_nav(
     index_series: pd.DataFrame | None,
     fx: pd.DataFrame | None,
     index_exposure: float = 1.0,
+    until: pd.Timestamp | None = None,
 ) -> dict:
     result = {
         "navForPremium": official_nav,
@@ -426,6 +713,8 @@ def estimate_nav(
         return clean_number(values.iloc[-1]["close"])
 
     target_dates = [d for d in index_series.index if d > nav_date]
+    if until is not None:
+        target_dates = [d for d in target_dates if d <= pd.Timestamp(until)]
     index_start = value_at_or_before(index_series, nav_date)
     if not target_dates or index_start is None:
         return result
@@ -458,6 +747,70 @@ def estimate_nav(
         }
     )
     return result
+
+
+def session_anchor_nav(
+    group: pd.DataFrame,
+    session_date: pd.Timestamp,
+    operating_fee: float | None,
+    index_series: pd.DataFrame | None,
+    fx: pd.DataFrame | None,
+    index_exposure: float = 1.0,
+    fixing: pd.DataFrame | None = None,
+) -> dict | None:
+    """A股交易日 session_date 开盘时，市场上能拿到的净值锚。
+
+    QDII 净值有发布滞后：10-30 盘中只拿得到 10-28 的官方净值（10-29 的要等当晚才出），
+    所以必须用「最近已发布净值 × 美股最近一个交易日的指数与汇率涨跌」预估，
+    不能直接拿 10-29 的官方净值去配 10-30 的场内价。
+
+    汇率项优先用央行中间价（fixing）：QDII 估值按中间价计，在岸即期与中间价
+    每天有 ±5bp 的基差漂移，用即期会让锚出现 ~0.05% 的系统性误差；
+    中间价缺失时回退在岸即期日线。
+    """
+    prior = group[group["date"] < session_date]
+    if prior.empty:
+        return None
+    ref = prior.iloc[-1]
+    base_nav = clean_number(ref.get("nav"))
+    base_date = ref.get("nav_date")
+    if base_nav in (None, 0) or not isinstance(base_date, str):
+        return None
+    # 该记录对应的美股收盘日就是 ref 的 A股日期（净值滞后一天）
+    us_close = pd.Timestamp(ref["date"])
+    fx_for_anchor = fixing if fixing is not None and not fixing.empty else fx
+    est = estimate_nav(
+        official_nav=float(base_nav),
+        official_nav_date=base_date,
+        operating_fee=operating_fee,
+        index_series=index_series,
+        fx=fx_for_anchor,
+        index_exposure=index_exposure,
+        until=us_close,
+    )
+    anchor = clean_number(est.get("navForReturn"))
+    if anchor in (None, 0):
+        return None
+    return {
+        "anchorNav": anchor,
+        "publishedNav": float(base_nav),
+        "publishedNavDate": base_date,
+        "usCloseDate": us_close.strftime("%Y-%m-%d"),
+        "anchorIndexReturn": clean_number(est.get("estimateNdxReturn")),
+        "anchorFxReturn": clean_number(est.get("estimateFxReturn")),
+    }
+
+
+def real_premium_at_china_close(close_value, anchor, future_change, fx_change):
+    """15:00 真实溢价率：场内价 ÷ (净值锚 × 15:00汇率 × 15:00期货) − 1。"""
+    if close_value in (None, 0) or anchor in (None, 0):
+        return None
+    if future_change is None or fx_change is None:
+        return None
+    marked = anchor * (1 + fx_change / 100) * (1 + future_change / 100)
+    if marked <= 0:
+        return None
+    return (float(close_value) / marked - 1) * 100
 
 
 def value_on_or_before(series: pd.DataFrame | None, date: pd.Timestamp) -> float | None:
@@ -553,6 +906,14 @@ def main() -> None:
     if "group" not in history.columns:
         history["group"] = "nasdaq100"
     index_map, fx = load_estimation_series()
+    # 净值锚的汇率项用央行中间价（QDII 估值口径），接口限流时回退在岸即期
+    fixing = fetch_pbc_fixing_daily()
+    if fixing is not None:
+        last_date = fixing.index.max() if not isinstance(fixing, pd.DataFrame) or "date" not in fixing.columns else fixing["date"].max()
+        last_value = fixing["close"].iloc[-1]
+        print(f"净值锚汇率项采用：央行中间价，最新 {pd.Timestamp(last_date):%Y-%m-%d} {last_value}")
+    else:
+        print("中间价不可用，净值锚汇率项回退在岸即期")
     etfcom_map = load_etfcom_premium_map()
     future_fallbacks = load_future_fallbacks()
     benchmark_map = {}
@@ -566,12 +927,49 @@ def main() -> None:
             print(f"{meta['benchmark_symbol']}历史行情获取失败，跟踪差将留空：{error}")
             benchmark_map[group_key] = None
     latest_date = history["date"].max()
-    china_close_future_changes = {
-        group_key: china_close_future_change(index_map.get(group_key), latest_date)
-        if group_key == "nasdaq100"
-        else None
-        for group_key in GROUPS
-    }
+    trading_dates = pd.Series(sorted(history["date"].unique()))
+    prev_date = trading_dates.iloc[-2] if len(trading_dates) >= 2 else None
+
+    # 近 7 个 A 股交易日（含最新）的 15:00 期货/汇率，一份缓存同时供「真实溢价率变化」
+    # 与「近 7 日真实溢价率趋势」使用，避免逐日重复拉分钟线。
+    TREND_POINTS = 7
+    trend_dates = [pd.Timestamp(day) for day in list(trading_dates)[-TREND_POINTS:]]
+    future_change_cache: dict[tuple[str, pd.Timestamp], float | None] = {}
+    fx_change_cache: dict[pd.Timestamp, float | None] = {}
+    for day in trend_dates:
+        fx_change_cache[day] = china_close_fx_change(day)
+        for group_key in GROUPS:
+            symbol = GROUP_FUTURE_YAHOO_SYMBOLS.get(group_key, "NQ=F")
+            cache_key = (symbol, day)
+            if cache_key not in future_change_cache:
+                future_change_cache[cache_key] = china_close_future_change(day, symbol)
+
+    def future_change_for(day, group_key: str):
+        if day is None:
+            return None
+        day = pd.Timestamp(day)
+        symbol = GROUP_FUTURE_YAHOO_SYMBOLS.get(group_key, "NQ=F")
+        cache_key = (symbol, day)
+        if cache_key not in future_change_cache:
+            future_change_cache[cache_key] = china_close_future_change(day, symbol)
+        return future_change_cache[cache_key]
+
+    def fx_change_for(day):
+        if day is None:
+            return None
+        day = pd.Timestamp(day)
+        if day not in fx_change_cache:
+            fx_change_cache[day] = china_close_fx_change(day)
+        return fx_change_cache[day]
+
+    china_close_future_changes = {group_key: future_change_for(latest_date, group_key) for group_key in GROUPS}
+    china_close_fx_change_pct = fx_change_for(latest_date)
+    # 前一交易日：用于「真实溢价率变化」的对照组。
+    # 休市时当前值只能锚定在最后一个A股时刻，此时要比的对象是再前一个交易日的15:00。
+    prev_china_close_future_changes = (
+        {group_key: future_change_for(prev_date, group_key) for group_key in GROUPS} if prev_date is not None else {}
+    )
+    prev_china_close_fx_change_pct = fx_change_for(prev_date) if prev_date is not None else None
     funds = []
     for code, group in history.sort_values("date").groupby("code"):
         group = group.sort_values("date").reset_index(drop=True)
@@ -629,6 +1027,100 @@ def main() -> None:
         if clean_number(latest_premium) is None and clean_number(etfcom.get("etfComPremiumRate")) is not None:
             latest_premium = clean_number(etfcom.get("etfComPremiumRate"))
 
+        # 前一交易日（A股口径）的收盘溢价，作为「真实溢价率变化」的对照组
+        prev_rows = group[group["date"] < latest_date]
+        prev_premium = None
+        prev_row_date = None
+        if len(prev_rows):
+            prev_row = prev_rows.iloc[-1]
+            prev_row_date = prev_row["date"]
+            prev_premium = clean_number(prev_row.get("live_premium_pct"))
+            if prev_premium is None:
+                prev_nav = clean_number(prev_row.get("nav"))
+                prev_close = clean_number(prev_row.get("close"))
+                if prev_nav not in (None, 0) and prev_close is not None:
+                    prev_premium = (float(prev_close) / float(prev_nav) - 1) * 100
+
+        # 15:00 真实溢价：用「发布滞后 + 美股前一日涨跌」预估出的净值锚，
+        # 再叠加当日 15:00 的期货与汇率变动。
+        fund_index_series = index_map[code] if code in index_map else index_map.get(group_key)
+        fund_exposure = FUND_INDEX_EXPOSURES.get(code, 1.0)
+        anchor_now = session_anchor_nav(group, latest_date, operating_fee, fund_index_series, fx, fund_exposure, fixing)
+        anchor_prev = (
+            session_anchor_nav(group, prev_row_date, operating_fee, fund_index_series, fx, fund_exposure, fixing)
+            if prev_row_date is not None
+            else None
+        )
+        # 15:00 期货：默认用所属分组的期货；无对应期货的基金（标普信息科技）走代理分组，
+        # 代理期货的涨跌还要乘 beta 才等于该基金跟踪指数的预估涨跌。
+        future_key = FUND_FUTURE_PROXY.get(code, group_key)
+        future_beta = FUND_FUTURE_BETA.get(code, 1.0)
+        fut_now_raw = clean_json_value(china_close_future_changes.get(future_key))
+        fut_prev_raw = clean_json_value(prev_china_close_future_changes.get(future_key))
+        fut_now = clean_json_value(fut_now_raw * future_beta) if fut_now_raw is not None else None
+        fut_prev = clean_json_value(fut_prev_raw * future_beta) if fut_prev_raw is not None else None
+        fx_now = clean_json_value(china_close_fx_change_pct)
+        fx_prev = clean_json_value(prev_china_close_fx_change_pct)
+        prev_close_value = clean_number(prev_rows.iloc[-1]["close"]) if len(prev_rows) else None
+
+        china_close_real_premium = real_premium_at_china_close(
+            clean_number(latest["close"]),
+            anchor_now["anchorNav"] if anchor_now else None,
+            fut_now,
+            fx_now,
+        )
+        prev_china_close_real_premium = real_premium_at_china_close(
+            prev_close_value,
+            anchor_prev["anchorNav"] if anchor_prev else None,
+            fut_prev,
+            fx_prev,
+        )
+
+        # 近 7 个 A 股交易日的 15:00 真实溢价率（口径与当日完全一致：锚 × 15:00 汇率 × 15:00 期货），
+        # 供前端画迷你折线图看趋势。历史日同样用「当时能拿到的最新已发布净值」做锚。
+        real_premium_trend = []
+        for trend_day in trend_dates:
+            day_rows = group[group["date"] == trend_day]
+            if day_rows.empty:
+                continue
+            day_anchor = session_anchor_nav(
+                group, trend_day, operating_fee, fund_index_series, fx, fund_exposure, fixing
+            )
+            day_future_raw = future_change_for(trend_day, future_key)
+            day_future = clean_json_value(day_future_raw * future_beta) if day_future_raw is not None else None
+            day_value = real_premium_at_china_close(
+                clean_number(day_rows.iloc[0]["close"]),
+                day_anchor["anchorNav"] if day_anchor else None,
+                day_future,
+                fx_change_for(trend_day),
+            )
+            if day_value is not None:
+                real_premium_trend.append({"date": trend_day.strftime("%Y-%m-%d"), "value": round(day_value, 3)})
+
+        # 2026 年净值收益：官方净值只到 navDate（滞后一天），而 A股 latest_date 收盘时
+        # 能拿到的净值口径是「锚 × 当日15:00汇率 × 当日15:00期货」（与真实溢价率同源同时点）。
+        # 用它把收益延伸到最新交易日，避免拿当晚才有的官方净值算「未来收益」。
+        nav_for_return = clean_number(nav_info.get("navForReturn")) or clean_number(nav_info.get("navForPremium"))
+        latest_fitted_nav = None
+        metrics_2026_fitted = dict.fromkeys(("navReturn", "fxStrippedReturn", "qqqReturn", "trackingDiff"))
+        if (
+            anchor_now
+            and nav_for_return
+            and fut_now is not None
+            and fx_now is not None
+        ):
+            latest_fitted_nav = anchor_now["anchorNav"] * (1 + fx_now / 100) * (1 + fut_now / 100)
+            if latest_fitted_nav > 0:
+                latest_accum_fitted = latest_accum * latest_fitted_nav / nav_for_return
+                metrics_2026_fitted = period_nav_metrics(
+                    group,
+                    "2025-12-31",
+                    latest_date.strftime("%Y-%m-%d"),
+                    latest_accum_fitted,
+                    benchmark_map.get(group_key),
+                    fx,
+                )
+
         premium_history = group.copy()
         premium_history["premium_for_mean"] = premium_history["live_premium_pct"]
         premium_history.loc[premium_history.index[-1], "premium_for_mean"] = latest_premium
@@ -654,7 +1146,26 @@ def main() -> None:
                 "navDate": official_nav_date,
                 **nav_info,
                 "latestPremium": clean_number(latest_premium),
-                "chinaCloseFutureChangePct": clean_json_value(china_close_future_changes.get(group_key)),
+                "chinaCloseFutureChangePct": fut_now,
+                "chinaCloseFutureRawPct": fut_now_raw,
+                "futureBeta": future_beta if future_beta != 1.0 else None,
+                "futureProxySymbol": future_key if future_beta != 1.0 else None,
+                "chinaCloseFutureDate": latest_date.strftime("%Y-%m-%d"),
+                "chinaCloseFxChangePct": clean_json_value(china_close_fx_change_pct),
+                "prevDate": prev_row_date.strftime("%Y-%m-%d") if prev_row_date is not None else None,
+                "prevPremium": clean_number(prev_premium),
+                "prevChinaCloseFutureChangePct": fut_prev,
+                "prevChinaCloseFutureRawPct": fut_prev_raw,
+                "prevChinaCloseFxChangePct": clean_json_value(prev_china_close_fx_change_pct),
+                "chinaCloseRealPremium": clean_number(china_close_real_premium),
+                "prevChinaCloseRealPremium": clean_number(prev_china_close_real_premium),
+                "realPremiumTrend": real_premium_trend,
+                "sessionAnchorNav": clean_number(anchor_now["anchorNav"]) if anchor_now else None,
+                "sessionAnchorPublishedNav": clean_number(anchor_now["publishedNav"]) if anchor_now else None,
+                "sessionAnchorPublishedDate": anchor_now["publishedNavDate"] if anchor_now else None,
+                "sessionAnchorUsCloseDate": anchor_now["usCloseDate"] if anchor_now else None,
+                "sessionAnchorIndexReturn": clean_number(anchor_now["anchorIndexReturn"]) if anchor_now else None,
+                "sessionAnchorFxReturn": clean_number(anchor_now["anchorFxReturn"]) if anchor_now else None,
                 "etfComServerTime": etfcom.get("etfComServerTime"),
                 "etfComIndexCode": etfcom.get("etfComIndexCode"),
                 "etfComName": etfcom.get("etfComName"),
@@ -674,6 +1185,11 @@ def main() -> None:
                 "return2026": clean_number(return_2026),
                 "navReturn2025": clean_number(metrics_2025["navReturn"]),
                 "navReturn2026": clean_number(metrics_2026["navReturn"]),
+                "navReturn2026Fitted": clean_number(metrics_2026_fitted["navReturn"]),
+                "fxStrippedReturn2026Fitted": clean_number(metrics_2026_fitted["fxStrippedReturn"]),
+                "trackingDiff2026Fitted": clean_number(metrics_2026_fitted["trackingDiff"]),
+                "latestFittedNav": clean_number(latest_fitted_nav),
+                "latestFittedNavDate": latest_date.strftime("%Y-%m-%d") if latest_fitted_nav else None,
                 "fxStrippedReturn2025": clean_number(metrics_2025["fxStrippedReturn"]),
                 "fxStrippedReturn2026": clean_number(metrics_2026["fxStrippedReturn"]),
                 "qqqReturn2025": clean_number(metrics_2025["qqqReturn"]),
