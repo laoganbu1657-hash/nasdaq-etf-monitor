@@ -40,6 +40,9 @@ FUNDS = [
     {"code": "513650", "name": "标普500ETF南方", "group": "sp500"},
     {"code": "159655", "name": "标普500ETF华夏", "group": "sp500"},
     {"code": "161128", "name": "标普信息科技LOF", "group": "nasdaq100"},
+    {"code": "161130", "name": "纳斯达克100LOF", "group": "nasdaq100"},
+    {"code": "513850", "name": "美国50ETF易方达", "group": "usa50"},
+    {"code": "159577", "name": "美国50ETF汇添富", "group": "usa50"},
 ]
 
 NAV_COLS = [
@@ -201,7 +204,23 @@ def fetch_nav_table_df(code: str) -> pd.DataFrame:
     return normalize_nav_df(df)
 
 
+def fetch_nav_akshare_df(code: str) -> pd.DataFrame:
+    """akshare 全历史单位净值（东方财富 lsjz 接口退化为只给最近 20 条时用它兜底）。
+
+    该源没有累计净值与申赎状态，accum_nav 留空，后续由 accum_value() 回退到单位净值。
+    """
+    df = ak.fund_open_fund_info_em(symbol=code, indicator="单位净值走势")
+    if df is None or df.empty:
+        return empty_nav_df()
+    df = df.rename(columns={"净值日期": "nav_date", "单位净值": "nav", "日增长率": "nav_growth_pct"})
+    df["nav_date"] = pd.to_datetime(df["nav_date"], errors="coerce")
+    df = df[(df["nav_date"] >= pd.Timestamp(NAV_START)) & (df["nav_date"] <= pd.Timestamp(END))].copy()
+    df["accum_nav"] = pd.NA
+    return normalize_nav_df(df)
+
+
 def fetch_nav_df(code: str, existing: pd.DataFrame) -> pd.DataFrame:
+    best = empty_nav_df()
     for source_name, fetcher in [
         ("东方财富 JSON", fetch_nav_api_df),
         ("东方财富网页", fetch_nav_table_df),
@@ -211,8 +230,25 @@ def fetch_nav_df(code: str, existing: pd.DataFrame) -> pd.DataFrame:
         except Exception as error:
             print(f"Warning: {code} {source_name}历史净值获取失败：{error}")
             continue
-        if not df.empty:
-            return df
+        if len(df) > len(best):
+            best = df
+        if len(best) >= 60:
+            break
+
+    # 东财 lsjz 接口偶尔只返回最近 20 条；若本地也没有该基金的历史（新接入的基金），
+    # 用 akshare 补全，避免净值序列只有一个月、算不出年度收益。
+    if len(best) < 60 and nav_df_from_existing(existing, code).empty:
+        try:
+            ak_df = fetch_nav_akshare_df(code)
+            if len(ak_df) > len(best):
+                print(f"Info: {code} 东财接口仅 {len(best)} 条，改用 akshare 全历史 {len(ak_df)} 条")
+                best = pd.concat([ak_df, best], ignore_index=True)
+                best = best.drop_duplicates("nav_date", keep="last").sort_values("nav_date")
+        except Exception as error:
+            print(f"Warning: {code} akshare 历史净值获取失败：{error}")
+
+    if not best.empty:
+        return best
 
     fallback = nav_df_from_existing(existing, code)
     if not fallback.empty:
