@@ -30,6 +30,10 @@
         margin: 0;
         background: var(--bg);
         color: var(--ink);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
         font-family:
           -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       }
@@ -37,6 +41,7 @@
       header {
         position: sticky;
         top: 0;
+        flex: none;
         z-index: 10;
         border-bottom: 1px solid var(--line);
         background: rgba(246, 248, 251, 0.96);
@@ -149,6 +154,10 @@
         max-width: 1480px;
         margin: 0 auto;
         padding: 18px 24px 36px;
+        width: 100%;
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
       }
 
       .stats {
@@ -176,8 +185,23 @@
         font-size: 13px;
       }
 
+      .stat span.stale {
+        color: #c0392b;
+        font-weight: 600;
+      }
+
+      .stat span.fresh {
+        color: #1e8449;
+      }
+
       .table-wrap {
+        /* main 是纵向滚动容器，表格外壳吸附在 main 顶部（页头正下方），
+           表内 th 的 position:sticky 相对本壳生效，下滚时表头始终锁定 */
+        position: sticky;
+        top: 0;
+        max-height: calc(100vh - var(--page-head-h, 0px) - 40px);
         overflow: auto;
+        z-index: 5;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
@@ -185,16 +209,16 @@
 
       table {
         width: 100%;
-        min-width: 1780px;
+        min-width: 1560px;
         border-collapse: collapse;
-        font-size: 14px;
+        font-size: 12.5px;
       }
 
       th,
       td {
         border-right: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
-        padding: 12px 10px;
+        padding: 7px 6px;
         text-align: right;
         white-space: nowrap;
       }
@@ -206,6 +230,7 @@
         background: var(--head);
         color: #334155;
         font-weight: 800;
+        font-size: 12px;
         cursor: pointer;
         user-select: none;
       }
@@ -289,6 +314,24 @@
         overflow: hidden;
         border-radius: 0;
         background: transparent;
+      }
+
+      .spark-cell {
+        width: 80px;
+        min-width: 80px;
+        text-align: center;
+      }
+
+      .spark-box {
+        display: inline-flex;
+        width: 74px;
+        height: 24px;
+      }
+
+      .spark-box svg {
+        width: 100%;
+        height: 100%;
+        display: block;
       }
 
       .trend-line {
@@ -402,7 +445,14 @@
         body {
           background: #eef3f8;
           width: 100%;
+          height: auto;
+          display: block;
           overflow-x: hidden;
+          overflow-y: auto;
+        }
+
+        main {
+          overflow: visible;
         }
 
         header {
@@ -491,6 +541,8 @@
         }
 
         .table-wrap {
+          position: static;
+          max-height: none;
           overflow: auto;
           max-width: 100%;
           border: 1px solid var(--line);
@@ -499,13 +551,13 @@
         }
 
         table {
-          min-width: 1500px;
-          font-size: 12px;
+          min-width: 1320px;
+          font-size: 11px;
         }
 
         th,
         td {
-          padding: 9px 8px;
+          padding: 6px 5px;
         }
 
         th:first-child,
@@ -613,14 +665,15 @@
               <th data-key="changePct">今日涨幅趋势</th>
               <th data-key="changePct">今日实时涨跌幅</th>
               <th id="currentPremiumHead" data-key="currentPremium">当前溢价率</th>
-              <th data-key="usdCnyChangePct">实时汇率影响</th>
-              <th data-key="nqFutureChangePct">实时对应期货</th>
+              <th data-key="usdCnyChangePct">实时汇率</th>
+              <th data-key="nqFutureChangePct">实时期货</th>
               <th data-key="avg7AmountWan">7日日均成交额</th>
               <th data-key="relativeDeviation">均值差</th>
               <th data-key="switchAdvantage">切换优势20日</th>
               <th data-key="switchAdvantage30">切换优势30日</th>
               <th data-key="adjustedPremium">真实溢价率</th>
               <th data-key="adjustedPremiumChange">真实溢价较昨收</th>
+              <th data-key="realPremiumTrend" title="近 7 个 A 股交易日 15:00 真实溢价率走势（口径与「真实溢价率」一致：净值锚 × 当日15:00汇率 × 当日15:00期货）">近7日趋势</th>
               <th data-key="operatingFee">运作费率</th>
               <th data-key="avg10Premium">10日均值</th>
               <th data-key="avg20Premium">20日均值</th>
@@ -667,6 +720,16 @@
       };
 
       const $ = (id) => document.getElementById(id);
+      // 页头是 sticky 的，表格壳要吸附在它下方：动态把页头高度写入 CSS 变量
+      const pageHead = document.querySelector("header");
+      const syncPageHeadHeight = () => {
+        document.documentElement.style.setProperty("--page-head-h", `${pageHead.offsetHeight}px`);
+      };
+      if (window.ResizeObserver && pageHead) {
+        new ResizeObserver(syncPageHeadHeight).observe(pageHead);
+      }
+      window.addEventListener("resize", syncPageHeadHeight);
+      syncPageHeadHeight();
       const REMOTE_DATA_BASE = "https://laoganbu1657-hash.github.io/nasdaq-etf-monitor";
       const ACTIVE_GROUP_STORAGE_KEY = "qdii-etf-monitor-active-group";
       const HOLDING_STORAGE_PREFIX = "qdii-etf-monitor-holding-code-";
@@ -750,6 +813,85 @@
         return "";
       }
 
+      function beijingStampFromUnix(seconds) {
+        const value = Number(seconds);
+        if (!Number.isFinite(value) || value <= 0) return "";
+        const parts = new Intl.DateTimeFormat("zh-CN", {
+          timeZone: "Asia/Shanghai",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).formatToParts(new Date(value * 1000));
+        const get = (type) => parts.find((part) => part.type === type)?.value || "";
+        return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`;
+      }
+
+      // 把行情源自带的时间戳解析成「距今多少秒」，用来暴露真实的延迟。
+      function quoteAgeSeconds(timeText) {
+        const match = String(timeText || "").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+        if (!match) return null;
+        const stamp = Date.parse(`${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6] || "00"}+08:00`);
+        if (!Number.isFinite(stamp)) return null;
+        return Math.max(0, Math.round((Date.now() - stamp) / 1000));
+      }
+
+      function formatAgeText(seconds) {
+        if (!Number.isFinite(seconds)) return "";
+        if (seconds < 90) return `${seconds}秒前`;
+        if (seconds < 3600) return `${Math.round(seconds / 60)}分钟前`;
+        if (seconds < 86400) return `${(seconds / 3600).toFixed(1)}小时前`;
+        return `${Math.round(seconds / 86400)}天前`;
+      }
+
+      function shortClock(timeText) {
+        const match = String(timeText || "").match(/(\d{2}):(\d{2})(?::(\d{2}))?/);
+        return match ? `${match[1]}:${match[2]}` : "";
+      }
+
+      // 期货"交易日"：NQ/ES 每个交易日 06:00（北京时间）开始、次日 05:00 结束，
+      // 所以凌晨 6 点前的报价属于前一个交易日。
+      function futureSessionDate(timeText) {
+        const match = String(timeText || "").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+        if (!match) return null;
+        const noon = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+        const shifted = new Date(Number(match[4]) < 6 ? noon - 86400000 : noon);
+        const pad = (value) => String(value).padStart(2, "0");
+        return `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())}`;
+      }
+
+      function baseDataAgeDays(dateText) {
+        const stamp = Date.parse(`${String(dateText || "").slice(0, 10)}T00:00:00+08:00`);
+        if (!Number.isFinite(stamp)) return null;
+        return Math.floor((Date.now() - stamp) / 86400000);
+      }
+
+      // 腾讯行情 field[30] 形如 20261030150003
+      function parseTencentTimestamp(raw) {
+        const text = String(raw || "").replace(/\D/g, "");
+        if (text.length >= 12) {
+          return `${text.slice(0, 4)}-${text.slice(4, 6)}-${text.slice(6, 8)} ${text.slice(8, 10)}:${text.slice(10, 12)}:${text.slice(12, 14) || "00"}`;
+        }
+        return "";
+      }
+
+      function beijingDateKeyOf(timeText) {
+        const match = String(timeText || "").match(/(\d{4})-(\d{2})-(\d{2})/);
+        return match ? `${match[1]}-${match[2]}-${match[3]}` : "";
+      }
+
+      // 价格是否来自今天的实时行情：决定「真实溢价率」走盘中口径还是休市口径。
+      // 无时间戳时宁可按休市口径处理，避免把休市价格配到更新后的净值上。
+      function priceIsLiveToday(quote) {
+        if (!quote || !Number.isFinite(quote.price) || quote.price <= 0) return false;
+        const key = beijingDateKeyOf(quote.time);
+        if (!key) return false;
+        return key === beijingDateKeyOf(beijingStampFromUnix(Date.now() / 1000));
+      }
+
       function sampledTrend(points, stepMinutes = 1) {
         const result = [];
         let lastBucket = null;
@@ -811,6 +953,37 @@
         }
 
         return `<span class="trend-empty" title="今日涨跌幅：${fmtPct(clean)}；暂无真实分钟趋势数据">—</span>`;
+      }
+
+      function premiumSpark(fund) {
+        const trend = (fund.realPremiumTrend || []).filter((point) => point && Number.isFinite(point.value));
+        if (trend.length < 2) return '<span class="trend-empty" title="近7日真实溢价率数据不足">—</span>';
+        const values = trend.map((point) => point.value);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const width = 74;
+        const height = 24;
+        const padX = 3;
+        const padY = 3;
+        // 最小显示幅度 0.12pct，避免走势被压缩成一条直线
+        const halfSpan = Math.max((max - min) / 2, 0.06);
+        const mid = (min + max) / 2;
+        const yMin = mid - halfSpan;
+        const yMax = mid + halfSpan;
+        const coords = trend.map((point, index) => {
+          const x = padX + (index / (trend.length - 1)) * (width - padX * 2);
+          const y = padY + ((yMax - point.value) / (yMax - yMin)) * (height - padY * 2);
+          return [x, y];
+        });
+        const pointsText = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+        const first = coords[0];
+        const last = coords[coords.length - 1];
+        const delta = values[values.length - 1] - values[0];
+        const color = Math.abs(delta) < 1e-9 ? "var(--muted)" : delta > 0 ? "var(--red)" : "var(--green)";
+        const area = `M ${first[0].toFixed(1)},${first[1].toFixed(1)} L ${pointsText} L ${last[0].toFixed(1)},${height - padY} L ${first[0].toFixed(1)},${height - padY} Z`;
+        const dates = trend.map((point) => `${point.date.slice(5)}  ${fmtPct(point.value)}`).join("&#10;");
+        const tip = `近7日真实溢价率（15:00 口径）&#10;${dates}&#10;最新 ${fmtPct(values[values.length - 1])}；区间 ${fmtPct(min)} ~ ${fmtPct(max)}`;
+        return `<div class="spark-box" style="color:${color}" title="${tip}"><svg viewBox="0 0 ${width} ${height}" aria-hidden="true"><path d="${area}" fill="currentColor" opacity="0.1"></path><polyline points="${pointsText}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="2.2" fill="currentColor"></circle></svg></div>`;
       }
 
       function quoteStack(fund) {
@@ -887,18 +1060,88 @@
                 : "估算当前溢价率（ETF.com.cn溢价反推）";
         const future = state.macro.futures[fund.group] || {};
         const usdCnyChangePct = Number.isFinite(state.macro.usdCnyChangePct) ? state.macro.usdCnyChangePct : fallbackFxChangePct([fund]);
-        const macroImpact =
-          (Number.isFinite(usdCnyChangePct) ? usdCnyChangePct : 0) +
-          (Number.isFinite(future.changePct) ? future.changePct : 0);
-        const adjustedNav = premiumNav * (1 + macroImpact / 100);
-        const adjustedPremium = adjustedNav > 0 && !premiumNavStale ? (price / adjustedNav - 1) * 100 : calculatedPremium;
-        const chinaCloseFutureChangePct = Number.isFinite(fund.chinaCloseFutureChangePct) ? fund.chinaCloseFutureChangePct : 0;
-        const priorCloseComparablePremium =
-          Number.isFinite(fund.latestPremium) ? fund.latestPremium + chinaCloseFutureChangePct : null;
-        const adjustedPremiumChange =
-          Number.isFinite(adjustedPremium) && Number.isFinite(priorCloseComparablePremium)
-            ? adjustedPremium - priorCloseComparablePremium
-            : null;
+        // 跟踪指数没有对应期货的基金（161128→S5INFT），用代理期货涨跌 × beta 拟合指数涨跌。
+        const futureBeta = Number.isFinite(fund.futureBeta) && fund.futureBeta > 0 ? fund.futureBeta : 1;
+        const rawFutureChangePct = Number.isFinite(future.changePct) ? future.changePct : null;
+        const nqFutureChangePct = Number.isFinite(rawFutureChangePct) ? rawFutureChangePct * futureBeta : null;
+
+        // 真实溢价率＝场内价 ÷ [净值锚 ×(1+期货涨幅)×(1+汇率涨幅)] − 1
+        // 分两种模式，价格与净值必须属于同一时刻：
+        // ① 盘中（行情时间戳是今天）：锚 = 最新美股收盘的估算净值 navForReturn，
+        //    叠加开盘以来的实时期货/汇率；基准 = 上一A股交易日 15:00 的真实溢价（chinaCloseRealPremium）。
+        // ② 休市（价格冻结在最后收盘价）：锚 = sessionAnchorNav——QDII净值有发布滞后，
+        //    A股交易日 D 盘中只有 D-2 的官方净值，需按美股最近一个交易日的涨跌预估；
+        //    再叠加 D 日 15:00 的期货/汇率。基准 = 再前一日 15:00 的真实溢价。
+        //    这样「收盘后才发生的美股波动」不会提前算进溢价。
+        const liveQuote = state.quotes.get(fund.code);
+        const priceLiveToday = priceIsLiveToday(liveQuote);
+        const chinaFutPct = Number.isFinite(fund.chinaCloseFutureChangePct) ? fund.chinaCloseFutureChangePct : null;
+        const chinaFxPct = Number.isFinite(fund.chinaCloseFxChangePct) ? fund.chinaCloseFxChangePct : null;
+        let adjustedPremium = null;
+        let adjustedPremiumChange = null;
+        let premiumMode = "frozen";
+        let basePremium = null;
+        let baseFuture = null;
+        let baseFx = null;
+        let baseDate = "";
+        let baseComparablePremium = null;
+        // 兜底：若 funds.json 还是旧结构（缺 chinaCloseRealPremium / prevChinaCloseRealPremium），
+        // 就用锚净值与当日 15:00 涨幅现场推算，避免退化成「含美股收盘」的错误口径。
+        const realPremiumFromAnchor = (anchorNav, fxPct, futPct) => {
+          if (!(anchorNav > 0)) return null;
+          if (fxPct === null && futPct === null) return null;
+          return (price / (anchorNav * (1 + (fxPct || 0) / 100) * (1 + (futPct || 0) / 100)) - 1) * 100;
+        };
+        const realPremiumFromClosePremium = (closePremium, fxPct, futPct) => {
+          if (!Number.isFinite(closePremium)) return null;
+          if (fxPct === null && futPct === null) return null;
+          return ((1 + closePremium / 100) / ((1 + (fxPct || 0) / 100) * (1 + (futPct || 0) / 100)) - 1) * 100;
+        };
+        if (priceLiveToday) {
+          premiumMode = "live";
+          const liveFut = Number.isFinite(nqFutureChangePct) ? nqFutureChangePct : null;
+          const liveFx = Number.isFinite(usdCnyChangePct) ? usdCnyChangePct : null;
+          if (premiumNav > 0 && !premiumNavStale && (liveFut !== null || liveFx !== null)) {
+            const liveMarkup = (1 + (liveFx || 0) / 100) * (1 + (liveFut || 0) / 100);
+            adjustedPremium = (price / (premiumNav * liveMarkup) - 1) * 100;
+          } else {
+            adjustedPremium = calculatedPremium;
+          }
+          basePremium = Number.isFinite(fund.latestPremium) ? fund.latestPremium : null;
+          baseFuture = chinaFutPct;
+          baseFx = chinaFxPct;
+          baseDate = fund.chinaCloseFutureDate || fund.latestDate || "";
+          baseComparablePremium = Number.isFinite(fund.chinaCloseRealPremium)
+            ? fund.chinaCloseRealPremium
+            : realPremiumFromClosePremium(basePremium, chinaFxPct, chinaFutPct);
+          adjustedPremiumChange =
+            Number.isFinite(adjustedPremium) && Number.isFinite(baseComparablePremium)
+              ? adjustedPremium - baseComparablePremium
+              : null;
+        } else {
+          const frozenDerived = realPremiumFromAnchor(fund.sessionAnchorNav, chinaFxPct, chinaFutPct);
+          adjustedPremium = Number.isFinite(fund.chinaCloseRealPremium)
+            ? fund.chinaCloseRealPremium
+            : Number.isFinite(frozenDerived)
+              ? frozenDerived
+              : calculatedPremium;
+          basePremium = Number.isFinite(fund.prevPremium) ? fund.prevPremium : null;
+          baseFuture = Number.isFinite(fund.prevChinaCloseFutureChangePct) ? fund.prevChinaCloseFutureChangePct : null;
+          baseFx = Number.isFinite(fund.prevChinaCloseFxChangePct) ? fund.prevChinaCloseFxChangePct : null;
+          baseDate = fund.prevDate || "";
+          baseComparablePremium = Number.isFinite(fund.prevChinaCloseRealPremium)
+            ? fund.prevChinaCloseRealPremium
+            : realPremiumFromClosePremium(basePremium, baseFx, baseFuture);
+          adjustedPremiumChange =
+            Number.isFinite(adjustedPremium) && Number.isFinite(baseComparablePremium)
+              ? adjustedPremium - baseComparablePremium
+              : null;
+        }
+        const baseComponentsMissing =
+          premiumMode === "live"
+            ? chinaFutPct === null || chinaFxPct === null
+            : baseFuture === null || baseFx === null;
+        const priorCloseComparablePremium = Number.isFinite(baseComparablePremium) ? baseComparablePremium : null;
         const scaleAmount = Number.isFinite(fund.exchangeShares) && fund.nav > 0 ? fund.exchangeShares * fund.nav : null;
         const subscriptionAmountRatio = Number.isFinite(fund.subscriptionLimitAmount) && scaleAmount > 0
           ? (fund.subscriptionLimitAmount / scaleAmount) * 100 : null;
@@ -920,10 +1163,18 @@
           premiumNavDate,
           currentPremiumSource,
           usdCnyChangePct,
-          nqFutureChangePct: future.changePct,
+          nqFutureChangePct,
+          rawFutureChangePct,
+          futureBeta,
+          premiumMode,
+          priceLiveToday,
           adjustedPremium,
           adjustedPremiumChange,
-          chinaCloseFutureChangePct,
+          basePremium,
+          baseFuture,
+          baseFx,
+          baseDate,
+          baseComponentsMissing,
           priorCloseComparablePremium,
           relativeDeviation:
             Number.isFinite(currentPremium) && Number.isFinite(fund.avg20Premium) ? currentPremium - fund.avg20Premium : null,
@@ -960,8 +1211,14 @@
           .filter((fund) => !keyword || fund.name.toLowerCase().includes(keyword) || fund.code.includes(keyword))
           .sort((a, b) => {
             const key = state.sortBy;
-            const av = a[key];
-            const bv = b[key];
+            const val = (fund) => {
+              const raw = key === "navReturn2026" ? (fund.navReturn2026Fitted ?? fund.navReturn2026) : fund[key];
+              if (typeof raw === "string") return raw;
+              // 数值列以外的类型（如近7日趋势数组）不参与比较
+              return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+            };
+            const av = val(a);
+            const bv = val(b);
             if (typeof av === "string" || typeof bv === "string") {
               return String(av || "").localeCompare(String(bv || ""), "zh-Hans-CN") * state.sortDir;
             }
@@ -969,10 +1226,46 @@
           });
       }
 
+      function realPremiumTitle(fund) {
+        const lines = [];
+        if (fund.premiumMode === "live") {
+          lines.push(
+            "【盘中口径】真实溢价率＝实时价 ÷ [最新美股收盘估算净值 ×(1+实时期货涨幅)×(1+实时汇率涨幅)] − 1",
+            `锚定净值：${fmtPrice(fund.premiumNav)}（估算至 ${fund.navForPremiumDate || "-"} 美股收盘）`,
+            `实时期货：${fmtPctPoint(fund.nqFutureChangePct)}${fund.futureBeta ? `（纳指期货 ${fmtPctPoint(fund.rawFutureChangePct)} × beta ${fund.futureBeta.toFixed(4)} 拟合）` : ""}；实时汇率：${fmtPctPoint(fund.usdCnyChangePct)}`
+          );
+        } else {
+          lines.push(
+            "【休市口径】真实溢价率＝最新收盘价 ÷ [净值锚 ×(1+当日15:00期货涨幅)×(1+当日15:00汇率涨幅)] − 1",
+            `净值锚：${fmtPrice(fund.sessionAnchorNav)} = ${fund.sessionAnchorPublishedDate || "-"} 官方净值 ${fmtPrice(fund.sessionAnchorPublishedNav)}`,
+            `× 美股 ${fund.sessionAnchorUsCloseDate || "-"} 涨跌 ${fmtPctPoint(fund.sessionAnchorIndexReturn)} × 中间价汇率 ${fmtPctPoint(fund.sessionAnchorFxReturn)} 预估`,
+            "（QDII净值发布滞后，A股交易日盘中只能拿到前两天的官方净值，故按美股前一交易日涨跌预估；锚的汇率项用央行中间价——QDII估值口径，误差<1bp）",
+            `叠加 ${fund.chinaCloseFutureDate || "-"} 15:00 期货 ${fmtPctPoint(fund.chinaCloseFutureChangePct)}${fund.futureBeta ? `（纳指期货 ${fmtPctPoint(fund.chinaCloseFutureRawPct)} × beta ${fund.futureBeta.toFixed(4)} 拟合，跟踪指数无对应期货）` : ""}、汇率 ${fmtPctPoint(fund.chinaCloseFxChangePct)}`
+          );
+        }
+        lines.push(
+          `⇒ 真实溢价率：${fmtPct(fund.adjustedPremium)}`,
+          `场内价：${fmtPrice(fund.livePrice)}`
+        );
+        return lines.join("\n");
+      }
+
+      function realPremiumChangeTitle(fund) {
+        const missing = fund.baseComponentsMissing ? "（该分组缺少部分15:00基准数据）" : "";
+        return [
+          "真实溢价率变化＝当前真实溢价率 − 上一A股交易日北京时间15:00 的真实溢价率",
+          `【当前】${fund.premiumMode === "live" ? "盘中实时口径" : `${fund.latestDate || "-"} 收盘口径`} ⇒ ${fmtPct(fund.adjustedPremium)}`,
+          `【基准 ${fund.baseDate || "-"} 15:00】收盘价对应净值锚口径 ⇒ ${fmtPct(fund.priorCloseComparablePremium)}${missing}`,
+          `⇒ 变化：${fmtPctPoint(fund.adjustedPremiumChange)}`,
+          "15:00 的期货涨幅取同一 NQ/ES 合约相对前一交易日结算价的当日涨幅，不是从开盘起算。",
+          "汇率分两段：净值锚的隔夜段用央行中间价（QDII 估值口径，接口失败回退新浪在岸）；盘中 15:00 段用新浪在岸 USD/CNY（14:50–15:00 中位数，基数为前一交易日收盘）。",
+        ].join("\n");
+      }
+
       function render() {
         const funds = sortedFunds();
         const allForScale = enrichedFunds();
-        const navReturn2026Values = allForScale.map((fund) => fund.navReturn2026);
+        const navReturn2026Values = allForScale.map((fund) => fund.navReturn2026Fitted ?? fund.navReturn2026);
         const navReturn2025Values = allForScale.map((fund) => fund.navReturn2025);
         $("tbody").innerHTML = funds
           .map((fund, index) => {
@@ -986,14 +1279,15 @@
                 <td class="trend-cell" data-label="今日趋势">${trendBars(fund)}</td>
                 <td data-label="实时价格 / 涨跌">${quoteStack(fund)}</td>
                 <td data-label="估算当前溢价率" title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNav)}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
-                <td data-label="实时汇率影响" class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
-                <td data-label="实时对应期货" class="${classForSigned(fund.nqFutureChangePct)}">${fmtPct(fund.nqFutureChangePct)}</td>
+                <td data-label="实时汇率" class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
+                <td data-label="实时期货" title="${fund.futureBeta ? `跟踪指数无对应期货，用纳指期货 ${fmtPct(fund.rawFutureChangePct)} × beta ${fund.futureBeta.toFixed(4)} 拟合为指数预估涨跌` : "实时对应期货涨跌幅"}" class="${classForSigned(fund.nqFutureChangePct)}">${Number.isFinite(fund.nqFutureChangePct) ? fmtPct(fund.nqFutureChangePct) + (fund.futureBeta ? '<span style="font-size:11px;opacity:.6">估</span>' : "") : "-"}</td>
                 <td data-label="7日日均成交额">${fmtAmount(fund.avg7AmountWan)}</td>
                 <td data-label="均值差" class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
                 <td data-label="切换优势" class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
                 <td data-label="切换优势2（30日）" class="${switch30Class}">${fmtPctPoint(fund.switchAdvantage30)}</td>
-                <td data-label="真实溢价率" class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
-                <td data-label="真实溢价较昨收" title="当前真实溢价率 -（昨日收盘溢价率 + 昨日北京时间15:00纳指期货涨跌幅）；昨日期货：${fmtPctPoint(fund.chinaCloseFutureChangePct)}" class="${adjustedChangeClass}">${fmtPctPoint(fund.adjustedPremiumChange)}</td>
+                <td data-label="真实溢价率" title="${realPremiumTitle(fund)}" class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
+                <td data-label="真实溢价率变化" title="${realPremiumChangeTitle(fund)}" class="${adjustedChangeClass}">${fmtPctPoint(fund.adjustedPremiumChange)}</td>
+                <td data-label="近7日趋势" class="spark-cell">${premiumSpark(fund)}</td>
                 <td data-label="运作费率">${fmtPct(fund.operatingFee)}</td>
                 <td data-label="10日均值">${fmtPct(fund.avg10Premium)}</td>
                 <td data-label="20日均值">${fmtPct(fund.avg20Premium)}</td>
@@ -1006,7 +1300,7 @@
                 <td data-label="最新申购份额" title="${fund.subscriptionLimitDate || '-'}；${fund.subscriptionLimitNote || '暂无清单'}；额度上限，并非实际申购量">${Number.isFinite(fund.subscriptionLimitShares) ? (fund.subscriptionLimitShares / 1e4).toFixed(0) + '万份' : fund.code === '161128' ? '不适用' : fund.subscriptionLimitNote === '不设上限' ? '不设上限' : '-'}</td>
                 <td data-label="最新申购金额" title="清单额度×清单净值${fmtPrice(fund.subscriptionLimitNav)}；日期${fund.subscriptionLimitDate || '-'}">${Number.isFinite(fund.subscriptionLimitAmount) ? (fund.subscriptionLimitAmount / 1e4).toFixed(2) + '万元' : '-'}</td>
                 <td data-label="申购金额占比" title="最新申购金额 ÷ 规模；申购金额为额度上限对应金额">${fmtPct(fund.subscriptionAmountRatio)}</td>
-                <td data-label="2026净值收益" class="${classForRank(fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026)}</td>
+                <td data-label="2026净值收益" title="最新交易日 ${fund.latestFittedNavDate || "-"} 拟合净值 ${fmtPrice(fund.latestFittedNav)}（锚 × 当日15:00汇率 × 当日15:00期货）；官方净值 ${fmtPrice(fund.nav)}（${fund.navDate || "-"}）口径收益 ${fmtPct(fund.navReturn2026)}" class="${classForRank(fund.navReturn2026Fitted ?? fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026Fitted ?? fund.navReturn2026)}</td>
                 <td data-label="2025净值收益" class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
                 <td data-label="溢价净值日">${fund.navForPremiumDate || fund.navDate}${fund.navForPremiumSource === "estimated" ? "估" : ""}</td>
               </tr>
@@ -1035,11 +1329,22 @@
         const future = state.macro.futures[state.activeGroup] || {};
         $("nqFuture").textContent =
           future.price === null || future.price === undefined ? "-" : `${Number(future.price).toFixed(2)} / ${fmtPct(future.changePct)}`;
-        $("futureLabel").textContent = `实时${groupMeta.name || ""}期货`;
+        const futureAge = quoteAgeSeconds(future.time);
+        $("nqFuture").title =
+          `${future.source || "期货行情"}${future.time ? `；行情时间：${future.time}（北京时间）` : ""}` +
+          (Number.isFinite(futureAge) ? `；距今 ${formatAgeText(futureAge)}` : "；无时间戳，无法判断延迟");
+        const futureLabelText = `实时${groupMeta.name || ""}期货${future.time ? ` · ${shortClock(future.time)}` : ""}`;
+        $("futureLabel").textContent = Number.isFinite(futureAge) ? `${futureLabelText}（${formatAgeText(futureAge)}）` : futureLabelText;
+        $("futureLabel").className = Number.isFinite(futureAge) ? (futureAge > 120 ? "stale" : "fresh") : "";
         $("updated").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
         const etfComTimes = [...new Set(all.map((fund) => fund.etfComServerTime).filter(Boolean))];
         const etfComText = etfComTimes.length ? `ETF.com.cn参考时间：${etfComTimes[0]}` : "ETF.com.cn参考数据：未取到";
-        $("subtitle").textContent = `当前分组：${groupMeta.name || state.activeGroup}；基础数据：${state.latestDate}；估算当前溢价率=场内实时价格/含隔夜指数与汇率变化的估算人民币净值；${etfComText}。`;
+        const dataAgeDays = baseDataAgeDays(state.latestDate);
+        const staleWarning =
+          Number.isFinite(dataAgeDays) && dataAgeDays > 4
+            ? ` ⚠ 基础数据已滞后 ${dataAgeDays} 天，溢价率与"真实溢价率变化"仍以 ${state.latestDate} 收盘为起点，请先更新数据。`
+            : "";
+        $("subtitle").textContent = `当前分组：${groupMeta.name || state.activeGroup}；基础数据：${state.latestDate}；估算当前溢价率=场内实时价格/含隔夜指数与汇率变化的估算人民币净值；${etfComText}。${staleWarning}`;
       }
 
       function renderGroupTabs() {
@@ -1124,6 +1429,7 @@
             price,
             changePct: Number.isFinite(prevClose) && prevClose > 0 ? (price / prevClose - 1) * 100 : fund.latestChangePct,
             amount: Number.isFinite(amount) ? amount : null,
+            time: `${fields[30] || ""} ${fields[31] || ""}`.trim(),
           });
           delete window[`hq_str_${symbol}`];
         });
@@ -1147,6 +1453,7 @@
               Number.isFinite(changePct) ? changePct : Number.isFinite(prevClose) && prevClose > 0 ? (price / prevClose - 1) * 100 : fund.latestChangePct,
             iopv: Number(fields[78]),
             amount: null,
+            time: parseTencentTimestamp(fields[30]),
           });
           delete window[`v_${symbol}`];
         });
@@ -1164,6 +1471,8 @@
         return {
           price,
           changePct: Number.isFinite(changePct) ? changePct : null,
+          source: "腾讯期货",
+          time: "",
         };
       }
 
@@ -1179,6 +1488,8 @@
         return {
           price,
           changePct: Number.isFinite(prev) && prev > 0 ? (price / prev - 1) * 100 : null,
+          source: "新浪期货",
+          time: `${fields[12] || ""} ${fields[6] || ""}`.trim(),
         };
       }
 
@@ -1296,6 +1607,7 @@
                 price: quote.price,
                 changePct: quote.changePct,
                 amount: null,
+                time: quote.time || "",
               });
             } catch (error) {
               console.warn(`${fund.code} 单只行情刷新失败`, error);
@@ -1314,7 +1626,7 @@
         try {
           for (const chunk of chunks) {
             const callbackName = `emQuote${Date.now()}${Math.floor(Math.random() * 10000)}`;
-            const fields = "f12,f14,f2,f3,f5,f6";
+            const fields = "f12,f14,f2,f3,f5,f6,f124";
             const url =
               `https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&invt=2&fields=${fields}` +
               `&secids=${chunk.join(",")}&cb=${callbackName}`;
@@ -1326,6 +1638,7 @@
                   price: Number(item.f2),
                   changePct: Number(item.f3),
                   amount: Number(item.f6),
+                  time: beijingStampFromUnix(item.f124),
                 });
               }
             });
@@ -1360,68 +1673,11 @@
         render();
       }
 
-      async function refreshMacro() {
-        try {
-          const usdCny = await loadEastmoneyQuote("120.USDCNYC");
-
-          state.macro.usdCny = usdCny.price;
-          state.macro.usdCnyChangePct = usdCny.changePct;
-        } catch (error) {
-          try {
-            const usdCny = await loadSinaUsdCny();
-            state.macro.usdCny = usdCny.price;
-            state.macro.usdCnyChangePct = usdCny.changePct;
-          } catch (fallbackError) {
-            state.macro.usdCny = null;
-            state.macro.usdCnyChangePct = null;
-          }
-        }
-        const entries = Object.entries(state.groups);
-        await Promise.all(
-          entries.map(async ([group, meta]) => {
-            try {
-              const quote = await loadEastmoneyQuote(meta.future_secid);
-              state.macro.futures[group] = {
-                price: quote.price,
-                changePct: quote.changePct,
-              };
-            } catch (error) {
-              if (meta.tencent_future_symbol) {
-                try {
-                  state.macro.futures[group] = await loadTencentFuture(meta.tencent_future_symbol);
-                  return;
-                } catch (fallbackError) {
-                  // 保留空值，页面仍可使用当前溢价率和历史均值。
-                }
-              }
-              if (meta.sina_future_symbol) {
-                try {
-                  state.macro.futures[group] = await loadSinaFuture(meta.sina_future_symbol);
-                  return;
-                } catch (fallbackError) {
-                  // 保留空值，页面仍可使用当前溢价率和历史均值。
-                }
-              }
-              if (Number.isFinite(meta.fallbackFuturePrice) || Number.isFinite(meta.fallbackFutureChangePct)) {
-                state.macro.futures[group] = {
-                  price: Number.isFinite(meta.fallbackFuturePrice) ? meta.fallbackFuturePrice : null,
-                  changePct: Number.isFinite(meta.fallbackFutureChangePct) ? meta.fallbackFutureChangePct : null,
-                  source: meta.fallbackFutureSource || "备用期货",
-                  time: meta.fallbackFutureTime || "",
-                };
-                return;
-              }
-              state.macro.futures[group] = state.macro.futures[group] || { price: null, changePct: null };
-            }
-          })
-        );
-      }
-
       async function loadEastmoneyQuote(secid) {
         const callbackName = `emMacro${Date.now()}${Math.floor(Math.random() * 10000)}`;
         const url =
-          `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}` +
-          `&fields=f43,f57,f58,f59,f60,f170&cb=${callbackName}`;
+          `https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&fltt=2&invt=2&secid=${secid}` +
+          `&fields=f43,f57,f58,f59,f60,f170,f86&cb=${callbackName}`;
         const data = await loadJsonp(url, callbackName);
         const item = data?.data;
         if (!item || item.f43 === "-" || item.f43 === undefined) {
@@ -1431,7 +1687,110 @@
         const price = Number(item.f43) / scale;
         const prev = Number(item.f60) / scale;
         const changePct = Number.isFinite(Number(item.f170)) ? Number(item.f170) / 100 : (price / prev - 1) * 100;
-        return { price, prev, changePct };
+        return { price, prev, changePct, time: beijingStampFromUnix(item.f86) };
+      }
+
+      // 东财批量接口：页面取 ETF 行情时已验证可用，作为单只接口空返回时的备用。
+      async function loadEastmoneyBatchQuote(secid) {
+        const callbackName = `emBatch${Date.now()}${Math.floor(Math.random() * 10000)}`;
+        const url =
+          `https://push2.eastmoney.com/api/qt/ulist.np/get?ut=fa5fd1943c7b386f172d6893dbfba10b&fltt=2&invt=2` +
+          `&fields=f12,f13,f14,f2,f3,f4,f124&secids=${secid}&cb=${callbackName}`;
+        const data = await loadJsonp(url, callbackName);
+        const item = (data?.data?.diff || [])[0];
+        if (!item || item.f2 === "-" || item.f2 === undefined) {
+          throw new Error(`${secid} 无批量行情数据`);
+        }
+        const price = Number(item.f2);
+        const changePct = Number.isFinite(Number(item.f3)) ? Number(item.f3) : null;
+        return { price, changePct, time: beijingStampFromUnix(item.f124) };
+      }
+
+      function settle(promise) {
+        return promise.then(
+          (value) => ({ ok: true, value }),
+          (error) => ({ ok: false, error })
+        );
+      }
+
+      async function loadUsdCnyQuote() {
+        try {
+          return await loadEastmoneyQuote("120.USDCNYC");
+        } catch (error) {
+          // 新浪汇率脚本不返回可解析的行情时间，这里不伪造时间戳。
+          return loadSinaUsdCny();
+        }
+      }
+
+      async function loadFutureQuote(group, meta) {
+        const attempts = [];
+        if (meta.future_secid) {
+          attempts.push(() => loadEastmoneyQuote(meta.future_secid));
+          attempts.push(() => loadEastmoneyBatchQuote(meta.future_secid));
+        }
+        // 新浪 hq.sinajs.cn 要求 Referer 属于新浪域，线上/本地页面都会被判 403，
+        // 因此放在东财之后，作为可用时才启用的补充源。
+        if (meta.sina_future_symbol) {
+          attempts.push(() => loadSinaFuture(meta.sina_future_symbol));
+        }
+        if (meta.tencent_future_symbol) {
+          attempts.push(() => loadTencentFuture(meta.tencent_future_symbol));
+        }
+        const errors = [];
+        for (const attempt of attempts) {
+          try {
+            const quote = await attempt();
+            if (Number.isFinite(quote.price) && quote.price > 0) return quote;
+          } catch (error) {
+            errors.push(error.message);
+          }
+        }
+        const fallbackTime = Date.parse(String(meta.fallbackFutureTime || "").replace(" ", "T") + "+08:00");
+        const fallbackFresh = Number.isFinite(fallbackTime) && Date.now() - fallbackTime <= 5 * 60 * 1000;
+        if (fallbackFresh && (Number.isFinite(meta.fallbackFuturePrice) || Number.isFinite(meta.fallbackFutureChangePct))) {
+          return {
+            price: Number.isFinite(meta.fallbackFuturePrice) ? meta.fallbackFuturePrice : null,
+            changePct: Number.isFinite(meta.fallbackFutureChangePct) ? meta.fallbackFutureChangePct : null,
+            source: meta.fallbackFutureSource || "备用期货",
+            time: meta.fallbackFutureTime || "",
+          };
+        }
+        throw new Error(errors.join(" / ") || "无有效实时行情");
+      }
+
+      let macroBusy = false;
+
+      async function refreshMacro() {
+        if (macroBusy) return;
+        macroBusy = true;
+        try {
+          const entries = Object.entries(state.groups);
+          // 汇率和期货并行拉取，避免汇率接口超时把期货时间戳整体拖后。
+          const [fxResult, ...futureResults] = await Promise.all([
+            settle(loadUsdCnyQuote()),
+            ...entries.map(([group, meta]) => settle(loadFutureQuote(group, meta))),
+          ]);
+
+          if (fxResult.ok) {
+            state.macro.usdCny = fxResult.value.price;
+            state.macro.usdCnyChangePct = fxResult.value.changePct;
+          } else {
+            state.macro.usdCny = null;
+            state.macro.usdCnyChangePct = null;
+          }
+
+          entries.forEach(([group], index) => {
+            const result = futureResults[index];
+            if (result.ok) {
+              state.macro.futures[group] = { ...result.value, source: result.value.source || "东方财富" };
+            } else {
+              console.warn(`${group} 期货行情刷新失败`, result.error?.message || result.error);
+              state.macro.futures[group] = { price: null, changePct: null, source: "无有效实时行情", time: "" };
+            }
+          });
+        } finally {
+          macroBusy = false;
+        }
       }
 
       function assertValidData(data) {
@@ -1508,8 +1867,10 @@
         await refreshTrendData();
         setInterval(async () => {
           await refreshMacro();
+        }, 15 * 1000);
+        setInterval(async () => {
           await refreshQuotes();
-        }, 60 * 1000);
+        }, 30 * 1000);
         setInterval(async () => {
           await refreshTrendData();
         }, 2 * 60 * 1000);
