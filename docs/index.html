@@ -1165,7 +1165,9 @@
           usdCnyChangePct,
           nqFutureChangePct,
           rawFutureChangePct,
-          futureBeta,
+          // 展示层用：仅当跟踪指数确实无对应期货、需要 beta 拟合时才有值，
+          // 供「估」标记与 tooltip 判断；计算用的兜底 1 不写回这里。
+          futureBeta: Number.isFinite(fund.futureBeta) && fund.futureBeta > 0 ? fund.futureBeta : null,
           premiumMode,
           priceLiveToday,
           adjustedPremium,
@@ -1675,8 +1677,12 @@
 
       async function loadEastmoneyQuote(secid) {
         const callbackName = `emMacro${Date.now()}${Math.floor(Math.random() * 10000)}`;
+        // 注意：这里不能带 fltt=2。带该参数时东财返回的 f43/f170 已按小数位
+        // 格式化（如 28764.48 / 0.81），再按 f59 缩放会多除一个 10^n，
+        // 导致期货显示 287.58、汇率显示 0.0007 这类错位小数。
+        // 不带 fltt 时返回原始整数（f43=2875873、f170=79），下面的缩放逻辑才正确。
         const url =
-          `https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&fltt=2&invt=2&secid=${secid}` +
+          `https://push2.eastmoney.com/api/qt/stock/get?ut=fa5fd1943c7b386f172d6893dbfba10b&invt=2&secid=${secid}` +
           `&fields=f43,f57,f58,f59,f60,f170,f86&cb=${callbackName}`;
         const data = await loadJsonp(url, callbackName);
         const item = data?.data;
