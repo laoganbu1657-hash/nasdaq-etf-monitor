@@ -1,5 +1,5 @@
 window.NASDAQ_ETF_FUNDS = {
-  "generatedAt": "2026-11-03T04:53:52.354779+08:00",
+  "generatedAt": "2026-11-03T10:57:08.721839+08:00",
   "latestDate": "2026-11-02",
   "groups": {
     "nasdaq100": {
@@ -14,9 +14,9 @@ window.NASDAQ_ETF_FUNDS = {
         "NDX"
       ],
       "default_holding": "159660",
-      "fallbackFuturePrice": 28163.16,
-      "fallbackFutureChangePct": -1.2996425317165494,
-      "fallbackFutureTime": "2026-11-03 04:53:46",
+      "fallbackFuturePrice": 28236.498,
+      "fallbackFutureChangePct": 0.38751399875567305,
+      "fallbackFutureTime": "2026-11-03 10:57:03",
       "fallbackFutureSource": "新浪期货"
     },
     "sp500": {
@@ -32,9 +32,9 @@ window.NASDAQ_ETF_FUNDS = {
         "SPTR500N"
       ],
       "default_holding": "513500",
-      "fallbackFuturePrice": 7583.318,
-      "fallbackFutureChangePct": -0.402968216443389,
-      "fallbackFutureTime": "2026-11-03 04:53:46",
+      "fallbackFuturePrice": 7574.913,
+      "fallbackFutureChangePct": 0.005452505115832729,
+      "fallbackFutureTime": "2026-11-03 10:57:04",
       "fallbackFutureSource": "新浪期货"
     },
     "usa50": {
@@ -47,9 +47,9 @@ window.NASDAQ_ETF_FUNDS = {
       "sina_future_symbol": "hf_ES",
       "etfcom_index_codes": [],
       "default_holding": "513850",
-      "fallbackFuturePrice": 7583.64,
-      "fallbackFutureChangePct": -0.3987391646966043,
-      "fallbackFutureTime": "2026-11-03 04:53:47",
+      "fallbackFuturePrice": 7574.913,
+      "fallbackFutureChangePct": 0.005452505115832729,
+      "fallbackFutureTime": "2026-11-03 10:57:04",
       "fallbackFutureSource": "新浪期货"
     }
   },
@@ -83,11 +83,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 16.831790374099942,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 15.251069038633403,
-      "prevChinaCloseRealPremium": 17.54561228255833,
+      "prevChinaCloseRealPremium": 17.544598442654568,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -111,7 +111,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 17.546
+          "value": 17.545
         },
         {
           "date": "2026-11-02",
@@ -124,13 +124,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF嘉实",
-      "etfComPremiumRate": 20.24,
-      "etfComLastPrice": 2.144,
-      "etfComChangeRate": -0.65,
-      "etfComDealBalance": 149638334.0,
+      "etfComPremiumRate": 20.55,
+      "etfComLastPrice": 2.12,
+      "etfComChangeRate": -1.12,
+      "etfComDealBalance": 37360744.0,
       "etfComUnitNav": 1.7831,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 17.325789030835164,
@@ -162,11 +162,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.238,
       "historyHighNav": 1.9591,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 1.8471,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 1.7831,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "净申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15950120261102.txt",
-      "subscriptionLimitAmount": 1847100.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15950120261103.txt",
+      "subscriptionLimitAmount": 1783100.0
     },
     {
       "code": "159509",
@@ -197,11 +197,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 34.85616837948211,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 33.98937384565135,
-      "prevChinaCloseRealPremium": 34.615577853194225,
+      "prevChinaCloseRealPremium": 34.61441678353074,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -225,7 +225,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 34.616
+          "value": 34.614
         },
         {
           "date": "2026-11-02",
@@ -276,11 +276,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 3.345,
       "historyHighNav": 2.3992,
       "subscriptionLimitShares": 8000000.0,
-      "subscriptionLimitNav": 2.2283,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 2.1365,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "净申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15950920261102.txt",
-      "subscriptionLimitAmount": 17826400.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15950920261103.txt",
+      "subscriptionLimitAmount": 17092000.0
     },
     {
       "code": "159513",
@@ -311,11 +311,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 8.743436317010623,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 8.215119519503734,
-      "prevChinaCloseRealPremium": 9.4025626592688,
+      "prevChinaCloseRealPremium": 9.401619053791354,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -339,7 +339,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 9.403
+          "value": 9.402
         },
         {
           "date": "2026-11-02",
@@ -352,13 +352,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克100ETF大成",
-      "etfComPremiumRate": 12.92,
-      "etfComLastPrice": 1.785,
-      "etfComChangeRate": 0.22,
-      "etfComDealBalance": 272357909.0,
+      "etfComPremiumRate": 12.77,
+      "etfComLastPrice": 1.758,
+      "etfComChangeRate": -1.51,
+      "etfComDealBalance": 93059800.0,
       "etfComUnitNav": 1.5811,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 10.25962491493004,
@@ -390,11 +390,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 1.93,
       "historyHighNav": 1.7436,
       "subscriptionLimitShares": 15000000.0,
-      "subscriptionLimitNav": 1.6378,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 1.5811,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "累计可申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15951320261102.txt",
-      "subscriptionLimitAmount": 24567000.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15951320261103.txt",
+      "subscriptionLimitAmount": 23716500.0
     },
     {
       "code": "159577",
@@ -492,7 +492,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-02",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 17.719063776702647,
+      "qqqReturn2025": 17.71905127643969,
       "qqqReturn2026": 11.687979456589703,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -504,11 +504,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 1.752,
       "historyHighNav": 1.6132,
       "subscriptionLimitShares": 500000.0,
-      "subscriptionLimitNav": 1.562,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 1.5275,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "净申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15957720261102.txt",
-      "subscriptionLimitAmount": 781000.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15957720261103.txt",
+      "subscriptionLimitAmount": 763750.0
     },
     {
       "code": "159612",
@@ -580,13 +580,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:42",
+      "etfComServerTime": "2026-11-03 10:57:01",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF国泰",
-      "etfComPremiumRate": 8.39,
-      "etfComLastPrice": 2.047,
-      "etfComChangeRate": 0.0,
-      "etfComDealBalance": 40818669.0,
+      "etfComPremiumRate": 8.22,
+      "etfComLastPrice": 2.033,
+      "etfComChangeRate": -0.68,
+      "etfComDealBalance": 11465757.0,
       "etfComUnitNav": 1.8876,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 7.392702161392059,
@@ -606,7 +606,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-02",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 17.719063776702647,
+      "qqqReturn2025": 17.71905127643969,
       "qqqReturn2026": 11.687979456589703,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -618,11 +618,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.117,
       "historyHighNav": 1.9529,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 1.9228,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 1.8876,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "累计可申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15961220261102.txt",
-      "subscriptionLimitAmount": 1922800.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15961220261103.txt",
+      "subscriptionLimitAmount": 1887600.0
     },
     {
       "code": "159632",
@@ -653,11 +653,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 8.947674678841588,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 8.530959070782673,
-      "prevChinaCloseRealPremium": 9.608987601308705,
+      "prevChinaCloseRealPremium": 9.608042215400348,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -681,7 +681,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 9.609
+          "value": 9.608
         },
         {
           "date": "2026-11-02",
@@ -694,13 +694,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克ETF华安",
-      "etfComPremiumRate": 13.24,
-      "etfComLastPrice": 2.442,
-      "etfComChangeRate": 0.33,
-      "etfComDealBalance": 397458548.0,
+      "etfComPremiumRate": 13.12,
+      "etfComLastPrice": 2.406,
+      "etfComChangeRate": -1.47,
+      "etfComDealBalance": 79406800.0,
       "etfComUnitNav": 2.1567,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 10.64546599060053,
@@ -731,12 +731,12 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighPrice": 2.65,
       "historyHighClose": 2.627,
       "historyHighNav": 2.3681,
-      "subscriptionLimitShares": 10000000.0,
-      "subscriptionLimitNav": 2.2341,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitShares": 2000000.0,
+      "subscriptionLimitNav": 2.1567,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "累计可申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15963220261102.txt",
-      "subscriptionLimitAmount": 22341000.000000004
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15963220261103.txt",
+      "subscriptionLimitAmount": 4313400.0
     },
     {
       "code": "159655",
@@ -808,13 +808,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:42",
+      "etfComServerTime": "2026-11-03 10:57:01",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF华夏",
-      "etfComPremiumRate": 7.91,
-      "etfComLastPrice": 1.982,
-      "etfComChangeRate": -0.1,
-      "etfComDealBalance": 203746892.0,
+      "etfComPremiumRate": 7.87,
+      "etfComLastPrice": 1.968,
+      "etfComChangeRate": -0.71,
+      "etfComDealBalance": 83506121.0,
       "etfComUnitNav": 1.8366,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 6.795173700394367,
@@ -834,7 +834,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-02",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 17.719063776702647,
+      "qqqReturn2025": 17.71905127643969,
       "qqqReturn2026": 11.687979456589703,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -846,11 +846,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.061,
       "historyHighNav": 1.9049,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 1.872,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 1.8366,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "净申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15965520261102.txt",
-      "subscriptionLimitAmount": 1872000.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15965520261103.txt",
+      "subscriptionLimitAmount": 1836600.0
     },
     {
       "code": "159659",
@@ -881,11 +881,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 10.849722405194306,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 10.344275319337504,
-      "prevChinaCloseRealPremium": 11.530232937289163,
+      "prevChinaCloseRealPremium": 11.5292709804927,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -909,7 +909,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 11.53
+          "value": 11.529
         },
         {
           "date": "2026-11-02",
@@ -922,13 +922,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克100ETF招商",
-      "etfComPremiumRate": 15.12,
-      "etfComLastPrice": 2.362,
-      "etfComChangeRate": 0.25,
-      "etfComDealBalance": 186428223.0,
+      "etfComPremiumRate": 15.23,
+      "etfComLastPrice": 2.332,
+      "etfComChangeRate": -1.27,
+      "etfComDealBalance": 50134302.0,
       "etfComUnitNav": 2.052,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 12.751992982836125,
@@ -959,12 +959,12 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighPrice": 2.757,
       "historyHighClose": 2.529,
       "historyHighNav": 2.2466,
-      "subscriptionLimitShares": 5000000.0,
-      "subscriptionLimitNav": 2.1254,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitShares": 2000000.0,
+      "subscriptionLimitNav": 2.052,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "累计可申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15965920261102.txt",
-      "subscriptionLimitAmount": 10627000.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15965920261103.txt",
+      "subscriptionLimitAmount": 4104000.0
     },
     {
       "code": "159660",
@@ -995,11 +995,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 9.735666418466128,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 9.373686974003913,
-      "prevChinaCloseRealPremium": 10.405917771418483,
+      "prevChinaCloseRealPremium": 10.4049655119264,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1023,7 +1023,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 10.406
+          "value": 10.405
         },
         {
           "date": "2026-11-02",
@@ -1036,13 +1036,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF汇添富",
-      "etfComPremiumRate": 14.12,
-      "etfComLastPrice": 2.367,
-      "etfComChangeRate": 0.38,
-      "etfComDealBalance": 142239249.0,
+      "etfComPremiumRate": 14.1,
+      "etfComLastPrice": 2.334,
+      "etfComChangeRate": -1.39,
+      "etfComDealBalance": 30009397.0,
       "etfComUnitNav": 2.0743,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 11.773229633377921,
@@ -1074,11 +1074,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.563,
       "historyHighNav": 2.2789,
       "subscriptionLimitShares": 500000.0,
-      "subscriptionLimitNav": 2.1488,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 2.0743,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "净申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15966020261102.txt",
-      "subscriptionLimitAmount": 1074400.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15966020261103.txt",
+      "subscriptionLimitAmount": 1037150.0
     },
     {
       "code": "159696",
@@ -1109,11 +1109,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 13.143668432261247,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 12.450100113025453,
-      "prevChinaCloseRealPremium": 13.839555257397528,
+      "prevChinaCloseRealPremium": 13.838573382519282,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1137,7 +1137,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 13.84
+          "value": 13.839
         },
         {
           "date": "2026-11-02",
@@ -1150,13 +1150,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF易方达",
-      "etfComPremiumRate": 17.32,
-      "etfComLastPrice": 2.074,
-      "etfComChangeRate": 0.1,
-      "etfComDealBalance": 105894146.0,
+      "etfComPremiumRate": 17.35,
+      "etfComLastPrice": 2.046,
+      "etfComChangeRate": -1.35,
+      "etfComDealBalance": 29642090.0,
       "etfComUnitNav": 1.7678,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 14.92840699657965,
@@ -1188,11 +1188,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.206,
       "historyHighNav": 1.9415,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 1.8313,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 1.7678,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "净申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15969620261102.txt",
-      "subscriptionLimitAmount": 1831300.0
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15969620261103.txt",
+      "subscriptionLimitAmount": 1767800.0
     },
     {
       "code": "159941",
@@ -1223,11 +1223,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 12.131102951176407,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 11.6063439889313,
-      "prevChinaCloseRealPremium": 12.804042620227584,
+      "prevChinaCloseRealPremium": 12.803069676725109,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1251,7 +1251,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 12.804
+          "value": 12.803
         },
         {
           "date": "2026-11-02",
@@ -1264,13 +1264,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF广发",
-      "etfComPremiumRate": 16.42,
-      "etfComLastPrice": 1.653,
-      "etfComChangeRate": 0.24,
-      "etfComDealBalance": 1046462821.0,
+      "etfComPremiumRate": 16.36,
+      "etfComLastPrice": 1.629,
+      "etfComChangeRate": -1.45,
+      "etfComDealBalance": 363273281.0,
       "etfComUnitNav": 1.4195,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 14.410418672843274,
@@ -1302,11 +1302,11 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 1.769,
       "historyHighNav": 1.5657,
       "subscriptionLimitShares": 1300000.0,
-      "subscriptionLimitNav": 1.4706,
-      "subscriptionLimitDate": "2026-11-02",
+      "subscriptionLimitNav": 1.4195,
+      "subscriptionLimitDate": "2026-11-03",
       "subscriptionLimitNote": "净申购上限",
-      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15994120261102.txt",
-      "subscriptionLimitAmount": 1911779.9999999998
+      "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15994120261103.txt",
+      "subscriptionLimitAmount": 1845350.0
     },
     {
       "code": "161128",
@@ -1337,11 +1337,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 6.62078296420483,
-      "prevChinaCloseFutureChangePct": -2.2184500372099336,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -2.2174888370205017,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 6.502099366217884,
-      "prevChinaCloseRealPremium": 8.132598948794678,
+      "prevChinaCloseRealPremium": 8.131536007442941,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1365,7 +1365,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 8.133
+          "value": 8.132
         },
         {
           "date": "2026-11-02",
@@ -1446,11 +1446,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 5.338580169688156,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 4.99843241752016,
-      "prevChinaCloseRealPremium": 6.0677426541832835,
+      "prevChinaCloseRealPremium": 6.066827811783693,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1474,7 +1474,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 6.068
+          "value": 6.067
         },
         {
           "date": "2026-11-02",
@@ -1554,11 +1554,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 13.868687382393327,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 13.314024178230355,
-      "prevChinaCloseRealPremium": 14.564246323122433,
+      "prevChinaCloseRealPremium": 14.56325819772828,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1582,7 +1582,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 14.564
+          "value": 14.563
         },
         {
           "date": "2026-11-02",
@@ -1595,13 +1595,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF国泰",
-      "etfComPremiumRate": 18.26,
-      "etfComLastPrice": 2.244,
-      "etfComChangeRate": 0.22,
-      "etfComDealBalance": 474639666.0,
+      "etfComPremiumRate": 18.5,
+      "etfComLastPrice": 2.218,
+      "etfComChangeRate": -1.16,
+      "etfComDealBalance": 118235433.0,
       "etfComUnitNav": 1.8983,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 15.801724326690405,
@@ -1633,13 +1633,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.4,
       "historyHighNav": 2.087,
       "subscriptionLimitShares": 2500000.0,
-      "subscriptionLimitNav": 1.9663,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 1.8983,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "累计可申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513100",
       "exchangeShares": 9684610600.0,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 4915750.0
+      "subscriptionLimitAmount": 4745750.0
     },
     {
       "code": "513110",
@@ -1670,11 +1670,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 8.74861572535992,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 8.241660120890604,
-      "prevChinaCloseRealPremium": 9.419908344336502,
+      "prevChinaCloseRealPremium": 9.418964589251221,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1698,7 +1698,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 9.42
+          "value": 9.419
         },
         {
           "date": "2026-11-02",
@@ -1711,13 +1711,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF华泰柏瑞",
-      "etfComPremiumRate": 12.93,
-      "etfComLastPrice": 2.461,
-      "etfComChangeRate": 0.24,
-      "etfComDealBalance": 332707116.0,
+      "etfComPremiumRate": 12.81,
+      "etfComLastPrice": 2.425,
+      "etfComChangeRate": -1.46,
+      "etfComDealBalance": 59002340.0,
       "etfComUnitNav": 2.1797,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 10.355006836265275,
@@ -1749,13 +1749,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.652,
       "historyHighNav": 2.3965,
       "subscriptionLimitShares": 2000000.0,
-      "subscriptionLimitNav": 2.2575,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 2.1797,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "累计可申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513110",
       "exchangeShares": 2254435000.0,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 4515000.0
+      "subscriptionLimitAmount": 4359400.0
     },
     {
       "code": "513300",
@@ -1786,11 +1786,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 9.747588754360748,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 9.254916145199509,
-      "prevChinaCloseRealPremium": 10.350796487089852,
+      "prevChinaCloseRealPremium": 10.34984470302307,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1814,7 +1814,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 10.351
+          "value": 10.35
         },
         {
           "date": "2026-11-02",
@@ -1827,13 +1827,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克ETF华夏",
-      "etfComPremiumRate": 14.07,
-      "etfComLastPrice": 2.681,
-      "etfComChangeRate": 0.26,
-      "etfComDealBalance": 405592617.0,
+      "etfComPremiumRate": 14.51,
+      "etfComLastPrice": 2.65,
+      "etfComChangeRate": -1.16,
+      "etfComDealBalance": 82871056.0,
       "etfComUnitNav": 2.3505,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 11.741038137160846,
@@ -1865,13 +1865,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.896,
       "historyHighNav": 2.5835,
       "subscriptionLimitShares": 750000.0,
-      "subscriptionLimitNav": 2.4365,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 2.3505,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "净申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513300",
       "exchangeShares": 5532671000.0,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 1827375.0
+      "subscriptionLimitAmount": 1762874.9999999998
     },
     {
       "code": "513390",
@@ -1902,11 +1902,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 9.67098703888336,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 9.118583304436001,
-      "prevChinaCloseRealPremium": 10.337052144543858,
+      "prevChinaCloseRealPremium": 10.33610047902307,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -1930,7 +1930,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 10.337
+          "value": 10.336
         },
         {
           "date": "2026-11-02",
@@ -1943,13 +1943,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指100ETF博时",
-      "etfComPremiumRate": 13.84,
-      "etfComLastPrice": 2.425,
-      "etfComChangeRate": 0.21,
-      "etfComDealBalance": 225364970.0,
+      "etfComPremiumRate": 13.74,
+      "etfComLastPrice": 2.391,
+      "etfComChangeRate": -1.4,
+      "etfComDealBalance": 58913710.0,
       "etfComUnitNav": 2.1302,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 10.833973896077163,
@@ -1981,13 +1981,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.59,
       "historyHighNav": 2.3406,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 2.2066,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 2.1302,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "累计可申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513390",
       "exchangeShares": 2805379099.9999995,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 2206600.0
+      "subscriptionLimitAmount": 2130200.0
     },
     {
       "code": "513500",
@@ -2059,13 +2059,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:43",
+      "etfComServerTime": "2026-11-03 10:57:03",
       "etfComIndexCode": "SPTR500N",
       "etfComName": "标普500ETF博时",
-      "etfComPremiumRate": 10.28,
-      "etfComLastPrice": 2.654,
-      "etfComChangeRate": -0.11,
-      "etfComDealBalance": 296003856.0,
+      "etfComPremiumRate": 10.18,
+      "etfComLastPrice": 2.638,
+      "etfComChangeRate": -0.6,
+      "etfComDealBalance": 59152310.0,
       "etfComUnitNav": 2.4061,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 8.529194888388107,
@@ -2085,7 +2085,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-02",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 17.719063776702647,
+      "qqqReturn2025": 17.71905127643969,
       "qqqReturn2026": 11.687979456589703,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -2097,13 +2097,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.778,
       "historyHighNav": 2.4897,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 2.451,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 2.4061,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "累计可申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513500",
       "exchangeShares": 10683638600.000002,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 2451000.0
+      "subscriptionLimitAmount": 2406100.0
     },
     {
       "code": "513650",
@@ -2175,13 +2175,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:42",
+      "etfComServerTime": "2026-11-03 10:57:01",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF南方",
-      "etfComPremiumRate": 8.16,
-      "etfComLastPrice": 1.983,
-      "etfComChangeRate": 0.05,
-      "etfComDealBalance": 511165171.0,
+      "etfComPremiumRate": 7.93,
+      "etfComLastPrice": 1.969,
+      "etfComChangeRate": -0.71,
+      "etfComDealBalance": 170233349.0,
       "etfComUnitNav": 1.8333,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 6.671372266829046,
@@ -2201,7 +2201,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-02",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 17.719063776702647,
+      "qqqReturn2025": 17.71905127643969,
       "qqqReturn2026": 11.687979456589703,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -2213,13 +2213,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.06,
       "historyHighNav": 1.8952,
       "subscriptionLimitShares": 10000000.0,
-      "subscriptionLimitNav": 1.8675,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 1.8333,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "累计可申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513650",
       "exchangeShares": 5191734000.0,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 18675000.0
+      "subscriptionLimitAmount": 18333000.0
     },
     {
       "code": "513850",
@@ -2317,7 +2317,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-02",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 17.719063776702647,
+      "qqqReturn2025": 17.71905127643969,
       "qqqReturn2026": 11.687979456589703,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -2329,13 +2329,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 1.955,
       "historyHighNav": 1.7934,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 1.739,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 1.7014,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "净申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513850",
       "exchangeShares": 1350892600.0,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 1739000.0
+      "subscriptionLimitAmount": 1701400.0
     },
     {
       "code": "513870",
@@ -2366,11 +2366,11 @@ window.NASDAQ_ETF_FUNDS = {
       "chinaCloseFxChangePct": -0.1322155112833956,
       "prevDate": "2026-10-30",
       "prevPremium": 10.357714895888948,
-      "prevChinaCloseFutureChangePct": -1.9518300520939058,
-      "prevChinaCloseFutureRawPct": -1.9518300520939058,
+      "prevChinaCloseFutureChangePct": -1.9509843718287012,
+      "prevChinaCloseFutureRawPct": -1.9509843718287012,
       "prevChinaCloseFxChangePct": -0.05179246982525143,
       "chinaCloseRealPremium": 9.893527589844942,
-      "prevChinaCloseRealPremium": 11.036001421900576,
+      "prevChinaCloseRealPremium": 11.035043727888771,
       "realPremiumTrend": [
         {
           "date": "2026-10-23",
@@ -2394,7 +2394,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-30",
-          "value": 11.036
+          "value": 11.035
         },
         {
           "date": "2026-11-02",
@@ -2407,13 +2407,13 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-10-30",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-03 04:53:40",
+      "etfComServerTime": "2026-11-03 10:56:59",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF富国",
       "etfComPremiumRate": 14.7,
-      "etfComLastPrice": 2.073,
-      "etfComChangeRate": 0.29,
-      "etfComDealBalance": 100529642.0,
+      "etfComLastPrice": 2.045,
+      "etfComChangeRate": -1.35,
+      "etfComDealBalance": 24612383.0,
       "etfComUnitNav": 1.808,
       "etfComNavDate": "2026-10-30",
       "avg10Premium": 12.210325585624684,
@@ -2445,13 +2445,13 @@ window.NASDAQ_ETF_FUNDS = {
       "historyHighClose": 2.218,
       "historyHighNav": 1.987,
       "subscriptionLimitShares": 1000000.0,
-      "subscriptionLimitNav": 1.873,
-      "subscriptionLimitDate": "20261102",
+      "subscriptionLimitNav": 1.808,
+      "subscriptionLimitDate": "20261103",
       "subscriptionLimitNote": "累计可申购上限",
       "subscriptionLimitSource": "https://www.sse.com.cn/assortment/fund/list/etfinfo/basic/index.shtml?FUNDID=513870",
       "exchangeShares": 1579671000.0,
       "scaleDate": "2026-11-02",
-      "subscriptionLimitAmount": 1873000.0
+      "subscriptionLimitAmount": 1808000.0
     }
   ]
 };
