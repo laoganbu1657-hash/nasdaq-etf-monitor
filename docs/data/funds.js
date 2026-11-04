@@ -1,5 +1,5 @@
 window.NASDAQ_ETF_FUNDS = {
-  "generatedAt": "2026-11-04T15:30:00.306758+08:00",
+  "generatedAt": "2026-11-04T18:53:42.704115+08:00",
   "latestDate": "2026-11-03",
   "groups": {
     "nasdaq100": {
@@ -14,9 +14,9 @@ window.NASDAQ_ETF_FUNDS = {
         "NDX"
       ],
       "default_holding": "159660",
-      "fallbackFuturePrice": 28264.025,
-      "fallbackFutureChangePct": -0.14740821211237654,
-      "fallbackFutureTime": "2026-11-04 15:29:55",
+      "fallbackFuturePrice": 28586.243,
+      "fallbackFutureChangePct": 0.9909400033561999,
+      "fallbackFutureTime": "2026-11-04 18:53:36",
       "fallbackFutureSource": "新浪期货"
     },
     "sp500": {
@@ -32,9 +32,9 @@ window.NASDAQ_ETF_FUNDS = {
         "SPTR500N"
       ],
       "default_holding": "513500",
-      "fallbackFuturePrice": 7588.227,
-      "fallbackFutureChangePct": -0.11219271398953401,
-      "fallbackFutureTime": "2026-11-04 15:29:55",
+      "fallbackFuturePrice": 7675.075,
+      "fallbackFutureChangePct": 1.0310330075361085,
+      "fallbackFutureTime": "2026-11-04 18:53:36",
       "fallbackFutureSource": "新浪期货"
     },
     "usa50": {
@@ -47,9 +47,9 @@ window.NASDAQ_ETF_FUNDS = {
       "sina_future_symbol": "hf_ES",
       "etfcom_index_codes": [],
       "default_holding": "513850",
-      "fallbackFuturePrice": 7588.227,
-      "fallbackFutureChangePct": -0.11219271398953401,
-      "fallbackFutureTime": "2026-11-04 15:29:55",
+      "fallbackFuturePrice": 7674.96,
+      "fallbackFutureChangePct": 1.0295192022904631,
+      "fallbackFutureTime": "2026-11-04 18:53:38",
       "fallbackFutureSource": "新浪期货"
     }
   },
@@ -99,7 +99,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 18.703
+          "value": 18.773
         },
         {
           "date": "2026-10-29",
@@ -124,7 +124,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF嘉实",
       "etfComPremiumRate": 20.98,
@@ -150,7 +150,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -213,7 +213,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 40.775
+          "value": 40.858
         },
         {
           "date": "2026-10-29",
@@ -264,7 +264,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -327,7 +327,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 12.812
+          "value": 12.878
         },
         {
           "date": "2026-10-29",
@@ -352,7 +352,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克100ETF大成",
       "etfComPremiumRate": 13.02,
@@ -378,7 +378,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -441,7 +441,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 10.061
+          "value": 10.126
         },
         {
           "date": "2026-10-29",
@@ -555,7 +555,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 8.932
+          "value": 8.996
         },
         {
           "date": "2026-10-29",
@@ -580,7 +580,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:53",
+      "etfComServerTime": "2026-11-04 18:53:34",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF国泰",
       "etfComPremiumRate": 8.51,
@@ -669,7 +669,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 12.893
+          "value": 12.959
         },
         {
           "date": "2026-10-29",
@@ -694,7 +694,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克ETF华安",
       "etfComPremiumRate": 13.58,
@@ -720,7 +720,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -783,7 +783,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 8.171
+          "value": 8.235
         },
         {
           "date": "2026-10-29",
@@ -808,7 +808,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:53",
+      "etfComServerTime": "2026-11-04 18:53:34",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF华夏",
       "etfComPremiumRate": 7.2,
@@ -897,7 +897,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 14.49
+          "value": 14.557
         },
         {
           "date": "2026-10-29",
@@ -922,7 +922,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克100ETF招商",
       "etfComPremiumRate": 15.48,
@@ -948,7 +948,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1011,7 +1011,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 13.667
+          "value": 13.733
         },
         {
           "date": "2026-10-29",
@@ -1036,7 +1036,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF汇添富",
       "etfComPremiumRate": 14.35,
@@ -1062,7 +1062,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1125,7 +1125,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 16.839
+          "value": 16.908
         },
         {
           "date": "2026-10-29",
@@ -1150,7 +1150,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF易方达",
       "etfComPremiumRate": 17.02,
@@ -1176,7 +1176,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1239,7 +1239,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 16.055
+          "value": 16.123
         },
         {
           "date": "2026-10-29",
@@ -1264,7 +1264,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF广发",
       "etfComPremiumRate": 16.65,
@@ -1290,7 +1290,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1353,7 +1353,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 11.503
+          "value": 11.568
         },
         {
           "date": "2026-10-29",
@@ -1404,7 +1404,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1462,7 +1462,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 8.402
+          "value": 8.466
         },
         {
           "date": "2026-10-29",
@@ -1513,7 +1513,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1570,7 +1570,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 17.658
+          "value": 17.726
         },
         {
           "date": "2026-10-29",
@@ -1595,7 +1595,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF国泰",
       "etfComPremiumRate": 18.94,
@@ -1621,7 +1621,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1686,7 +1686,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 12.967
+          "value": 13.033
         },
         {
           "date": "2026-10-29",
@@ -1711,7 +1711,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF华泰柏瑞",
       "etfComPremiumRate": 12.97,
@@ -1737,7 +1737,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1802,7 +1802,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 13.642
+          "value": 13.708
         },
         {
           "date": "2026-10-29",
@@ -1827,7 +1827,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克ETF华夏",
       "etfComPremiumRate": 14.11,
@@ -1853,7 +1853,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -1918,7 +1918,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 13.36
+          "value": 13.426
         },
         {
           "date": "2026-10-29",
@@ -1943,7 +1943,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指100ETF博时",
       "etfComPremiumRate": 14.37,
@@ -1969,7 +1969,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
@@ -2034,7 +2034,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 10.803
+          "value": 10.868
         },
         {
           "date": "2026-10-29",
@@ -2059,7 +2059,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:54",
+      "etfComServerTime": "2026-11-04 18:53:36",
       "etfComIndexCode": "SPTR500N",
       "etfComName": "标普500ETF博时",
       "etfComPremiumRate": 8.8,
@@ -2150,7 +2150,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 8.45
+          "value": 8.513
         },
         {
           "date": "2026-10-29",
@@ -2175,7 +2175,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:53",
+      "etfComServerTime": "2026-11-04 18:53:34",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF南方",
       "etfComPremiumRate": 7.54,
@@ -2266,7 +2266,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 10.114
+          "value": 10.178
         },
         {
           "date": "2026-10-29",
@@ -2382,7 +2382,7 @@ window.NASDAQ_ETF_FUNDS = {
         },
         {
           "date": "2026-10-28",
-          "value": 14.347
+          "value": 14.413
         },
         {
           "date": "2026-10-29",
@@ -2407,7 +2407,7 @@ window.NASDAQ_ETF_FUNDS = {
       "sessionAnchorUsCloseDate": "2026-11-02",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-04 15:29:52",
+      "etfComServerTime": "2026-11-04 18:53:32",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF富国",
       "etfComPremiumRate": 15.08,
@@ -2433,7 +2433,7 @@ window.NASDAQ_ETF_FUNDS = {
       "latestFittedNavDate": "2026-11-03",
       "fxStrippedReturn2025": null,
       "fxStrippedReturn2026": null,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 11.248335483899275,
       "trackingDiff2025": null,
       "trackingDiff2026": null,
