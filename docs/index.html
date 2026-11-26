@@ -50,18 +50,21 @@
 
       .bar {
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 16px;
+        grid-template-columns: max-content 1fr;
+        gap: 14px;
         align-items: center;
         max-width: 1480px;
         margin: 0 auto;
-        padding: 18px 24px 14px;
+        padding: 10px 20px 8px;
       }
 
       h1 {
         margin: 0;
-        font-size: 24px;
+        font-size: 17px;
+        font-weight: 800;
         letter-spacing: 0;
+        white-space: nowrap;
+        line-height: 1.25;
       }
 
       .sub {
@@ -70,35 +73,52 @@
 
       .toolbar {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
+        flex-wrap: nowrap;
+        gap: 8px;
         justify-content: flex-end;
+        min-width: 0;
       }
 
       button,
       select,
       input {
-        height: 38px;
+        height: 32px;
         border: 1px solid var(--line);
         border-radius: 6px;
         background: var(--panel);
         color: var(--ink);
         font: inherit;
+        font-size: 12px;
       }
 
       button {
-        padding: 0 14px;
+        padding: 0 10px;
         cursor: pointer;
         font-weight: 700;
       }
 
+      a.trend-link {
+        display: inline-flex;
+        align-items: center;
+        height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #eef6ff;
+        color: #1d4ed8;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      a.trend-link:hover { background: #dbeafe; }
+
       select {
-        padding: 0 32px 0 12px;
+        padding: 0 26px 0 9px;
       }
 
       input {
-        width: 180px;
-        padding: 0 12px;
+        width: 148px;
+        padding: 0 9px;
       }
 
       input[type="number"] {
@@ -108,9 +128,9 @@
       .holding-control {
         display: flex;
         align-items: center;
-        gap: 8px;
-        height: 38px;
-        padding: 0 10px;
+        gap: 6px;
+        height: 32px;
+        padding: 0 8px;
         border: 1px solid var(--line);
         border-radius: 6px;
         background: var(--panel);
@@ -118,13 +138,13 @@
 
       .holding-control span {
         color: var(--muted);
-        font-size: 13px;
+        font-size: 12px;
         white-space: nowrap;
       }
 
       .holding-control input {
-        width: 86px;
-        height: 30px;
+        width: 66px;
+        height: 24px;
         border: 0;
         padding: 0;
         font-weight: 800;
@@ -133,10 +153,10 @@
       .group-tabs {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         max-width: 1480px;
         margin: 0 auto;
-        padding: 0 24px 14px;
+        padding: 0 20px 8px;
       }
 
       .group-tab {
@@ -153,7 +173,7 @@
       main {
         max-width: 1480px;
         margin: 0 auto;
-        padding: 18px 24px 36px;
+        padding: 12px 20px 28px;
         width: 100%;
         flex: 1;
         min-height: 0;
@@ -162,27 +182,40 @@
 
       .stats {
         display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
-        gap: 12px;
-        margin-bottom: 14px;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 10px;
       }
 
       .stat {
         border: 1px solid var(--line);
-        border-radius: 8px;
+        border-radius: 6px;
         background: var(--panel);
-        padding: 14px 16px;
+        /* 卡片整体收紧：内边距、字号、行数都压缩，避免长文本把整行撑高 */
+        padding: 7px 9px;
+        min-width: 0;
       }
 
       .stat b {
-        display: block;
-        font-size: 22px;
-        margin-bottom: 4px;
+        /* 最多两行，超出省略；同一 grid 行内的卡片会自动等高 */
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+        font-size: 14px;
+        line-height: 1.25;
+        margin-bottom: 2px;
       }
 
       .stat span {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 10.5px;
+        line-height: 1.25;
       }
 
       .stat span.stale {
@@ -199,19 +232,45 @@
            表内 th 的 position:sticky 相对本壳生效，下滚时表头始终锁定 */
         position: sticky;
         top: 0;
-        max-height: calc(100vh - var(--page-head-h, 0px) - 40px);
+        /* 不再撑满整屏：框随行数自适应，页面随时可以上下滑动；
+           只保留最大高度上限，让纳指100这类长表格在框内纵向滚动，
+           且概览指标卡、横向滚动条、状态条都不会被挤出屏幕 */
+        min-height: 0;
+        max-height: calc(100vh - var(--page-head-h, 0px) - var(--stats-h, 96px) - 64px);
         overflow: auto;
         z-index: 5;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--panel);
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+      }
+
+      /* 滚动条常显：方便鼠标用户直接拖横向滚动条 */
+      .table-wrap::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+
+      .table-wrap::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+
+      .table-wrap::-webkit-scrollbar-thumb {
+        border: 2px solid #f1f5f9;
+        border-radius: 6px;
+        background: #cbd5e1;
+      }
+
+      .table-wrap::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
       }
 
       table {
         width: 100%;
-        min-width: 1560px;
+        min-width: 1440px;
         border-collapse: collapse;
-        font-size: 12.5px;
+        font-size: 11.5px;
       }
 
       th,
@@ -230,7 +289,7 @@
         background: var(--head);
         color: #334155;
         font-weight: 800;
-        font-size: 12px;
+        font-size: 11px;
         cursor: pointer;
         user-select: none;
       }
@@ -273,7 +332,7 @@
 
       .code {
         color: #64748b;
-        font-size: 12px;
+        font-size: 11px;
       }
 
       .positive {
@@ -296,6 +355,22 @@
         font-weight: 850;
       }
 
+      /* 基准日落后时的提示角标：说明该格数字是多日累计，不是单日变化 */
+      .stale-flag {
+        display: inline-block;
+        margin-left: 2px;
+        padding: 0 3px;
+        border: 1px solid #fed7aa;
+        border-radius: 3px;
+        background: #fff7ed;
+        color: #b45309;
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1.35;
+        vertical-align: 1px;
+        cursor: help;
+      }
+
       .trend-cell {
         width: 140px;
         min-width: 140px;
@@ -303,7 +378,7 @@
 
       .trend-empty {
         color: var(--muted);
-        font-size: 14px;
+        font-size: 12px;
       }
 
       .trend-box {
@@ -384,12 +459,12 @@
 
       .quote-price {
         color: var(--ink);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 850;
       }
 
       .quote-change {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 900;
       }
 
@@ -438,7 +513,7 @@
       .status {
         margin-top: 10px;
         color: var(--muted);
-        font-size: 13px;
+        font-size: 12px;
       }
 
       @media (max-width: 760px) {
@@ -491,7 +566,7 @@
           width: 100%;
           min-width: 0;
           height: 42px;
-          font-size: 14px;
+          font-size: 13px;
         }
 
         .group-tabs {
@@ -508,7 +583,7 @@
           width: 100%;
           min-width: 0;
           padding: 0 8px;
-          font-size: 14px;
+          font-size: 13px;
         }
 
         main {
@@ -520,28 +595,29 @@
 
         .stats {
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 8px;
-          margin-bottom: 10px;
+          gap: 6px;
+          margin-bottom: 8px;
         }
 
         .stat {
-          min-height: 76px;
-          padding: 10px 12px;
-          border-radius: 7px;
+          min-height: 52px;
+          padding: 7px 9px;
+          border-radius: 6px;
         }
 
         .stat b {
-          font-size: 18px;
-          line-height: 1.2;
+          font-size: 14px;
+          line-height: 1.25;
           word-break: break-word;
         }
 
         .stat span {
-          font-size: 12px;
+          font-size: 10px;
         }
 
         .table-wrap {
           position: static;
+          min-height: 0;
           max-height: none;
           overflow: auto;
           max-width: 100%;
@@ -551,8 +627,8 @@
         }
 
         table {
-          min-width: 1320px;
-          font-size: 11px;
+          min-width: 1220px;
+          font-size: 10.5px;
         }
 
         th,
@@ -572,13 +648,13 @@
 
         .name {
           overflow: hidden;
-          font-size: 13px;
+          font-size: 12px;
           text-overflow: ellipsis;
         }
 
         .code {
           margin-top: 2px;
-          font-size: 12px;
+          font-size: 11px;
         }
 
         .trend-cell {
@@ -600,20 +676,20 @@
         }
 
         .quote-price {
-          font-size: 15px;
+          font-size: 14px;
         }
 
         .quote-change {
-          font-size: 14px;
+          font-size: 13px;
         }
 
         .status {
           padding: 0 4px;
-          font-size: 12px;
+          font-size: 11px;
         }
 
         h1 {
-          font-size: 21px;
+          font-size: 19px;
         }
       }
     </style>
@@ -639,7 +715,10 @@
             <option value="navReturn2026">按2026净值收益排序</option>
             <option value="changePct">按今日涨跌排序</option>
             <option value="avg7AmountWan">按7日成交排序</option>
+            <option value="marginBalanceYi">按融资余额排序</option>
+            <option value="marginDayNetBuyWan">按当日净买入排序</option>
           </select>
+          <a class="trend-link" href="./premium_compare.html">真实溢价趋势对比</a>
           <button id="refresh">刷新数据/行情</button>
         </div>
       </div>
@@ -667,28 +746,33 @@
               <th id="currentPremiumHead" data-key="currentPremium">当前溢价率</th>
               <th data-key="usdCnyChangePct">实时汇率</th>
               <th data-key="nqFutureChangePct">实时期货</th>
+              <th data-key="estimateNdxReturn" title="最新美股交易日的指数涨跌预估（已拟合进净值锚）。各基金用自身跟踪指数：纳指100=纳斯达克100、159509=纳斯达克科技市值加权(NDXTMC)、标普500=标普500、美国50=标普500等权重、161128=标普500信息技术">昨日指数涨跌</th>
               <th data-key="avg7AmountWan">7日日均成交额</th>
-              <th data-key="relativeDeviation">均值差</th>
-              <th data-key="switchAdvantage">切换优势20日</th>
-              <th data-key="switchAdvantage30">切换优势30日</th>
+              <th data-key="relativeDeviation" title="当前真实溢价率 − 20日真实溢价率均值（15:00 口径）。切换优势＝持有基金的均值差 − 该基金的均值差">均值差</th>
+              <th data-key="switchAdvantage" title="切换优势＝持有基金的均值差 − 该基金的均值差；均值差基于真实溢价率（净值锚 × 15:00 汇率 × 15:00 期货）。>0 表示该基金相对持有的更便宜">切换优势20日</th>
+              <th data-key="switchAdvantage30" title="同「切换优势20日」，均值窗口为 30 个交易日的真实溢价率均值">切换优势30日</th>
               <th data-key="adjustedPremium">真实溢价率</th>
               <th data-key="adjustedPremiumChange">真实溢价较昨收</th>
               <th data-key="realPremiumTrend" title="近 7 个 A 股交易日 15:00 真实溢价率走势（口径与「真实溢价率」一致：净值锚 × 当日15:00汇率 × 当日15:00期货）">近7日趋势</th>
               <th data-key="operatingFee">运作费率</th>
-              <th data-key="avg10Premium">10日均值</th>
-              <th data-key="avg20Premium">20日均值</th>
-              <th data-key="avg30Premium">30日均值</th>
+              <th data-key="avg10Premium" title="近10个A股交易日 15:00 真实溢价率的均值（口径与「真实溢价率」一致：净值锚 × 15:00 汇率 × 15:00 期货；含当日）">10日均值</th>
+              <th data-key="avg20Premium" title="近20个A股交易日 15:00 真实溢价率的均值（口径与「真实溢价率」一致；含当日）">20日均值</th>
+              <th data-key="avg30Premium" title="近30个A股交易日 15:00 真实溢价率的均值（口径与「真实溢价率」一致；含当日）">30日均值</th>
               <th data-key="latestPremium">最近收盘溢价</th>
               <th data-key="priceDrawdown">最高价格回撤</th>
               <th data-key="closePriceDrawdown">收盘价格回撤</th>
               <th data-key="navDrawdown">净值回撤</th>
               <th data-key="scaleAmount">规模</th>
-              <th data-key="subscriptionLimitShares">最新申购份额</th>
-              <th data-key="subscriptionLimitAmount">最新申购金额</th>
-              <th data-key="subscriptionAmountRatio">申购金额占比</th>
+              <th data-key="subscriptionLimitShares" title="交易所每日申赎清单里公布的「当天净申购份额上限」，是额度上限、不是实际申购量；这个额度往往长期不变。实际新增份额请看各行情站的份额变动">净申购上限</th>
+              <th data-key="subscriptionLimitAmount" title="额度上限 × 清单净值，仅代表理论可申购金额上限，非实际申购金额">上限金额</th>
+              <th data-key="subscriptionAmountRatio" title="上限金额 ÷ 基金规模，仅代表理论上限占比，非实际申购占比">上限占规模</th>
               <th data-key="navReturn2026">2026净值收益</th>
               <th data-key="navReturn2025">2025净值收益</th>
               <th data-key="navForPremiumDate">溢价净值日</th>
+              <th data-key="marginBalanceYi" title="交易所披露的融资余额（亿元）。T日数据一般当晚才披露，最新日期见单元格提示">融资余额</th>
+              <th data-key="marginDayNetBuyWan" title="当日融资净买入（万元）。沪市＝融资买入额−偿还额（交易所口径）；深市披露不含偿还额，按融资余额较前一交易日变化计算">当日净买入</th>
+              <th data-key="margin5dNetBuyWan" title="融资余额较5个交易日前变化（万元）＝近5个交易日累计净买入（含当日）">近5日净买入</th>
+              <th data-key="margin10dNetBuyWan" title="融资余额较10个交易日前变化（万元）＝近10个交易日累计净买入（含当日）">近10日净买入</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -716,20 +800,54 @@
           usdCny: null,
           usdCnyChangePct: null,
           futures: {},
+          // 每个期货合约（secid）最近一次成功拉取的时间戳，用于差异化刷新间隔
+          lastFetch: {},
         },
       };
 
       const $ = (id) => document.getElementById(id);
       // 页头是 sticky 的，表格壳要吸附在它下方：动态把页头高度写入 CSS 变量
       const pageHead = document.querySelector("header");
+      const statsBlock = document.querySelector(".stats");
       const syncPageHeadHeight = () => {
         document.documentElement.style.setProperty("--page-head-h", `${pageHead.offsetHeight}px`);
+        // 指标卡高度也影响表格壳可占的剩余高度（行数少的分组靠它撑满屏）
+        if (statsBlock) {
+          document.documentElement.style.setProperty("--stats-h", `${statsBlock.offsetHeight}px`);
+        }
       };
       if (window.ResizeObserver && pageHead) {
-        new ResizeObserver(syncPageHeadHeight).observe(pageHead);
+        const headObserver = new ResizeObserver(syncPageHeadHeight);
+        headObserver.observe(pageHead);
+        if (statsBlock) headObserver.observe(statsBlock);
       }
       window.addEventListener("resize", syncPageHeadHeight);
       syncPageHeadHeight();
+
+      // 行数少的分组（标普500/美国50）表格没有纵向滚动，鼠标滚轮是纵向的，
+      // 在表格区域滚动时直接映射为横向滚动，避免"看着滑不动"
+      // 窄屏布局（≤760px）下表格壳不限高、由页面整体滚动，
+      // 此时绝不能劫持滚轮，否则页面永远滚不上去、够不到顶部输入框
+      const narrowLayoutQuery = window.matchMedia("(max-width: 760px)");
+      const tableWrapEl = document.querySelector(".table-wrap");
+      if (tableWrapEl) {
+        tableWrapEl.addEventListener(
+          "wheel",
+          (event) => {
+            if (event.shiftKey || event.ctrlKey || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+            if (narrowLayoutQuery.matches) return;
+            const canScrollX = tableWrapEl.scrollWidth > tableWrapEl.clientWidth + 1;
+            const canScrollY = tableWrapEl.scrollHeight > tableWrapEl.clientHeight + 1;
+            if (!canScrollX || canScrollY) return; // 表格本身能纵向滚时保持默认行为
+            const step = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+            if (!step) return;
+            event.preventDefault();
+            tableWrapEl.scrollLeft += step;
+          },
+          { passive: false }
+        );
+      }
+
       const REMOTE_DATA_BASE = "https://laoganbu1657-hash.github.io/nasdaq-etf-monitor";
       const ACTIVE_GROUP_STORAGE_KEY = "qdii-etf-monitor-active-group";
       const HOLDING_STORAGE_PREFIX = "qdii-etf-monitor-holding-code-";
@@ -785,6 +903,13 @@
       function fmtAmount(wan) {
         if (wan === null || wan === undefined || Number.isNaN(wan)) return "-";
         return wan >= 10000 ? `${(wan / 10000).toFixed(2)}亿` : `${wan.toFixed(2)}万`;
+      }
+
+      // 融资净买入（万元）：整数 + 千分位 + 显式正号，红涨绿跌由 classForMarketChange 负责
+      function fmtSignedWan(wan) {
+        if (wan === null || wan === undefined || Number.isNaN(wan)) return "-";
+        const rounded = Math.round(wan);
+        return `${rounded > 0 ? "+" : ""}${rounded.toLocaleString("en-US")}万`;
       }
 
       function fmtPrice(value) {
@@ -881,6 +1006,23 @@
       function beijingDateKeyOf(timeText) {
         const match = String(timeText || "").match(/(\d{4})-(\d{2})-(\d{2})/);
         return match ? `${match[1]}-${match[2]}-${match[3]}` : "";
+      }
+
+      // 两个日期之间的工作日数（不含起始日、含结束日），用于判断「基准日」落后了几天。
+      // 只做粗略的周一~周五计数，节假日会多算，因此仅用于「是否需要提示」而非精确计算。
+      function weekdayGapDays(fromKey, toKey) {
+        if (!fromKey || !toKey) return null;
+        const from = new Date(`${fromKey}T00:00:00+08:00`);
+        const to = new Date(`${toKey}T00:00:00+08:00`);
+        if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to <= from) return null;
+        let count = 0;
+        const cursor = new Date(from);
+        while (cursor < to) {
+          cursor.setDate(cursor.getDate() + 1);
+          const day = cursor.getDay();
+          if (day !== 0 && day !== 6) count += 1;
+        }
+        return count;
       }
 
       // 价格是否来自今天的实时行情：决定「真实溢价率」走盘中口径还是休市口径。
@@ -1047,17 +1189,34 @@
             : null;
         const premiumNav = fund.navForReturn || fund.navForPremium || fund.nav || liveIopv || fund.etfComUnitNav || etfComIopv;
         const premiumNavDate = fund.navForPremiumDate || fund.navDate;
-        const premiumNavStale = Boolean(premiumNavDate && fund.latestDate && premiumNavDate < fund.latestDate);
-        const calculatedPremium = premiumNav > 0 && !premiumNavStale ? (price / premiumNav - 1) * 100 : null;
+        // 「净值过期」判断：估算净值至少要覆盖到 latestDate 对应的美股收盘日
+        // （sessionAnchorUsCloseDate，即 A 股 T 日盘中能拿到的最新美股收盘 = T-1）。
+        // 不能直接和 latestDate（A股日期）比：数据正常时估算净值永远停在 T-1 的美股收盘，
+        // 那是设计如此，不是过期——否则数据一恢复当日落库，整列溢价就会被误杀成 "-"。
+        const expectedUsClose = fund.sessionAnchorUsCloseDate || null;
+        const premiumNavStale = expectedUsClose
+          ? Boolean(premiumNavDate && premiumNavDate < expectedUsClose)
+          : Boolean(premiumNavDate && fund.latestDate && premiumNavDate < fund.latestDate);
+        // 估算当前溢价率口径：只吃「最新公布净值 × (1+预估上一交易日指数涨跌幅)」，
+        // 不叠加汇率项、也不叠加今日期货/汇率（叠加这两项的只有「真实溢价率」那列）
+        const publishedNav = Number.isFinite(fund.nav) && fund.nav > 0 ? fund.nav : null;
+        const indexOnlyNav =
+          publishedNav && Number.isFinite(fund.estimateNdxReturn)
+            ? publishedNav * (1 + fund.estimateNdxReturn / 100)
+            : null;
+        const premiumNavColumn = indexOnlyNav || premiumNav;
+        const calculatedPremium = premiumNavColumn > 0 && !premiumNavStale ? (price / premiumNavColumn - 1) * 100 : null;
         const currentPremium = calculatedPremium;
         const currentPremiumSource =
-          fund.navForReturn || fund.navForPremium || fund.nav
-            ? "估算当前溢价率（含汇率）"
-            : liveIopv
-              ? "估算当前溢价率（腾讯IOPV兜底）"
-              : fund.etfComUnitNav
-                ? "估算当前溢价率（ETF.com.cn净值兜底）"
-                : "估算当前溢价率（ETF.com.cn溢价反推）";
+          indexOnlyNav
+            ? "估算当前溢价率＝场内实时价 ÷ [最新公布净值 × (1+预估上一交易日指数涨跌幅)] − 1（不含汇率与今日期货）"
+            : fund.navForReturn || fund.navForPremium || fund.nav
+              ? "估算当前溢价率（含汇率）"
+              : liveIopv
+                ? "估算当前溢价率（腾讯IOPV兜底）"
+                : fund.etfComUnitNav
+                  ? "估算当前溢价率（ETF.com.cn净值兜底）"
+                  : "估算当前溢价率（ETF.com.cn溢价反推）";
         const future = state.macro.futures[fund.group] || {};
         const usdCnyChangePct = Number.isFinite(state.macro.usdCnyChangePct) ? state.macro.usdCnyChangePct : fallbackFxChangePct([fund]);
         // 跟踪指数没有对应期货的基金（161128→S5INFT），用代理期货涨跌 × beta 拟合指数涨跌。
@@ -1085,6 +1244,9 @@
         let baseFx = null;
         let baseDate = "";
         let baseComparablePremium = null;
+        // 基准日与今天的间隔（工作日）。=1 表示基准就是上一个交易日，正常；
+        // >=2 说明基础数据没跟上，「较昨收」其实是多日累计变化，需要显式提示。
+        let baseGapDays = null;
         // 兜底：若 funds.json 还是旧结构（缺 chinaCloseRealPremium / prevChinaCloseRealPremium），
         // 就用锚净值与当日 15:00 涨幅现场推算，避免退化成「含美股收盘」的错误口径。
         const realPremiumFromAnchor = (anchorNav, fxPct, futPct) => {
@@ -1107,13 +1269,32 @@
           } else {
             adjustedPremium = calculatedPremium;
           }
-          basePremium = Number.isFinite(fund.latestPremium) ? fund.latestPremium : null;
-          baseFuture = chinaFutPct;
-          baseFx = chinaFxPct;
-          baseDate = fund.chinaCloseFutureDate || fund.latestDate || "";
-          baseComparablePremium = Number.isFinite(fund.chinaCloseRealPremium)
-            ? fund.chinaCloseRealPremium
-            : realPremiumFromClosePremium(basePremium, chinaFxPct, chinaFutPct);
+          // 基准 = 最近一个「已完成」交易日的 15:00 真实溢价。
+          // 最新行是昨天收盘数据 → chinaCloseRealPremium 就是昨天的；
+          // 最新行是今天的盘中半根 bar（15:00 期货/汇率尚不存在 → chinaCloseRealPremium=null）
+          // → 必须退到 prevChinaCloseRealPremium（前一交易日的），
+          //   且基准的期货/汇率/日期/原始溢价要整体切换到 prev* 系列，
+          //   否则会混用 latestPremium（原始溢价口径）造成较昨收虚高。
+          if (Number.isFinite(fund.chinaCloseRealPremium)) {
+            basePremium = Number.isFinite(fund.latestPremium) ? fund.latestPremium : null;
+            baseFuture = chinaFutPct;
+            baseFx = chinaFxPct;
+            baseDate = fund.chinaCloseFutureDate || fund.latestDate || "";
+            baseComparablePremium = fund.chinaCloseRealPremium;
+          } else if (Number.isFinite(fund.prevChinaCloseRealPremium)) {
+            basePremium = Number.isFinite(fund.prevPremium) ? fund.prevPremium : null;
+            baseFuture = Number.isFinite(fund.prevChinaCloseFutureChangePct) ? fund.prevChinaCloseFutureChangePct : null;
+            baseFx = Number.isFinite(fund.prevChinaCloseFxChangePct) ? fund.prevChinaCloseFxChangePct : null;
+            baseDate = fund.prevDate || "";
+            baseComparablePremium = fund.prevChinaCloseRealPremium;
+          } else {
+            basePremium = Number.isFinite(fund.latestPremium) ? fund.latestPremium : null;
+            baseFuture = chinaFutPct;
+            baseFx = chinaFxPct;
+            baseDate = fund.chinaCloseFutureDate || fund.latestDate || "";
+            baseComparablePremium = realPremiumFromClosePremium(basePremium, chinaFxPct, chinaFutPct);
+          }
+          baseGapDays = weekdayGapDays(baseDate, beijingDateKeyOf(beijingStampFromUnix(Date.now() / 1000)));
           adjustedPremiumChange =
             Number.isFinite(adjustedPremium) && Number.isFinite(baseComparablePremium)
               ? adjustedPremium - baseComparablePremium
@@ -1155,6 +1336,7 @@
           livePrice: price,
           changePct,
           premiumNav,
+          premiumNavIndexOnly: indexOnlyNav,
           etfComIopv,
           etfComPremium: hasEtfComPremium ? fund.etfComPremiumRate : null,
           calculatedPremium,
@@ -1176,12 +1358,16 @@
           baseFuture,
           baseFx,
           baseDate,
+          baseGapDays,
+          baseStale: Number.isFinite(baseGapDays) && baseGapDays >= 2,
           baseComponentsMissing,
           priorCloseComparablePremium,
           relativeDeviation:
-            Number.isFinite(currentPremium) && Number.isFinite(fund.avg20Premium) ? currentPremium - fund.avg20Premium : null,
+            Number.isFinite(adjustedPremium) && Number.isFinite(fund.avg20Premium)
+              ? adjustedPremium - fund.avg20Premium : null,
           relativeDeviation30:
-            Number.isFinite(currentPremium) && Number.isFinite(fund.avg30Premium) ? currentPremium - fund.avg30Premium : null,
+            Number.isFinite(adjustedPremium) && Number.isFinite(fund.avg30Premium)
+              ? adjustedPremium - fund.avg30Premium : null,
         };
       }
 
@@ -1254,14 +1440,27 @@
 
       function realPremiumChangeTitle(fund) {
         const missing = fund.baseComponentsMissing ? "（该分组缺少部分15:00基准数据）" : "";
+        const stale = fund.baseStale
+          ? `⚠ 基准日 ${fund.baseDate} 距今约 ${fund.baseGapDays} 个（工作日）交易日，基础数据未更新，此处的变化是「多日累计」而非单日变化。`
+          : "";
         return [
           "真实溢价率变化＝当前真实溢价率 − 上一A股交易日北京时间15:00 的真实溢价率",
+          ...(stale ? [stale] : []),
           `【当前】${fund.premiumMode === "live" ? "盘中实时口径" : `${fund.latestDate || "-"} 收盘口径`} ⇒ ${fmtPct(fund.adjustedPremium)}`,
           `【基准 ${fund.baseDate || "-"} 15:00】收盘价对应净值锚口径 ⇒ ${fmtPct(fund.priorCloseComparablePremium)}${missing}`,
           `⇒ 变化：${fmtPctPoint(fund.adjustedPremiumChange)}`,
           "15:00 的期货涨幅取同一 NQ/ES 合约相对前一交易日结算价的当日涨幅，不是从开盘起算。",
           "汇率分两段：净值锚的隔夜段用央行中间价（QDII 估值口径，接口失败回退新浪在岸）；盘中 15:00 段用新浪在岸 USD/CNY（14:50–15:00 中位数，基数为前一交易日收盘）。",
         ].join("\n");
+      }
+
+      // 融资融券列共用提示：附上交易所数据日期，若落后于最新交易日则说明是披露滞后
+      function marginTitle(fund, base) {
+        if (!fund.marginDataDate) return base;
+        const lag = fund.marginDataDate < fund.latestDate
+          ? `；T日数据交易所当晚才披露，此处为最新可得日期 ${fund.marginDataDate}`
+          : `；数据日期 ${fund.marginDataDate}`;
+        return `${base}${lag}`;
       }
 
       function render() {
@@ -1280,15 +1479,16 @@
                 <td class="fund-cell" data-label="基金名称"><div class="name">${fund.name}${fund.isHolding ? "（持有）" : ""}</div><div class="code">${fund.code}</div></td>
                 <td class="trend-cell" data-label="今日趋势">${trendBars(fund)}</td>
                 <td data-label="实时价格 / 涨跌">${quoteStack(fund)}</td>
-                <td data-label="估算当前溢价率" title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNav)}${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
+                <td data-label="估算当前溢价率" title="${fund.currentPremiumSource}；实时价：${fmtPrice(fund.livePrice)}；估算净值：${fmtPrice(fund.premiumNavIndexOnly || fund.premiumNav)}（公布净值 ${fmtPrice(fund.nav)} ${fund.navDate || ""} × (1${fmtPctPoint(fund.estimateNdxReturn)})）${Number.isFinite(fund.etfComPremium) ? "；ETF.com.cn：" + fmtPct(fund.etfComPremium) : ""}">${fmtPct(fund.currentPremium)}</td>
                 <td data-label="实时汇率" class="${classForSigned(fund.usdCnyChangePct)}">${fmtPct(fund.usdCnyChangePct)}</td>
-                <td data-label="实时期货" title="${fund.futureBeta ? `跟踪指数无对应期货，用纳指期货 ${fmtPct(fund.rawFutureChangePct)} × beta ${fund.futureBeta.toFixed(4)} 拟合为指数预估涨跌` : "实时对应期货涨跌幅"}" class="${classForSigned(fund.nqFutureChangePct)}">${Number.isFinite(fund.nqFutureChangePct) ? fmtPct(fund.nqFutureChangePct) + (fund.futureBeta ? '<span style="font-size:11px;opacity:.6">估</span>' : "") : "-"}</td>
+                <td data-label="实时期货" title="${fund.futureBeta ? `跟踪指数无对应期货，用纳指期货 ${fmtPct(fund.rawFutureChangePct)} × beta ${fund.futureBeta.toFixed(4)} 拟合为指数预估涨跌` : "实时对应期货涨跌幅"}" class="${classForSigned(fund.nqFutureChangePct)}">${Number.isFinite(fund.nqFutureChangePct) ? fmtPct(fund.nqFutureChangePct) + (fund.futureBeta ? '<span style="font-size:10px;opacity:.6">估</span>' : "") : "-"}</td>
+                <td data-label="昨日指数涨跌" title="净值锚中拟合的最新美股交易日指数涨跌，已包含在「真实溢价率」的分母里，与「实时期货」互不重复" class="${classForSigned(fund.estimateNdxReturn)}">${Number.isFinite(fund.estimateNdxReturn) ? fmtPct(fund.estimateNdxReturn) : "-"}</td>
                 <td data-label="7日日均成交额">${fmtAmount(fund.avg7AmountWan)}</td>
                 <td data-label="均值差" class="${cheapClass}">${fmtPctPoint(fund.relativeDeviation)}</td>
                 <td data-label="切换优势" class="${switchClass}">${fmtPctPoint(fund.switchAdvantage)}</td>
                 <td data-label="切换优势2（30日）" class="${switch30Class}">${fmtPctPoint(fund.switchAdvantage30)}</td>
                 <td data-label="真实溢价率" title="${realPremiumTitle(fund)}" class="${classForSigned(fund.adjustedPremium, true)}">${fmtPct(fund.adjustedPremium)}</td>
-                <td data-label="真实溢价率变化" title="${realPremiumChangeTitle(fund)}" class="${adjustedChangeClass}">${fmtPctPoint(fund.adjustedPremiumChange)}</td>
+                <td data-label="真实溢价率变化" title="${realPremiumChangeTitle(fund)}" class="${adjustedChangeClass}">${fmtPctPoint(fund.adjustedPremiumChange)}${fund.baseStale ? `<span class="stale-flag" title="基准日 ${fund.baseDate}，落后 ${fund.baseGapDays} 个交易日：该数字是多日累计变化">滞</span>` : ""}</td>
                 <td data-label="近7日趋势" class="spark-cell">${premiumSpark(fund)}</td>
                 <td data-label="运作费率">${fmtPct(fund.operatingFee)}</td>
                 <td data-label="10日均值">${fmtPct(fund.avg10Premium)}</td>
@@ -1299,12 +1499,16 @@
                 <td data-label="收盘价格回撤" title="当前价格相对历史最高收盘价；样本始于${fund.historyStartDate || '-'}；最高收盘价${fmtPrice(fund.historyHighClose)}">${fmtPct(fund.closePriceDrawdown)}</td>
                 <td data-label="净值回撤" title="估算当前净值对比历史单位净值峰值；样本始于${fund.historyStartDate || '-'}">${fmtPct(fund.navDrawdown)}</td>
                 <td data-label="规模" title="场内份额×最近官方净值；份额日${fund.scaleDate || '-'}">${Number.isFinite(fund.scaleAmount) ? (fund.scaleAmount / 1e8).toFixed(2) + '亿元' : '-'}</td>
-                <td data-label="最新申购份额" title="${fund.subscriptionLimitDate || '-'}；${fund.subscriptionLimitNote || '暂无清单'}；额度上限，并非实际申购量">${Number.isFinite(fund.subscriptionLimitShares) ? (fund.subscriptionLimitShares / 1e4).toFixed(0) + '万份' : fund.code === '161128' ? '不适用' : fund.subscriptionLimitNote === '不设上限' ? '不设上限' : '-'}</td>
-                <td data-label="最新申购金额" title="清单额度×清单净值${fmtPrice(fund.subscriptionLimitNav)}；日期${fund.subscriptionLimitDate || '-'}">${Number.isFinite(fund.subscriptionLimitAmount) ? (fund.subscriptionLimitAmount / 1e4).toFixed(2) + '万元' : '-'}</td>
-                <td data-label="申购金额占比" title="最新申购金额 ÷ 规模；申购金额为额度上限对应金额">${fmtPct(fund.subscriptionAmountRatio)}</td>
+                <td data-label="净申购上限" title="${fund.subscriptionLimitDate || '-'} 交易所申赎清单：${fund.subscriptionLimitNote || '暂无清单'}。这是当天可申购的额度上限，不是实际新增份额；该额度常长期固定不变，≠每日实际申购。实际份额变动请以行情站「新增份额」为准">${Number.isFinite(fund.subscriptionLimitShares) ? (fund.subscriptionLimitShares / 1e4).toFixed(0) + '万份(上限)' : fund.code === '161128' ? '不适用' : fund.subscriptionLimitNote === '不设上限' ? '不设上限' : '-'}</td>
+                <td data-label="上限金额" title="额度上限×清单净值${fmtPrice(fund.subscriptionLimitNav)}（${fund.subscriptionLimitDate || '-'}），理论上限、非实际申购金额">${Number.isFinite(fund.subscriptionLimitAmount) ? (fund.subscriptionLimitAmount / 1e4).toFixed(2) + '万元' : '-'}</td>
+                <td data-label="上限占规模" title="额度上限对应金额 ÷ 基金规模；理论上限占比、非实际申购占比">${fmtPct(fund.subscriptionAmountRatio)}</td>
                 <td data-label="2026净值收益" title="最新交易日 ${fund.latestFittedNavDate || "-"} 拟合净值 ${fmtPrice(fund.latestFittedNav)}（锚 × 当日15:00汇率 × 当日15:00期货）；官方净值 ${fmtPrice(fund.nav)}（${fund.navDate || "-"}）口径收益 ${fmtPct(fund.navReturn2026)}" class="${classForRank(fund.navReturn2026Fitted ?? fund.navReturn2026, navReturn2026Values)}">${fmtPct(fund.navReturn2026Fitted ?? fund.navReturn2026)}</td>
                 <td data-label="2025净值收益" class="${classForRank(fund.navReturn2025, navReturn2025Values)}">${fmtPct(fund.navReturn2025)}</td>
                 <td data-label="溢价净值日">${fund.navForPremiumDate || fund.navDate}${fund.navForPremiumSource === "estimated" ? "估" : ""}</td>
+                <td data-label="融资余额" title="${fund.marginDataDate ? `交易所披露融资余额（亿元），数据日期 ${fund.marginDataDate}` : "该基金暂无融资融券数据（LOF 等非融资标的或数据未披露）"}">${Number.isFinite(fund.marginBalanceYi) ? fund.marginBalanceYi.toFixed(2) + "亿" : "-"}</td>
+                <td data-label="当日净买入" class="${classForMarketChange(fund.marginDayNetBuyWan)}" title="${marginTitle(fund, "当日融资净买入（万元）")}">${fmtSignedWan(fund.marginDayNetBuyWan)}</td>
+                <td data-label="近5日净买入" class="${classForMarketChange(fund.margin5dNetBuyWan)}" title="${marginTitle(fund, "融资余额较5个交易日前变化（万元），即近5个交易日累计净买入（含当日）")}">${fmtSignedWan(fund.margin5dNetBuyWan)}</td>
+                <td data-label="近10日净买入" class="${classForMarketChange(fund.margin10dNetBuyWan)}" title="${marginTitle(fund, "融资余额较10个交易日前变化（万元），即近10个交易日累计净买入（含当日）")}">${fmtSignedWan(fund.margin10dNetBuyWan)}</td>
               </tr>
             `;
           })
@@ -1313,6 +1517,9 @@
         const all = enrichedFunds();
         const groupMeta = state.groups[state.activeGroup] || {};
         $("currentPremiumHead").textContent = "估算当前溢价率";
+        $("currentPremiumHead").title =
+          "场内实时价 ÷ [最新公布净值 × (1+预估上一交易日指数涨跌幅)] − 1；\n" +
+          "不叠加汇率变动，也不叠加今日期货/汇率（这两项只在「真实溢价率」列使用）；LOF 与 ETF 同口径。";
         const holdingCode = state.holdingCodes[state.activeGroup] || "";
         const holding = all.find((fund) => fund.code === holdingCode);
         const cheapest = [...all].sort((a, b) => a.relativeDeviation - b.relativeDeviation)[0];
@@ -1339,14 +1546,24 @@
         $("futureLabel").textContent = Number.isFinite(futureAge) ? `${futureLabelText}（${formatAgeText(futureAge)}）` : futureLabelText;
         $("futureLabel").className = Number.isFinite(futureAge) ? (futureAge > 120 ? "stale" : "fresh") : "";
         $("updated").textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+        // 卡片收紧后文字可能省略，鼠标悬停仍能看到完整内容（期货卡自带行情来源提示，不覆盖）
+        document.querySelectorAll(".stats .stat b").forEach((el) => {
+          if (el.id !== "nqFuture" && el.textContent.trim()) el.title = el.textContent.trim();
+        });
+        $("futureLabel").title = $("futureLabel").textContent.trim();
         const etfComTimes = [...new Set(all.map((fund) => fund.etfComServerTime).filter(Boolean))];
         const etfComText = etfComTimes.length ? `ETF.com.cn参考时间：${etfComTimes[0]}` : "ETF.com.cn参考数据：未取到";
         const dataAgeDays = baseDataAgeDays(state.latestDate);
-        const staleWarning =
-          Number.isFinite(dataAgeDays) && dataAgeDays > 4
+        // 「较昨收」的基准必须是上一个交易日。若基础数据落后（基准日与今天之间
+        // 还有交易日），整列数字就是多日累计，必须显式告警，避免被误读成单日变化。
+        const latestGapDays = weekdayGapDays(state.latestDate, beijingDateKeyOf(beijingStampFromUnix(Date.now() / 1000)));
+        const baseOutdated = Number.isFinite(latestGapDays) && latestGapDays >= 2;
+        const staleWarning = baseOutdated
+          ? ` ⚠ 基础数据停在 ${state.latestDate}，比今天落后约 ${latestGapDays} 个交易日：「真实溢价较昨收」是多日累计变化（非单日），请先更新数据。`
+          : Number.isFinite(dataAgeDays) && dataAgeDays > 4
             ? ` ⚠ 基础数据已滞后 ${dataAgeDays} 天，溢价率与"真实溢价率变化"仍以 ${state.latestDate} 收盘为起点，请先更新数据。`
             : "";
-        $("subtitle").textContent = `当前分组：${groupMeta.name || state.activeGroup}；基础数据：${state.latestDate}；估算当前溢价率=场内实时价格/含隔夜指数与汇率变化的估算人民币净值；${etfComText}。${staleWarning}`;
+        $("subtitle").textContent = `当前分组：${groupMeta.name || state.activeGroup}；基础数据：${state.latestDate}；估算当前溢价率=场内实时价格÷[最新公布净值×(1+预估上一交易日指数涨跌幅)]（不含汇率与今日期货，LOF 同口径）；${etfComText}。${staleWarning}`;
       }
 
       function renderGroupTabs() {
@@ -1765,35 +1982,73 @@
       }
 
       let macroBusy = false;
+      let macroBusySince = 0;
 
-      async function refreshMacro() {
-        if (macroBusy) return;
+      // 期货差异化刷新：优先组跟随 15s 调度，其余组拉长到 60s，
+      // 降低东财接口被限流的概率（纳指100 是轮动决策的主战场，优先保它）。
+      const MACRO_PRIORITY_GROUPS = ["nasdaq100"];
+      const MACRO_PRIORITY_GAP_MS = 15 * 1000;
+      const MACRO_SLOW_GAP_MS = 60 * 1000;
+
+      async function refreshMacro({ force = false } = {}) {
+        // 看门狗：若上一轮因异常卡住超过 30 秒，强制放行，避免永久停更
+        if (macroBusy) {
+          if (Date.now() - macroBusySince < 30 * 1000) return;
+          macroBusy = false;
+        }
         macroBusy = true;
+        macroBusySince = Date.now();
         try {
-          const entries = Object.entries(state.groups);
-          // 汇率和期货并行拉取，避免汇率接口超时把期货时间戳整体拖后。
+          const now = Date.now();
+          // 到期判断按「合约 secid」而非分组：sp500 和 usa50 都用 ES00Y，
+          // 一边刷成功后另一边不重复打同一接口。
+          const dueEntries = Object.entries(state.groups).filter(([group, meta]) => {
+            if (force) return true;
+            const key = meta.future_secid || "default";
+            const gap = MACRO_PRIORITY_GROUPS.includes(group) ? MACRO_PRIORITY_GAP_MS : MACRO_SLOW_GAP_MS;
+            return now - (state.macro.lastFetch[key] || 0) >= gap;
+          });
+          // 汇率每轮都拉（单请求、有新浪兜底）；期货只拉到期的。
           const [fxResult, ...futureResults] = await Promise.all([
             settle(loadUsdCnyQuote()),
-            ...entries.map(([group, meta]) => settle(loadFutureQuote(group, meta))),
+            ...dueEntries.map(([group, meta]) => settle(loadFutureQuote(group, meta))),
           ]);
 
           if (fxResult.ok) {
             state.macro.usdCny = fxResult.value.price;
             state.macro.usdCnyChangePct = fxResult.value.changePct;
-          } else {
-            state.macro.usdCny = null;
-            state.macro.usdCnyChangePct = null;
           }
+          // 汇率失败时同样保留旧值：state.macro.usdCny 不清空，
+          // 页面顶部会沿用它自己的行情时间显示，不会闪成 "-"。
 
-          entries.forEach(([group], index) => {
+          // 相同合约的结果共享（sp500/usa50 都是 ES00Y）
+          const bySecid = new Map();
+          dueEntries.forEach(([, meta], index) => {
+            const key = meta.future_secid || "default";
             const result = futureResults[index];
+            const existing = bySecid.get(key);
+            if (!existing || (result.ok && !existing.ok)) bySecid.set(key, result);
+          });
+
+          dueEntries.forEach(([group, meta], index) => {
+            const key = meta.future_secid || "default";
+            const result = bySecid.get(key);
             if (result.ok) {
               state.macro.futures[group] = { ...result.value, source: result.value.source || "东方财富" };
+              state.macro.lastFetch[key] = Date.now();
             } else {
-              console.warn(`${group} 期货行情刷新失败`, result.error?.message || result.error);
-              state.macro.futures[group] = { price: null, changePct: null, source: "无有效实时行情", time: "" };
+              console.warn(`${group} 期货行情刷新失败，沿用上次数据`, result.error?.message || result.error);
+              // 关键改动：失败不再覆盖为空值，保留旧行情继续展示。
+              // 旧值自带行情时间戳，页面会按「距今 xx 秒/分钟」正常显示陈旧状态（>2 分钟标橙）。
+              // 仅当从未成功拉到过时才保持 "-"。
+              if (!state.macro.futures[group] || state.macro.futures[group].price == null) {
+                state.macro.futures[group] = { price: null, changePct: null, source: "无有效实时行情", time: "" };
+              }
             }
           });
+        } catch (error) {
+          // 任何解析/取值异常都不应让刷新永久停摆：记录后下一轮继续
+          console.warn("宏观行情刷新异常", error);
         } finally {
           macroBusy = false;
         }
@@ -1868,7 +2123,7 @@
 
       async function init() {
         await refreshBaseData();
-        await refreshMacro();
+        await refreshMacro({ force: true });
         await refreshQuotes();
         await refreshTrendData();
         setInterval(async () => {
@@ -1883,7 +2138,7 @@
         setInterval(async () => {
           try {
             await refreshBaseData({ silent: true });
-            await refreshMacro();
+            await refreshMacro({ force: true });
             await refreshQuotes();
             await refreshTrendData();
           } catch (error) {
@@ -1894,7 +2149,7 @@
 
       $("refresh").addEventListener("click", async () => {
         await refreshBaseData();
-        await refreshMacro();
+        await refreshMacro({ force: true });
         await refreshQuotes();
         await refreshTrendData();
       });
