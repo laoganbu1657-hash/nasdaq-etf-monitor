@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, time
+from zoneinfo import ZoneInfo
 from io import StringIO
 from pathlib import Path
 import re
@@ -61,6 +62,32 @@ def market_symbol(code: str) -> str:
     return ("sh" if code.startswith("5") else "sz") + code
 
 
+def fetch_today_bar_em(code: str) -> dict | None:
+    """东财当日日线 bar（收盘后即可用），用于补新浪日线更新滞后（经常隔天才给出当日）。"""
+    try:
+        today_key = date.today().strftime("%Y%m%d")
+        df = ak.fund_etf_hist_em(
+            symbol=code, period="daily", start_date=today_key, end_date=today_key, adjust=""
+        )
+    except Exception:
+        return None
+    if df is None or df.empty:
+        return None
+    row = df.iloc[-1]
+    return {
+        "date": pd.Timestamp(row["日期"]),
+        "open": float(row["开盘"]),
+        "high": float(row["最高"]),
+        "low": float(row["最低"]),
+        "close": float(row["收盘"]),
+        # 东财成交量单位是手，与新浪的股差 100 倍，换算对齐
+        "volume": float(row["成交量"]) * 100,
+        "amount": float(row["成交额"]),
+        "postVol": float("nan"),
+        "postAmt": float("nan"),
+    }
+
+
 def fetch_price_df(code: str) -> pd.DataFrame:
     df = ak.fund_etf_hist_sina(symbol=market_symbol(code)).copy()
     df["date"] = pd.to_datetime(df["date"])
@@ -68,6 +95,19 @@ def fetch_price_df(code: str) -> pd.DataFrame:
     df = df.sort_values("date")
     for col in ["open", "high", "low", "close", "volume", "amount"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+    # 新浪日线经常收盘后隔天才补当日 bar：若今天缺失且东财已出，则补上，
+    # 否则当天净值锚/溢价数据会整体滞后一天。
+    # 关键：只在 A 股收盘后（北京时间 15:05 起）才补当日 bar。盘中补进来的
+    # 是半根 bar，会把全局 latest_date 污染成今天，导致所有基金的 15:00 基准
+    # (chinaCloseRealPremium) 取不到而退到兜底、较昨收变成多日累计且口径混乱。
+    now_bj = datetime.now(ZoneInfo("Asia/Shanghai"))
+    today = pd.Timestamp(date.today())
+    after_close = now_bj.time() >= time(15, 5)
+    if after_close and (df.empty or df["date"].iloc[-1] < today):
+        bar = fetch_today_bar_em(code)
+        if bar is not None and (df.empty or bar["date"] > df["date"].iloc[-1]):
+            print(f"Info: {code} 新浪日线缺当日数据，已从东财补 {bar['date'].date()}")
+            df = pd.concat([df, pd.DataFrame([bar])], ignore_index=True).sort_values("date")
     return df
 
 
