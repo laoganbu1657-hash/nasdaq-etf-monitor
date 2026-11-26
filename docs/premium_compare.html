@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>账面溢价率趋势对比 · 纳指ETF</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #172033;
+        --muted: #64748b;
+        --line: #d8e0eb;
+        --head: #edf2f8;
+        --green: #047857;
+        --red: #b42318;
+        --blue: #2563eb;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        font-size: 13px;
+      }
+      .wrap { max-width: 1360px; margin: 0 auto; padding: 18px 20px 40px; }
+      a.back { color: var(--blue); text-decoration: none; font-size: 12px; }
+      a.back:hover { text-decoration: underline; }
+      h1 { font-size: 20px; margin: 10px 0 4px; }
+      .head-row { display: flex; align-items: center; flex-wrap: wrap; }
+      .head-row .seg { margin-bottom: 4px; }
+      .sub { color: var(--muted); font-size: 12px; margin-bottom: 16px; line-height: 1.6; }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+      }
+      .ctrl-top { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; margin-bottom: 14px; }
+      .ctrl-block { min-width: 0; }
+      .ctrl-funds { border-top: 1px solid var(--line); padding-top: 12px; }
+      .ctrl-label { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600; }
+      .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+      .seg button {
+        border: 0; background: #fff; color: var(--ink); padding: 7px 13px; cursor: pointer;
+        font-size: 12px; border-right: 1px solid var(--line); font-family: inherit;
+      }
+      .seg button:last-child { border-right: 0; }
+      .seg button.on { background: var(--blue); color: #fff; font-weight: 600; }
+      .seg button:hover:not(.on) { background: var(--head); }
+      .funds { display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; }
+      .chip {
+        border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; cursor: pointer;
+        background: #fff; font-size: 12px; user-select: none; display: inline-flex; align-items: center; gap: 6px;
+      }
+      .chip .dot { width: 9px; height: 9px; border-radius: 50%; background: #cbd5e1; }
+      .chip.on { border-color: var(--blue); background: #eff6ff; font-weight: 600; }
+      .chip.on .dot { box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor; }
+      .chip:hover { border-color: var(--blue); }
+      .chip.maxed { opacity: .45; cursor: not-allowed; }
+      .chip.median { border-style: dashed; border-color: #94a3b8; }
+      .chip.median.on { border-color: #334155; background: #f1f5f9; }
+      .clear-btn {
+        border: 1px solid var(--line); background: #fff; color: var(--muted);
+        border-radius: 7px; padding: 3px 9px; font-size: 11px; cursor: pointer;
+        font-family: inherit; vertical-align: middle; margin-left: 4px;
+      }
+      .clear-btn:hover:not(:disabled) { border-color: var(--red); color: var(--red); }
+      .clear-btn:disabled { opacity: .4; cursor: default; }
+      .hint { color: var(--muted); font-size: 11px; margin-top: 6px; }
+      select, input[type="number"] {
+        border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; font-size: 12px;
+        background: #fff; color: var(--ink); font-family: inherit;
+      }
+      .chart-title { font-size: 14px; font-weight: 700; margin: 2px 0 2px; }
+      .chart-desc { color: var(--muted); font-size: 11px; margin-bottom: 6px; }
+      .chart-box { position: relative; width: 100%; }
+      svg { width: 100%; display: block; touch-action: none; }
+      .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; }
+      .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; }
+      .legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+      #tooltip, #diffTooltip {
+        position: absolute; pointer-events: none; background: rgba(23,32,51,.94); color: #fff;
+        border-radius: 7px; padding: 8px 10px; font-size: 11px; line-height: 1.7; z-index: 5;
+        box-shadow: 0 4px 16px rgba(0,0,0,.18); min-width: 150px; opacity: 0; transition: opacity .1s;
+      }
+      #tooltip b, #diffTooltip b { font-weight: 700; }
+      .tt-row { display: flex; justify-content: space-between; gap: 14px; }
+      .tt-row .v { font-variant-numeric: tabular-nums; }
+      .up { color: #ff8a80; }
+      .down { color: #6ee7a8; }
+      table { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 6px; }
+      th, td { padding: 6px 9px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+      th { color: var(--muted); font-weight: 600; background: var(--head); }
+      th:first-child, td:first-child { text-align: left; }
+      .note { color: var(--muted); font-size: 11px; line-height: 1.7; }
+      .empty { color: var(--muted); padding: 30px; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <a class="back" href="./index.html">← 返回监控主表</a>
+      <div class="head-row">
+        <h1 id="pageTitle">账面溢价率趋势对比</h1>
+        <span class="seg" id="premiumSeg" style="margin-left:14px">
+          <button data-p="book" class="on">账面</button>
+          <button data-p="real">真实</button>
+        </span>
+      </div>
+      <div class="sub" id="meta">加载中…</div>
+
+      <div class="panel">
+        <div class="ctrl-top">
+          <div class="ctrl-block">
+            <div class="ctrl-label">时间窗口</div>
+            <div class="seg" id="windowSeg">
+              <button data-d="30" class="on">30天</button>
+              <button data-d="45">45天</button>
+              <button data-d="60">60天</button>
+              <button data-d="90">90天</button>
+              <button data-d="180" id="maxWindowBtn">180天</button>
+            </div>
+          </div>
+          <div class="ctrl-block">
+            <div class="ctrl-label">差值基准</div>
+            <select id="baseSelect"></select>
+            <div class="hint">差值 = 各基金 − 基准</div>
+          </div>
+        </div>
+        <div class="ctrl-funds">
+          <div class="ctrl-label">
+            选择基金对比（最多 6 支，点选/取消） ·
+            <span class="seg" id="groupSeg" style="vertical-align:middle">
+              <button data-g="all" class="on">全部</button>
+              <button data-g="nasdaq100">纳指</button>
+              <button data-g="sp500">标普</button>
+              <button data-g="usa50">美国50</button>
+            </span>
+            <button class="clear-btn" id="clearSel" title="取消所有已选基金" style="margin-left:10px">取消选择</button>
+          </div>
+          <div class="funds" id="fundChips"></div>
+          <div class="hint" id="selHint"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="chart-title" id="mainTitle">账面溢价率走势（%）</div>
+        <div class="chart-desc" id="mainDesc">口径：账面溢价率 = 收盘价 ÷ 净值锚 − 1（已剔除当日期货与汇率的日内漂移）</div>
+        <div class="chart-box" id="mainBox">
+          <svg id="mainChart" viewBox="0 0 1300 380" preserveAspectRatio="none"></svg>
+          <div id="tooltip"></div>
+        </div>
+        <div class="legend" id="mainLegend"></div>
+      </div>
+
+      <div class="panel">
+        <div class="chart-title" id="diffTitle">账面溢价率差值走势（百分点，相对基准）</div>
+        <div class="chart-desc" id="diffDesc">差值 = 该基金账面溢价率 − 基准基金账面溢价率；0 轴以上为溢价更高</div>
+        <div class="chart-box" id="diffBox">
+          <svg id="diffChart" viewBox="0 0 1300 240" preserveAspectRatio="none"></svg>
+          <div id="diffTooltip"></div>
+        </div>
+        <div class="legend" id="diffLegend"></div>
+      </div>
+
+      <div class="panel">
+        <div class="chart-title">明细数据</div>
+        <table id="datatable"></table>
+        <div class="note" id="footNote" style="margin-top:10px">
+          说明：账面溢价率 = 场内收盘价 ÷ 净值锚 − 1，不含当日 15:00 期货与汇率的日内漂移。净值锚按「当时能拿到的最新已发布净值 + 上一美股交易日指数涨跌」逐日重算。
+          数据窗口以 2026-11-24 = 180 个交易日为基准，此后每新增一个交易日 +1（181、182…），历史只增不减。
+        </div>
+      </div>
+    </div>
+
+    <script src="./data/premium_history.js"></script>
+    <script>
+      (function () {
+        "use strict";
+        var PALETTE = ["#2563eb", "#d97706", "#7c3aed", "#0891b2", "#db2777", "#65a30d", "#dc2626"];
+        var MEDIAN_COLORS = { MED_nasdaq100: "#0f172a", MED_sp500: "#6d28d9", MED_usa50: "#0f766e" };
+        var MAX_FUNDS = 9;
+        var data = null;
+        var funds = [];
+        var byCode = {};
+        var selected = [];
+        var colorOf = {};
+        var windowDays = 30;
+        var baseCode = null;
+        var groupFilter = "all";
+        var visibleFunds = [];
+        var premiumMode = "book"; // book=账面（默认）, real=真实（含期货/汇率）
+        var POINT_KEY = { book: "points", real: "realPoints" };
+
+        var $ = function (id) { return document.getElementById(id); };
+
+        function init() {
+          data = window.PREMIUM_HISTORY;
+          if (!data || !data.funds) {
+            $("meta").textContent = "数据文件 premium_history.js 未找到，请先运行 build_web_data.py。";
+            return;
+          }
+          funds = data.funds.filter(function (f) { return f.points && f.points.length >= 5; });
+          // 分组中位数参考线并入可选池（默认三条全选，粗虚线+专属色区分）
+          (data.medianSeries || []).forEach(function (m) {
+            if (m.points && m.points.length) funds.push(m);
+          });
+          funds.forEach(function (f) { byCode[f.code] = f; });
+          // 默认选：三条分组中位数 + 持有富国 + 汇添富 + 国泰 + 博时
+          ["MED_nasdaq100", "MED_sp500", "MED_usa50", "513870", "159660", "513100", "513390"].forEach(function (c) {
+            if (byCode[c]) selected.push(c);
+          });
+          if (!selected.length) selected = funds.slice(0, 2).map(function (f) { return f.code; });
+          var fundColorIdx = 0;
+          selected.forEach(function (c) {
+            colorOf[c] = byCode[c].isMedian
+              ? (MEDIAN_COLORS[c] || "#334155")
+              : PALETTE[fundColorIdx++ % PALETTE.length];
+          });
+          // 默认基准用持有的富国（若被选中），否则第一支非中位数基金，避免基准落在参考线上
+          baseCode = (selected.indexOf("513870") >= 0) ? "513870"
+            : (selected.filter(function (c) { return !byCode[c].isMedian; })[0] || selected[0]);
+
+          // 最大窗口按钮随数据增长自动显示（180→181→182…，按交易日递增）
+          var maxWindow = data.maxWindow || 180;
+          var maxBtn = $("maxWindowBtn");
+          maxBtn.dataset.d = String(maxWindow);
+          maxBtn.textContent = maxWindow + "天";
+
+          $("meta").textContent =
+            "数据生成：" + (data.generatedAt || "").replace("T", " ").slice(0, 19) +
+            " · 最长可查 " + maxWindow + " 个交易日 · 点击基金标签选择对比（最多 " + MAX_FUNDS + " 支）";
+
+          buildChips();
+          bindWindow();
+          bindGroup();
+          bindClear();
+          bindPremium();
+          render();
+        }
+
+        function bindPremium() {
+          var seg = $("premiumSeg");
+          seg.addEventListener("click", function (e) {
+            var b = e.target.closest("button");
+            if (!b || b.dataset.p === premiumMode) return;
+            premiumMode = b.dataset.p;
+            Array.prototype.forEach.call(seg.children, function (x) { x.classList.toggle("on", x === b); });
+            applyModeText();
+            render();
+          });
+          applyModeText();
+        }
+
+        function applyModeText() {
+          var isReal = premiumMode === "real";
+          var label = isReal ? "真实" : "账面";
+          $("pageTitle").textContent = label + "溢价率趋势对比";
+          $("mainTitle").textContent = label + "溢价率走势（%）";
+          $("diffTitle").textContent = label + "溢价率差值走势（百分点，相对基准）";
+          $("mainDesc").textContent = isReal
+            ? "口径：真实溢价率 = 收盘价 ÷ [净值锚 ×(1+15:00期货)×(1+15:00汇率)] − 1"
+            : "口径：账面溢价率 = 收盘价 ÷ 净值锚 − 1（已剔除当日期货与汇率的日内漂移）";
+          $("diffDesc").textContent = "差值 = 各基金" + label + "溢价率 − 基准基金" + label + "溢价率；0 轴以上为溢价更高";
+          var prefix = isReal
+            ? "说明：真实溢价率 = 场内收盘价 ÷ [净值锚 ×(1+当日15:00期货涨跌)×(1+当日15:00汇率涨跌)] − 1，含当日盘中期货/汇率漂移。期货与汇率按 1m/5m/15m/1h 分级取北京15:00价，早期日期分钟线不可得则该日留空。"
+            : "说明：账面溢价率 = 场内收盘价 ÷ 净值锚 − 1，不含当日 15:00 期货与汇率的日内漂移。净值锚按「当时能拿到的最新已发布净值 + 上一美股交易日指数涨跌」逐日重算。";
+          $("footNote").innerHTML = prefix
+            + "<br>◆ 虚线为分组中位数参考线：每日对组内成分基金当日溢价取中位数（偶数支取中间两支平均）再逐日连线。纳指100中位数只含 12 支纯纳指100 ETF（已排除纳指科技ETF、标普信息科技LOF、纳斯达克100LOF）。"
+            + "<br>数据窗口以 2026-11-24 = 180 个交易日为基准，此后每新增一个交易日 +1（181、182…），历史只增不减。";
+        }
+
+        function bindClear() {
+          $("clearSel").addEventListener("click", function () {
+            if (!selected.length) return;
+            selected = [];
+            colorOf = {};
+            baseCode = null;
+            updateChips();
+            buildBaseSelect();
+            render();
+          });
+        }
+
+        function bindGroup() {
+          var seg = $("groupSeg");
+          seg.addEventListener("click", function (e) {
+            var b = e.target.closest("button");
+            if (!b) return;
+            groupFilter = b.dataset.g;
+            Array.prototype.forEach.call(seg.children, function (x) { x.classList.toggle("on", x === b); });
+            buildChips();
+          });
+        }
+
+        function buildChips() {
+          var box = $("fundChips");
+          box.innerHTML = "";
+          visibleFunds = groupFilter === "all"
+            ? funds
+            : funds.filter(function (f) { return f.group === groupFilter; });
+          // 中位数线排在最前
+          visibleFunds.sort(function (a, b) {
+            if (!!a.isMedian !== !!b.isMedian) return a.isMedian ? -1 : 1;
+            return 0;
+          });
+          visibleFunds.forEach(function (f) {
+            var chip = document.createElement("div");
+            chip.className = "chip" + (f.isMedian ? " median" : "");
+            chip.innerHTML = '<span class="dot"></span>' +
+              (f.isMedian ? "◆ " : "") + f.name +
+              (f.isMedian ? "" : " <small style='color:#94a3b8'>" + f.code + "</small>");
+            chip.addEventListener("click", function () { toggleFund(f.code); });
+            box.appendChild(chip);
+          });
+          updateChips();
+        }
+
+        function updateChips() {
+          var chips = $("fundChips").children;
+          for (var i = 0; i < chips.length; i++) {
+            var code = visibleFunds[i].code;
+            var isOn = selected.indexOf(code) >= 0;
+            chips[i].className = "chip" + (visibleFunds[i].isMedian ? " median" : "") +
+              (isOn ? " on" : "") +
+              (!isOn && selected.length >= MAX_FUNDS ? " maxed" : "");
+            var dot = chips[i].querySelector(".dot");
+            if (dot) dot.style.background = isOn ? colorOf[code] : "#cbd5e1";
+            if (isOn) chips[i].style.color = colorOf[code];
+            else chips[i].style.color = "";
+          }
+          $("selHint").textContent = selected.length
+            ? "已选 " + selected.length + " 支" +
+              (selected.length > MAX_FUNDS ? "（超出上限）" : "") + "（可跨分组选择）"
+            : "未选择任何基金，点击下方标签添加（最多 " + MAX_FUNDS + " 支）";
+          $("clearSel").disabled = selected.length === 0;
+        }
+
+        function toggleFund(code) {
+          var idx = selected.indexOf(code);
+          if (idx >= 0) {
+            selected.splice(idx, 1);
+            delete colorOf[code];
+          } else {
+            if (selected.length >= MAX_FUNDS) return;
+            selected.push(code);
+            colorOf[code] = byCode[code].isMedian
+              ? (MEDIAN_COLORS[code] || "#334155")
+              : PALETTE[selected.filter(function (c) { return !byCode[c].isMedian; }).length - 1];
+          }
+          if (!selected.length) baseCode = null;
+          else if (selected.indexOf(baseCode) < 0) baseCode = selected[0];
+          updateChips();
+          buildBaseSelect();
+          render();
+        }
+
+        function bindWindow() {
+          var seg = $("windowSeg");
+          seg.addEventListener("click", function (e) {
+            var b = e.target.closest("button");
+            if (!b) return;
+            windowDays = parseInt(b.dataset.d, 10);
+            Array.prototype.forEach.call(seg.children, function (x) { x.classList.toggle("on", x === b); });
+            render();
+          });
+        }
+
+        function buildBaseSelect() {
+          var sel = $("baseSelect");
+          sel.innerHTML = "";
+          if (!selected.length) {
+            var opt0 = document.createElement("option");
+            opt0.value = ""; opt0.textContent = "（未选择基金）";
+            sel.appendChild(opt0);
+            sel.disabled = true;
+            return;
+          }
+          sel.disabled = false;
+          selected.forEach(function (c) {
+            var opt = document.createElement("option");
+            opt.value = c; opt.textContent = byCode[c].name + " " + c;
+            sel.appendChild(opt);
+          });
+          sel.value = baseCode;
+          sel.onchange = function () { baseCode = sel.value; render(); };
+        }
+
+        // 对齐日期：以基准基金当前口径的日期序列为准，各基金按日期做映射
+        function alignedSeries() {
+          var key = POINT_KEY[premiumMode];
+          var base = byCode[baseCode];
+          var basePoints = base[key] || base.points;
+          var allDates = basePoints.slice(-windowDays).map(function (p) { return p.date; });
+          var map = {};
+          funds.forEach(function (f) {
+            var m = {};
+            var pts = f[key] || f.points; // 缺真实序列时降级到账面
+            pts.forEach(function (p) { m[p.date] = p.value; });
+            map[f.code] = m;
+          });
+          var series = {};
+          selected.forEach(function (c) {
+            series[c] = allDates.map(function (d) { return map[c][d] != null ? map[c][d] : null; });
+          });
+          return { dates: allDates, series: series };
+        }
+
+        function render() {
+          buildBaseSelect();
+          if (!selected.length || !baseCode) {
+            var msg = "未选择基金，请从上方标签中选择对比标的";
+            $("mainChart").setAttribute("viewBox", "0 0 1300 380");
+            $("mainChart").innerHTML = '<text x="650" y="190" text-anchor="middle" font-size="13" fill="#94a3b8">' + msg + '</text>';
+            $("diffChart").setAttribute("viewBox", "0 0 1300 240");
+            $("diffChart").innerHTML = '<text x="650" y="120" text-anchor="middle" font-size="13" fill="#94a3b8">' + msg + '</text>';
+            $("mainLegend").innerHTML = "";
+            $("diffLegend").innerHTML = "";
+            $("datatable").innerHTML = '<tbody><tr><td class="empty">' + msg + '</td></tr></tbody>';
+            $("diffDesc").textContent = "差值 = 各基金" + (premiumMode === "real" ? "真实" : "账面") + "溢价率 − 基准基金" + (premiumMode === "real" ? "真实" : "账面") + "溢价率；0 轴以上为溢价更高";
+            $("tooltip").style.opacity = 0;
+            $("diffTooltip").style.opacity = 0;
+            return;
+          }
+          var al = alignedSeries();
+          drawMain(al);
+          drawDiff(al);
+          drawTable(al);
+        }
+
+        function niceRange(values) {
+          var lo = Infinity, hi = -Infinity;
+          values.forEach(function (v) { if (v != null) { lo = Math.min(lo, v); hi = Math.max(hi, v); } });
+          if (!isFinite(lo)) { lo = 0; hi = 1; }
+          var pad = Math.max((hi - lo) * 0.12, 0.5);
+          return { lo: lo - pad, hi: hi + pad };
+        }
+
+        function drawMain(al) {
+          var svg = $("mainChart");
+          var W = 1300, H = 380, L = 62, R = 96, T = 16, B = 34;
+          var iw = W - L - R, ih = H - T - B;
+          var all = [];
+          selected.forEach(function (c) { al.series[c].forEach(function (v) { if (v != null) all.push(v); }); });
+          var rg = niceRange(all);
+          var n = al.dates.length;
+          var x = function (i) { return L + (n <= 1 ? iw / 2 : i * iw / (n - 1)); };
+          var y = function (v) { return T + ih - (v - rg.lo) / (rg.hi - rg.lo) * ih; };
+          var s = [];
+          // 网格 + Y 轴刻度
+          var ticks = 5;
+          for (var t = 0; t <= ticks; t++) {
+            var val = rg.lo + (rg.hi - rg.lo) * t / ticks;
+            var yy = y(val);
+            s.push('<line x1="' + L + '" y1="' + yy + '" x2="' + (W - R) + '" y2="' + yy + '" stroke="#eef2f7" stroke-width="1"/>');
+            s.push('<text x="' + (L - 9) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" fill="#94a3b8">' + val.toFixed(1) + '</text>');
+          }
+          // X 轴日期
+          var step = Math.max(1, Math.ceil(n / 8));
+          for (var i = 0; i < n; i += step) {
+            s.push('<text x="' + x(i) + '" y="' + (H - 10) + '" text-anchor="middle" font-size="10" fill="#94a3b8">' + al.dates[i].slice(5) + '</text>');
+          }
+          // 折线 + 端点标签
+          // 中位数线先画（底层），粗虚线；普通基金实线在上层
+          var drawOrder = selected.slice().sort(function (a, b) {
+            return (byCode[b].isMedian ? 1 : 0) - (byCode[a].isMedian ? 1 : 0);
+          });
+          drawOrder.forEach(function (c) {
+            var pts = al.series[c], d = "", lastI = -1, lastV = null;
+            for (var i = 0; i < n; i++) {
+              if (pts[i] == null) continue;
+              d += (d ? " L " : "M ") + x(i).toFixed(1) + " " + y(pts[i]).toFixed(1);
+              lastI = i; lastV = pts[i];
+            }
+            var isMed = !!byCode[c].isMedian;
+            var dash = isMed ? ' stroke-dasharray="9 5"' : '';
+            var sw = isMed ? 3.2 : 2.2;
+            s.push('<path d="' + d + '" fill="none" stroke="' + colorOf[c] + '" stroke-width="' + sw + '" stroke-linejoin="round"' + dash + '/>');
+            if (lastI >= 0) {
+              if (isMed) {
+                s.push('<rect x="' + (x(lastI) - 4) + '" y="' + (y(lastV) - 4) + '" width="8" height="8" fill="' + colorOf[c] + '" transform="rotate(45 ' + x(lastI) + ' ' + y(lastV) + ')"/>');
+              } else {
+                s.push('<circle cx="' + x(lastI) + '" cy="' + y(lastV) + '" r="3.5" fill="' + colorOf[c] + '"/>');
+              }
+              s.push('<text x="' + (W - R + 8) + '" y="' + (y(lastV) + 4) + '" font-size="11" font-weight="600" fill="' + colorOf[c] + '">' + lastV.toFixed(2) + '%</text>');
+            }
+          });
+          // hover 层
+          s.push('<g id="mainHover"></g>');
+          s.push('<rect id="mainHit" x="' + L + '" y="' + T + '" width="' + iw + '" height="' + ih + '" fill="transparent"/>');
+          svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+          svg.innerHTML = s.join("");
+
+          var legend = $("mainLegend");
+          legend.innerHTML = selected.map(function (c) {
+            var m = byCode[c].isMedian ? " ◆" : "";
+            var label = byCode[c].isMedian ? byCode[c].name : byCode[c].name + " " + c;
+            return '<span><i style="background:' + colorOf[c] + '"></i>' + m + " " + label + "</span>";
+          }).join("");
+
+          var hit = $("mainHit"), hover = $("mainHover"), tip = $("tooltip");
+          hit.addEventListener("mousemove", function (e) {
+            var rect = svg.getBoundingClientRect();
+            var px = (e.clientX - rect.left) / rect.width * W;
+            var i = Math.round((px - L) / iw * (n - 1));
+            i = Math.max(0, Math.min(n - 1, i));
+            var g = [];
+            g.push('<line x1="' + x(i) + '" y1="' + T + '" x2="' + x(i) + '" y2="' + (T + ih) + '" stroke="#94a3b8" stroke-dasharray="3 3"/>');
+            var rows = ['<b>' + al.dates[i] + '</b>'];
+            selected.forEach(function (c) {
+              var v = al.series[c][i];
+              g.push('<circle cx="' + x(i) + '" cy="' + y(v) + '" r="4" fill="#fff" stroke="' + colorOf[c] + '" stroke-width="2"/>');
+              rows.push('<div class="tt-row"><span><span style="color:' + colorOf[c] + '">●</span> ' + byCode[c].name + '</span><span class="v">' + (v != null ? v.toFixed(2) + "%" : "-") + '</span></div>');
+            });
+            // 差值行
+            selected.forEach(function (c) {
+              if (c === baseCode) return;
+              var a = al.series[c][i], b = al.series[baseCode][i];
+              if (a != null && b != null) {
+                var dv = a - b;
+                rows.push('<div class="tt-row"><span>Δ vs 基准</span><span class="v ' + (dv >= 0 ? "up" : "down") + '">' + (dv >= 0 ? "+" : "") + dv.toFixed(2) + '</span></div>');
+              }
+            });
+            hover.innerHTML = g.join("");
+            tip.innerHTML = rows.join("");
+            tip.style.opacity = 1;
+            var boxRect = $("mainBox").getBoundingClientRect();
+            var left = e.clientX - boxRect.left + 14;
+            if (left + 190 > boxRect.width) left = e.clientX - boxRect.left - 190;
+            tip.style.left = left + "px";
+            tip.style.top = (e.clientY - boxRect.top + 12) + "px";
+          });
+          hit.addEventListener("mouseleave", function () { hover.innerHTML = ""; tip.style.opacity = 0; });
+        }
+
+        function drawDiff(al) {
+          var svg = $("diffChart");
+          var W = 1300, H = 240, L = 62, R = 96, T = 14, B = 30;
+          var iw = W - L - R, ih = H - T - B;
+          var n = al.dates.length;
+          var others = selected.filter(function (c) { return c !== baseCode; });
+          var label = premiumMode === "real" ? "真实" : "账面";
+          $("diffDesc").textContent =
+            "差值 = 各基金" + label + "溢价率 − 「" + byCode[baseCode].name + " " + baseCode + "」" + label + "溢价率；0 轴以上为溢价更高。";
+
+          if (!others.length) {
+            svg.innerHTML = '<text x="' + (W / 2) + '" y="' + (H / 2) + '" text-anchor="middle" font-size="13" fill="#94a3b8">再选一支基金即可显示差值</text>';
+            $("diffLegend").innerHTML = "";
+            $("diffTooltip").style.opacity = 0;
+            return;
+          }
+          var diffs = {};
+          others.forEach(function (c) {
+            diffs[c] = al.series[c].map(function (v, i) {
+              var b = al.series[baseCode][i];
+              return (v != null && b != null) ? v - b : null;
+            });
+          });
+          var all = [];
+          Object.keys(diffs).forEach(function (c) { diffs[c].forEach(function (v) { if (v != null) all.push(v); }); });
+          all.push(0);
+          var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+          var pad = Math.max((hi - lo) * 0.15, 0.3);
+          lo -= pad; hi += pad;
+          var x = function (i) { return L + (n <= 1 ? iw / 2 : i * iw / (n - 1)); };
+          var y = function (v) { return T + ih - (v - lo) / (hi - lo) * ih; };
+          var s = [];
+          for (var t = 0; t <= 4; t++) {
+            var val = lo + (hi - lo) * t / 4, yy = y(val);
+            s.push('<line x1="' + L + '" y1="' + yy + '" x2="' + (W - R) + '" y2="' + yy + '" stroke="' + (Math.abs(val) < pad * 0.5 ? "#cbd5e1" : "#eef2f7") + '" stroke-width="1"/>');
+            s.push('<text x="' + (L - 9) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" fill="#94a3b8">' + (val >= 0 ? "+" : "") + val.toFixed(1) + '</text>');
+          }
+          var step = Math.max(1, Math.ceil(n / 8));
+          for (var i = 0; i < n; i += step) {
+            s.push('<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="#94a3b8">' + al.dates[i].slice(5) + '</text>');
+          }
+          others.forEach(function (c) {
+            var pts = diffs[c], d = "", lastI = -1, lastV = null;
+            for (var i = 0; i < n; i++) {
+              if (pts[i] == null) continue;
+              d += (d ? " L " : "M ") + x(i).toFixed(1) + " " + y(pts[i]).toFixed(1);
+              lastI = i; lastV = pts[i];
+            }
+            var col = colorOf[c];
+            var isMed = !!byCode[c].isMedian;
+            s.push('<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + (isMed ? 3 : 2.2) + '"' + (isMed ? ' stroke-dasharray="8 5"' : '') + '/>');
+            if (lastI >= 0) {
+              s.push('<circle cx="' + x(lastI) + '" cy="' + y(lastV) + '" r="3.5" fill="' + col + '"/>');
+              s.push('<text x="' + (W - R + 8) + '" y="' + (y(lastV) + 4) + '" font-size="11" font-weight="600" fill="' + col + '">' + (lastV >= 0 ? "+" : "") + lastV.toFixed(2) + '</text>');
+            }
+          });
+          // hover 层
+          s.push('<g id="diffHover"></g>');
+          s.push('<rect id="diffHit" x="' + L + '" y="' + T + '" width="' + iw + '" height="' + ih + '" fill="transparent"/>');
+          svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+          svg.innerHTML = s.join("");
+          $("diffLegend").innerHTML = others.map(function (c) {
+            return '<span><i style="background:' + colorOf[c] + '"></i>' + byCode[c].name + " − 基准</span>";
+          }).join("");
+
+          var hit = $("diffHit"), hover = $("diffHover"), tip = $("diffTooltip");
+          hit.addEventListener("mousemove", function (e) {
+            var rect = svg.getBoundingClientRect();
+            var px = (e.clientX - rect.left) / rect.width * W;
+            var i = Math.round((px - L) / iw * (n - 1));
+            i = Math.max(0, Math.min(n - 1, i));
+            var g = [];
+            g.push('<line x1="' + x(i) + '" y1="' + T + '" x2="' + x(i) + '" y2="' + (T + ih) + '" stroke="#94a3b8" stroke-dasharray="3 3"/>');
+            var rows = ['<b>' + al.dates[i] + '</b>'];
+            var bv = al.series[baseCode][i];
+            rows.push('<div class="tt-row"><span>基准 ' + byCode[baseCode].name + '</span><span class="v">' + (bv != null ? bv.toFixed(2) + "%" : "-") + '</span></div>');
+            others.forEach(function (c) {
+              var v = diffs[c][i];
+              if (v != null) {
+                g.push('<circle cx="' + x(i) + '" cy="' + y(v) + '" r="4" fill="#fff" stroke="' + colorOf[c] + '" stroke-width="2"/>');
+              }
+              rows.push('<div class="tt-row"><span><span style="color:' + colorOf[c] + '">●</span> ' + byCode[c].name + '</span><span class="v ' + (v == null ? "" : (v >= 0 ? "up" : "down")) + '">' + (v == null ? "-" : (v >= 0 ? "+" : "") + v.toFixed(2)) + '</span></div>');
+            });
+            hover.innerHTML = g.join("");
+            tip.innerHTML = rows.join("");
+            tip.style.opacity = 1;
+            var boxRect = $("diffBox").getBoundingClientRect();
+            var left = e.clientX - boxRect.left + 14;
+            if (left + 190 > boxRect.width) left = e.clientX - boxRect.left - 190;
+            tip.style.left = left + "px";
+            tip.style.top = (e.clientY - boxRect.top + 12) + "px";
+          });
+          hit.addEventListener("mouseleave", function () { hover.innerHTML = ""; tip.style.opacity = 0; });
+        }
+
+        function drawTable(al) {
+          var cols = ["基金"]; // 表格：每行基金，列为窗口首/末/变化/最大最小
+          var h = "<thead><tr><th>基金</th><th>窗口首溢价</th><th>窗口末溢价</th><th>变化(pct)</th><th>区间最高</th><th>区间最低</th><th>末值−基准(pct)</th></tr></thead><tbody>";
+          selected.forEach(function (c) {
+            var vals = al.series[c].filter(function (v) { return v != null; });
+            if (!vals.length) return;
+            var first = vals[0], last = vals[vals.length - 1];
+            var mx = Math.max.apply(null, vals), mn = Math.min.apply(null, vals);
+            var bvals = al.series[baseCode].filter(function (v) { return v != null; });
+            var blast = bvals[bvals.length - 1];
+            var dv = (c === baseCode || blast == null) ? null : last - blast;
+            var cls = function (v) { return v == null ? "" : (v >= 0 ? "color:#b42318" : "color:#047857"); };
+            h += "<tr><td><span style='color:" + colorOf[c] + "'>●</span> " + byCode[c].name + " " + c + "</td>" +
+              "<td>" + first.toFixed(2) + "%</td><td>" + last.toFixed(2) + "%</td>" +
+              "<td style='" + cls(last - first) + "'>" + (last - first >= 0 ? "+" : "") + (last - first).toFixed(2) + "</td>" +
+              "<td>" + mx.toFixed(2) + "%</td><td>" + mn.toFixed(2) + "%</td>" +
+              "<td style='" + cls(dv) + "'>" + (dv == null ? "基准" : (dv >= 0 ? "+" : "") + dv.toFixed(2)) + "</td></tr>";
+          });
+          h += "</tbody>";
+          $("datatable").innerHTML = h;
+        }
+
+        init();
+      })();
+    </script>
+  </body>
+</html>
