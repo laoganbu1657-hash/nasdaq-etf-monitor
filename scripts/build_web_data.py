@@ -17,8 +17,20 @@ from market_extras import enrich_payload
 ROOT = Path(__file__).resolve().parents[1]
 DATA_CSV = ROOT / "data" / "nasdaq_qdii_live_premium.csv"
 FEE_CSV = ROOT / "data" / "nasdaq_etf_fee.csv"
+MARGIN_CSV = ROOT / "data" / "margin_history.csv"
 OUT = ROOT / "docs" / "data" / "funds.json"
 OUT_JS = ROOT / "docs" / "data" / "funds.js"
+OUT_PREMIUM_HISTORY = ROOT / "docs" / "data" / "premium_history.json"
+OUT_PREMIUM_HISTORY_JS = ROOT / "docs" / "data" / "premium_history.js"
+
+# 融资融券明细：交易所每个交易日收盘后披露（一般在当晚，深市更早）。
+# 取最近 15 个交易日即可覆盖「近10日净买入」= 余额较10个交易日前变化的窗口，
+# 多留几天余量防止某天抓取失败造成断档。缓存为增量 CSV，每次只抓缺的日期。
+MARGIN_WINDOW_DAYS = 15
+# 只缓存监控列表里可能是融资标的的代码（LOF 161128/161130 通常不是标的，剔除）。
+# 覆盖性检查用「该市场至少出现一只监控代码」判定，个别代码不是标的不会导致重复抓取。
+MARGIN_EXPECTED_SH = {"513100", "513110", "513300", "513390", "513500", "513650", "513850", "513870"}
+MARGIN_EXPECTED_SZ = {"159501", "159509", "159513", "159632", "159659", "159660", "159696", "159941", "159612", "159655", "159577"}
 
 DISPLAY_NAMES = {
     "159501": "嘉实纳指100",
@@ -49,9 +61,15 @@ FUND_INDEX_SYMBOLS = {
     # Yahoo 只有最新点位、新浪无该代码，用窗口内真实指数比 XLK 代理准 4 倍
     # （10 月 16 个交易日：锚误差 MAE 6.7bp vs XLK×0.95 的 28.2bp）。
     "161128": ".SP500-45",
+    # 景顺长城纳指科技 ETF：跟踪纳斯达克科技市值加权指数 (NDXTMC)。
+    # 与纳指100 (NDX) 不同——成分只取 NDX 中的科技股，波动更大。
+    # Yahoo 的 ^NDXT 是另一版本（2026-11-23 +8.49%），与官方/集思录的 +8.18%
+    # 不符；改用纳斯达克官网 HistoryData 接口的官方点位。
+    "159509": "NDXTMC",
 }
 
 XUEQIU_INDEX_SYMBOLS = {".SP500-45"}
+NASDAQ_INDEX_SYMBOLS = {"NDXTMC"}
 
 # 该指数没有对应期货，盘中 15:00 一段用相近期货模拟。
 FUND_FUTURE_PROXY = {
@@ -346,6 +364,50 @@ def fetch_xueqiu_index(symbol: str, count: int = 400) -> pd.DataFrame:
     return df.dropna(subset=["date", "close"]).sort_values("date").set_index("date")[["close"]]
 
 
+_NASDAQ_INDEX_URL = "https://beta.indexes.nasdaq.com/Index/HistoryData"
+
+
+def fetch_nasdaq_index_history(symbol: str, months: int = 6) -> pd.DataFrame:
+    """纳斯达克官网指数日线（date 索引 + close）。
+
+    159509 跟踪的「纳斯达克科技市值加权指数」(NDXTMC) 在 Yahoo 只有 ^NDXT
+    （另一个版本，日涨跌与官方不符），东财/雪球都没有对应代码。纳斯达克官网
+    beta 站的 /Index/HistoryData 接口能给出官方逐日点位（Value），与集思录
+    展示的指数涨幅完全一致（如 2026-11-23 +8.18%）。
+    """
+    end = pd.Timestamp.today().normalize()
+    start = end - pd.DateOffset(months=months)
+    session = requests.Session()
+    session.headers.update(
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+            "Referer": f"https://beta.indexes.nasdaq.com/Index/History/{symbol}",
+            "X-Requested-With": "XMLHttpRequest",
+        }
+    )
+    response = session.post(
+        _NASDAQ_INDEX_URL,
+        data={
+            "id": symbol,
+            "startDate": start.strftime("%Y-%m-%dT00:00:00"),
+            "endDate": end.strftime("%Y-%m-%dT00:00:00"),
+        },
+        timeout=25,
+    )
+    response.raise_for_status()
+    rows = (response.json() or {}).get("aaData") or []
+    if not rows:
+        raise RuntimeError(f"纳斯达克 {symbol} 返回空数据")
+    df = pd.DataFrame(rows)
+    df["date"] = pd.to_datetime(df["TimeStamp"], errors="coerce").dt.normalize()
+    df["close"] = pd.to_numeric(df["Value"], errors="coerce")
+    df = df.dropna(subset=["date", "close"])
+    df = df[df["close"] > 0]
+    if df.empty:
+        raise RuntimeError(f"纳斯达克 {symbol} 无有效点位")
+    return df.sort_values("date").set_index("date")[["close"]]
+
+
 def load_estimation_series() -> tuple[dict[str, pd.DataFrame], pd.DataFrame | None]:
     try:
         index_map = {}
@@ -354,6 +416,8 @@ def load_estimation_series() -> tuple[dict[str, pd.DataFrame], pd.DataFrame | No
         for code, symbol in FUND_INDEX_SYMBOLS.items():
             if symbol in XUEQIU_INDEX_SYMBOLS:
                 fetcher = lambda symbol=symbol: fetch_xueqiu_index(symbol)
+            elif symbol in NASDAQ_INDEX_SYMBOLS:
+                fetcher = lambda symbol=symbol: fetch_nasdaq_index_history(symbol)
             elif symbol.startswith("."):
                 fetcher = lambda symbol=symbol: fetch_us_index_history(symbol)
             else:
@@ -512,6 +576,15 @@ def fetch_pbc_fixing_daily(days: int = 30) -> pd.DataFrame | None:
         except Exception as error:
             print(f"中间价获取失败（第 {attempt + 1} 次）：{error}")
             time.sleep(2)
+    # 中国货币网接口近期限流（返回空 records），改用东财 120.USDCNYC ——
+    # 该合约即 CFETS 人民币兑美元中间价日线，口径与货币网一致
+    try:
+        df = fetch_usdcnyc_history()
+        if df is not None and not df.empty:
+            print("货币网中间价不可用，改用东财 USDCNYC 中间价日线")
+            return df
+    except Exception as error:
+        print(f"东财 USDCNYC 中间价兜底失败：{error}")
     return None
 
 
@@ -564,14 +637,22 @@ def fetch_yahoo_daily(symbol: str, adjusted: bool = True) -> pd.DataFrame:
     return df
 
 
-def fetch_yahoo_minute_close_at_china_close(symbol: str, market_date: pd.Timestamp) -> float | None:
-    """Return the 15:00 Asia/Shanghai one-minute close for a futures symbol."""
+def fetch_yahoo_price_at_china_close(
+    symbol: str, market_date: pd.Timestamp, interval: str = "1m"
+) -> float | None:
+    """Return the 15:00 Asia/Shanghai price from a Yahoo bar at 07:00 UTC.
+
+    Uses the bar OPEN at 07:00 UTC (=15:00 Beijing), which is identical across
+    1m/5m/15m/1h intervals for the same instant, so switching granularity keeps
+    one consistent definition of "15:00 price".
+    """
     target = pd.Timestamp(market_date).normalize() + pd.Timedelta(hours=7)
-    start = int((target - pd.Timedelta(minutes=10)).tz_localize("UTC").timestamp())
-    end = int((target + pd.Timedelta(minutes=11)).tz_localize("UTC").timestamp())
+    span = {"1m": 15, "5m": 40, "15m": 90, "1h": 150}[interval]
+    start = int((target - pd.Timedelta(minutes=span)).tz_localize("UTC").timestamp())
+    end = int((target + pd.Timedelta(minutes=span)).tz_localize("UTC").timestamp())
     response = requests.get(
         f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
-        params={"period1": start, "period2": end, "interval": "1m", "includePrePost": "true"},
+        params={"period1": start, "period2": end, "interval": interval, "includePrePost": "true"},
         headers={"User-Agent": "Mozilla/5.0"},
         timeout=20,
     )
@@ -581,11 +662,34 @@ def fetch_yahoo_minute_close_at_china_close(symbol: str, market_date: pd.Timesta
         return None
     payload = result[0]
     timestamps = payload.get("timestamp") or []
-    closes = ((payload.get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
-    for timestamp, close in zip(timestamps, closes):
+    quote = ((payload.get("indicators") or {}).get("quote") or [{}])[0]
+    opens = quote.get("open") or []
+    closes = quote.get("close") or []
+    for i, timestamp in enumerate(timestamps):
         point = pd.Timestamp(timestamp, unit="s", tz="UTC").tz_convert(None)
         if point == target:
-            return clean_number(close)
+            if i < len(opens) and opens[i] is not None:
+                return clean_number(opens[i])
+            if i < len(closes):
+                return clean_number(closes[i])
+    return None
+
+
+def fetch_yahoo_minute_close_at_china_close(symbol: str, market_date: pd.Timestamp) -> float | None:
+    """Return the 15:00 Asia/Shanghai price, falling back across bar intervals.
+
+    Yahoo 1m bars only reach back ~30 days; 5m ~45 days, 15m ~60 days, 1h ~1 year.
+    Trying them in order lets the real-premium history extend to 60 trading days.
+    Because the 07:00-UTC OPEN is identical across intervals, the fallback does
+    not change the price definition.
+    """
+    for interval in ("1m", "5m", "15m", "1h"):
+        try:
+            value = fetch_yahoo_price_at_china_close(symbol, market_date, interval)
+            if value not in (None, 0):
+                return value
+        except Exception:
+            continue
     return None
 
 
@@ -627,22 +731,32 @@ def fetch_yahoo_minute_median_at_china_close(symbol: str, market_date: pd.Timest
     target = pd.Timestamp(market_date).normalize() + pd.Timedelta(hours=7)
     start = int((target - pd.Timedelta(minutes=window_minutes)).tz_localize("UTC").timestamp())
     end = int((target + pd.Timedelta(minutes=1)).tz_localize("UTC").timestamp())
-    response = requests.get(
-        f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
-        params={"period1": start, "period2": end, "interval": "1m", "includePrePost": "true"},
-        headers={"User-Agent": "Mozilla/5.0"},
-        timeout=20,
-    )
-    response.raise_for_status()
-    result = response.json().get("chart", {}).get("result") or []
-    if not result:
-        return None
-    closes = ((result[0].get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
-    values = [clean_number(value) for value in closes]
-    values = [value for value in values if value not in (None, 0)]
-    if not values:
-        return None
-    return clean_number(pd.Series(values).median())
+    try:
+        response = requests.get(
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+            params={"period1": start, "period2": end, "interval": "1m", "includePrePost": "true"},
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=20,
+        )
+        response.raise_for_status()
+        result = response.json().get("chart", {}).get("result") or []
+        if result:
+            closes = ((result[0].get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
+            values = [clean_number(value) for value in closes]
+            values = [value for value in values if value not in (None, 0)]
+            if values:
+                return clean_number(pd.Series(values).median())
+    except Exception:
+        pass
+    # 1m 只覆盖约 30 天；更早日期用 15m/1h 的 07:00-UTC 开盘价兜底
+    for interval in ("15m", "1h"):
+        try:
+            value = fetch_yahoo_price_at_china_close(symbol, market_date, interval)
+            if value not in (None, 0):
+                return value
+        except Exception:
+            continue
+    return None
 
 
 def china_close_fx_change(market_date: pd.Timestamp) -> float | None:
@@ -771,14 +885,32 @@ def session_anchor_nav(
     prior = group[group["date"] < session_date]
     if prior.empty:
         return None
-    ref = prior.iloc[-1]
+    # 优先取紧邻前一交易日；若该行缺净值（节假日空档等），往前找最近一条有 nav
+    # 的记录。最多回溯 10 个交易日：更早的缺口（如部分基金早期 nav 未回填）若用
+    # 数月前的净值反推会产生系统性失真，宁可让该日序列缺失也不造假数据。
+    ref = None
+    for offset, (_, candidate) in enumerate(prior.iloc[::-1].iterrows()):
+        if offset >= 10:
+            break
+        if clean_number(candidate.get("nav")) not in (None, 0) and isinstance(candidate.get("nav_date"), str):
+            ref = candidate
+            break
+    if ref is None:
+        return None
     base_nav = clean_number(ref.get("nav"))
     base_date = ref.get("nav_date")
     if base_nav in (None, 0) or not isinstance(base_date, str):
         return None
-    # 该记录对应的美股收盘日就是 ref 的 A股日期（净值滞后一天）
-    us_close = pd.Timestamp(ref["date"])
-    fx_for_anchor = fixing if fixing is not None and not fixing.empty else fx
+    # 锚点应落在「紧邻前一交易日」（QDII 净值滞后一天）：用该日美股收盘的指数
+    # 把 nav_date 的净值外推到这一日。即使 nav 取自更早的记录，美股收盘日仍应是
+    # 紧邻前一交易日，这样早期缺 nav 的日期也能补上且口径与正常日期一致。
+    us_close = pd.Timestamp(prior.iloc[-1]["date"])
+    # estimate_nav 的 value_at_or_before 按日期索引取数，fixing 若是 date 列形式先归一化
+    fx_for_anchor = fx
+    if fixing is not None and not fixing.empty:
+        fx_for_anchor = fixing if "date" not in fixing.columns else fixing.set_index("date")
+        if not isinstance(fx_for_anchor.index, pd.DatetimeIndex):
+            fx_for_anchor.index = pd.to_datetime(fx_for_anchor.index)
     est = estimate_nav(
         official_nav=float(base_nav),
         official_nav_date=base_date,
@@ -811,6 +943,52 @@ def real_premium_at_china_close(close_value, anchor, future_change, fx_change):
     if marked <= 0:
         return None
     return (float(close_value) / marked - 1) * 100
+
+
+def book_premium(close_value, anchor):
+    """账面溢价率：场内价 ÷ 净值锚 − 1。
+
+    净值锚 = 已公布净值 + 隔夜指数涨跌（账面部分），不叠加当日 15:00 的
+    期货与汇率日内漂移。供趋势对比页展示，剔除期货/汇率噪音。
+    """
+    if close_value in (None, 0) or anchor in (None, 0):
+        return None
+    return (float(close_value) / float(anchor) - 1) * 100
+
+
+# 趋势对比页分组中位数参考线：每个交易日对组内成分基金溢价取中位数。
+# 纳指100组排除 159509(纳指科技)、161128(标普信息科技LOF)、161130(纳斯达克100LOF)，
+# 只保留纯正的纳指100 ETF（12 支）；标普500、美国50 用全组。
+MEDIAN_SERIES_DEFS = [
+    ("nasdaq100", "MED_nasdaq100", "纳指100中位数", ("159509", "161128", "161130")),
+    ("sp500", "MED_sp500", "标普500中位数", ()),
+    ("usa50", "MED_usa50", "美国50中位数", ()),
+]
+
+
+def compute_group_median_series(history_export, group_key, exclude_codes=()):
+    """按交易日对指定分组的溢价序列取中位数（偶数支取中间两支平均）。
+
+    返回 ({"points": [...], "realPoints": [...]}, 成分数)。账面/真实两套口径分开算。
+    """
+    members = [
+        f for f in history_export.values()
+        if f.get("group") == group_key and f.get("code") not in exclude_codes
+    ]
+    result = {}
+    for key in ("points", "realPoints"):
+        by_date = {}
+        for f in members:
+            for p in f.get(key) or []:
+                by_date.setdefault(p["date"], []).append(p["value"])
+        series = []
+        for day in sorted(by_date):
+            vals = sorted(by_date[day])
+            n = len(vals)
+            med = vals[n // 2] if n % 2 else (vals[n // 2 - 1] + vals[n // 2]) / 2
+            series.append({"date": day, "value": round(med, 3)})
+        result[key] = series
+    return result, len(members)
 
 
 def value_on_or_before(series: pd.DataFrame | None, date: pd.Timestamp) -> float | None:
@@ -893,6 +1071,129 @@ def period_nav_metrics(
     return result
 
 
+def fetch_margin_detail_sse(date_str: str) -> pd.DataFrame:
+    """上交所融资融券明细（含 ETF）。融资偿还额仅沪市披露，深市需用余额差算净买入。"""
+    df = ak.stock_margin_detail_sse(date=date_str)
+    if df is None or df.empty:
+        raise RuntimeError("返回空数据")
+    df = df.rename(
+        columns={
+            "标的证券代码": "code",
+            "融资余额": "rzye",
+            "融资买入额": "rzbuy",
+            "融资偿还额": "rzrepay",
+        }
+    )
+    df["code"] = df["code"].astype(str).str.zfill(6)
+    df = df[df["code"].isin(MARGIN_EXPECTED_SH)]
+    if df.empty:
+        raise RuntimeError("监控代码均不在明细中")
+    return df[["code", "rzye", "rzbuy", "rzrepay"]]
+
+
+def fetch_margin_detail_szse(date_str: str) -> pd.DataFrame:
+    df = ak.stock_margin_detail_szse(date=date_str)
+    if df is None or df.empty:
+        raise RuntimeError("返回空数据")
+    df = df.rename(columns={"证券代码": "code", "融资余额": "rzye", "融资买入额": "rzbuy"})
+    df["code"] = df["code"].astype(str).str.zfill(6)
+    df = df[df["code"].isin(MARGIN_EXPECTED_SZ)]
+    if df.empty:
+        raise RuntimeError("监控代码均不在明细中")
+    df["rzrepay"] = None
+    return df[["code", "rzye", "rzbuy", "rzrepay"]]
+
+
+def load_margin_cache() -> pd.DataFrame:
+    if MARGIN_CSV.exists():
+        df = pd.read_csv(MARGIN_CSV, dtype={"code": str, "date": str})
+        df["code"] = df["code"].str.zfill(6)
+        return df
+    return pd.DataFrame(columns=["date", "code", "rzye", "rzbuy", "rzrepay"])
+
+
+def margin_day_markets(cache: pd.DataFrame, day_str: str) -> set[str]:
+    codes = set(cache.loc[cache["date"] == day_str, "code"])
+    markets = set()
+    if codes & MARGIN_EXPECTED_SH:
+        markets.add("sh")
+    if codes & MARGIN_EXPECTED_SZ:
+        markets.add("sz")
+    return markets
+
+
+def update_margin_cache(trading_dates: pd.Series) -> pd.DataFrame:
+    """增量抓取最近 MARGIN_WINDOW_DAYS 个交易日的融资融券明细并落盘缓存。
+
+    单个市场失败不影响另一市场：已缓存的市场不重抓，失败的市场下次运行自动补。
+    抓取失败不抛异常（融资数据缺失只影响新增列，不影响页面其它部分）。
+    """
+    cache = load_margin_cache()
+    window = [pd.Timestamp(day) for day in list(trading_dates)[-MARGIN_WINDOW_DAYS:]]
+    fetchers = {"sh": fetch_margin_detail_sse, "sz": fetch_margin_detail_szse}
+    for day in window:
+        day_str = day.strftime("%Y-%m-%d")
+        have = margin_day_markets(cache, day_str)
+        for market, fetcher in fetchers.items():
+            if market in have:
+                continue
+            try:
+                day_df = retry_fetch(
+                    f"融资融券明细 {market} {day_str}",
+                    lambda f=fetcher, s=day.strftime("%Y%m%d"): f(s),
+                    attempts=2,
+                )
+            except Exception as error:
+                print(f"融资融券明细 {market} {day_str} 获取失败：{error}")
+                continue
+            day_df["date"] = day_str
+            # 同市场已有部分行则先去掉，避免重复
+            cache = cache[~((cache["date"] == day_str) & cache["code"].isin(set(day_df["code"])))]
+            cache = pd.concat([cache, day_df], ignore_index=True)
+            print(f"融资融券明细 {market} {day_str}：新增 {len(day_df)} 条")
+    # 只保留最近 60 个日期，防止缓存无限增长
+    if not cache.empty:
+        keep = set(sorted(cache["date"].unique())[-60:])
+        cache = cache[cache["date"].isin(keep)].sort_values(["date", "code"])
+        cache.to_csv(MARGIN_CSV, index=False)
+    return cache
+
+
+def compute_margin_metrics(cache: pd.DataFrame) -> dict[str, dict]:
+    """每只基金：融资余额(亿)、当日净买入(万)、近5/10日净买入(万)、数据日期。
+
+    沪市有偿还额时当日净买入 = 买入额 − 偿还额（交易所口径）；
+    其余（含深市）一律用余额差：净买入 = 最新余额 − N 个交易日前余额。
+    """
+    out: dict[str, dict] = {}
+    for code, grp in cache.groupby("code"):
+        grp = grp.sort_values("date").reset_index(drop=True)
+        rzye = pd.to_numeric(grp["rzye"], errors="coerce")
+        buy = pd.to_numeric(grp["rzbuy"], errors="coerce")
+        repay = pd.to_numeric(grp["rzrepay"], errors="coerce")
+        if len(grp) == 0 or pd.isna(rzye.iloc[-1]):
+            continue
+
+        def balance_diff_wan(lag: int) -> float | None:
+            if len(rzye) <= lag or pd.isna(rzye.iloc[-1]) or pd.isna(rzye.iloc[-1 - lag]):
+                return None
+            return float((rzye.iloc[-1] - rzye.iloc[-1 - lag]) / 1e4)
+
+        day_net = None
+        if pd.notna(buy.iloc[-1]) and pd.notna(repay.iloc[-1]):
+            day_net = float((buy.iloc[-1] - repay.iloc[-1]) / 1e4)
+        else:
+            day_net = balance_diff_wan(1)
+        out[code] = {
+            "marginBalanceYi": float(rzye.iloc[-1]) / 1e8,
+            "marginDayNetBuyWan": day_net,
+            "margin5dNetBuyWan": balance_diff_wan(5),
+            "margin10dNetBuyWan": balance_diff_wan(10),
+            "marginDataDate": str(grp["date"].iloc[-1]),
+        }
+    return out
+
+
 def main() -> None:
     history = pd.read_csv(DATA_CSV, dtype={"code": str})
     history["date"] = pd.to_datetime(history["date"])
@@ -930,13 +1231,35 @@ def main() -> None:
     trading_dates = pd.Series(sorted(history["date"].unique()))
     prev_date = trading_dates.iloc[-2] if len(trading_dates) >= 2 else None
 
-    # 近 7 个 A 股交易日（含最新）的 15:00 期货/汇率，一份缓存同时供「真实溢价率变化」
-    # 与「近 7 日真实溢价率趋势」使用，避免逐日重复拉分钟线。
+    # 融资融券：交易所每日披露，本地缓存增量抓取；失败只影响新增列，不阻断构建
+    try:
+        margin_cache = update_margin_cache(trading_dates)
+        margin_map = compute_margin_metrics(margin_cache)
+        if margin_map:
+            margin_latest = max(item["marginDataDate"] for item in margin_map.values())
+            print(f"融资融券数据：{len(margin_map)} 只，最新数据日 {margin_latest}")
+        else:
+            print("融资融券数据：暂无（新增列将显示 -）")
+    except Exception as error:
+        print(f"融资融券数据处理失败（新增列将显示 -）：{error}")
+        margin_map = {}
+
     TREND_POINTS = 7
-    trend_dates = [pd.Timestamp(day) for day in list(trading_dates)[-TREND_POINTS:]]
+    # 近 N 个 A 股交易日（含最新）的 15:00 期货/汇率，一份缓存同时供「真实溢价率变化」、
+    # 「近 7 日真实溢价率趋势」与「10/20/30 日真实溢价均值」使用，避免逐日重复拉分钟线。
+    # 窗口按交易日只增不减：基准 2026-11-24 = 180，此后每多一个交易日 +1（181、182…）。
+    # 这样历史数据持续累积，对比图表页可切换的最大窗口随之增长。
+    # 主表均值仍只用最后 30 个点，趋势只取最后 7 个点。
+    WINDOW_BASE_DATE = pd.Timestamp("2026-11-24").normalize()
+    WINDOW_BASE_COUNT = 180
+    trading_day_index = {day: idx for idx, day in enumerate(sorted(trading_dates))}
+    base_idx = trading_day_index.get(WINDOW_BASE_DATE, len(trading_day_index) - 1)
+    REAL_PREMIUM_WINDOW = WINDOW_BASE_COUNT + max(0, (len(trading_day_index) - 1) - base_idx)
+    real_window_dates = [pd.Timestamp(day) for day in list(trading_dates)[-REAL_PREMIUM_WINDOW:]]
+    trend_dates = real_window_dates[-TREND_POINTS:]
     future_change_cache: dict[tuple[str, pd.Timestamp], float | None] = {}
     fx_change_cache: dict[pd.Timestamp, float | None] = {}
-    for day in trend_dates:
+    for day in real_window_dates:
         fx_change_cache[day] = china_close_fx_change(day)
         for group_key in GROUPS:
             symbol = GROUP_FUTURE_YAHOO_SYMBOLS.get(group_key, "NQ=F")
@@ -971,6 +1294,7 @@ def main() -> None:
     )
     prev_china_close_fx_change_pct = fx_change_for(prev_date) if prev_date is not None else None
     funds = []
+    premium_history_export: dict[str, dict] = {}
     for code, group in history.sort_values("date").groupby("code"):
         group = group.sort_values("date").reset_index(drop=True)
         latest = group.iloc[-1]
@@ -1076,26 +1400,53 @@ def main() -> None:
             fx_prev,
         )
 
-        # 近 7 个 A 股交易日的 15:00 真实溢价率（口径与当日完全一致：锚 × 15:00 汇率 × 15:00 期货），
-        # 供前端画迷你折线图看趋势。历史日同样用「当时能拿到的最新已发布净值」做锚。
-        real_premium_trend = []
-        for trend_day in trend_dates:
-            day_rows = group[group["date"] == trend_day]
+        # 近 30 个 A 股交易日的 15:00 真实溢价率序列（口径与当日完全一致：锚 × 15:00 汇率 × 15:00 期货）。
+        # 近7日趋势取最后 7 个点；10/20/30 日均值直接用该序列计算（与旧收盘溢价口径不同）。
+        real_premium_points = []
+        for series_day in real_window_dates:
+            day_rows = group[group["date"] == series_day]
             if day_rows.empty:
                 continue
             day_anchor = session_anchor_nav(
-                group, trend_day, operating_fee, fund_index_series, fx, fund_exposure, fixing
+                group, series_day, operating_fee, fund_index_series, fx, fund_exposure, fixing
             )
-            day_future_raw = future_change_for(trend_day, future_key)
+            day_future_raw = future_change_for(series_day, future_key)
             day_future = clean_json_value(day_future_raw * future_beta) if day_future_raw is not None else None
             day_value = real_premium_at_china_close(
                 clean_number(day_rows.iloc[0]["close"]),
                 day_anchor["anchorNav"] if day_anchor else None,
                 day_future,
-                fx_change_for(trend_day),
+                fx_change_for(series_day),
             )
             if day_value is not None:
-                real_premium_trend.append({"date": trend_day.strftime("%Y-%m-%d"), "value": round(day_value, 3)})
+                real_premium_points.append((series_day.strftime("%Y-%m-%d"), round(day_value, 3)))
+        real_premium_trend = [{"date": day, "value": value} for day, value in real_premium_points[-TREND_POINTS:]]
+        real_premium_values = [value for _, value in real_premium_points]
+        # 账面溢价序列：收盘价 ÷ 净值锚 − 1，剔除当日 15:00 期货与汇率漂移。
+        # 与 real_premium_points 用同一批交易日和同一净值锚，仅去掉期货/汇率两项。
+        book_premium_points = []
+        for series_day in real_window_dates:
+            day_rows = group[group["date"] == series_day]
+            if day_rows.empty:
+                continue
+            day_anchor = session_anchor_nav(
+                group, series_day, operating_fee, fund_index_series, fx, fund_exposure, fixing
+            )
+            day_value = book_premium(
+                clean_number(day_rows.iloc[0]["close"]),
+                day_anchor["anchorNav"] if day_anchor else None,
+            )
+            if day_value is not None:
+                book_premium_points.append((series_day.strftime("%Y-%m-%d"), round(day_value, 3)))
+        # 导出两套序列：points=账面溢价（默认展示），realPoints=真实溢价（含期货/汇率）。
+        # 供独立对比图表页头部切换；均按 30/45/60/90/180/… 天窗口共用。
+        premium_history_export[code] = {
+            "code": code,
+            "name": str(latest.get("name") or code),
+            "group": group_key,
+            "points": [{"date": day, "value": value} for day, value in book_premium_points],
+            "realPoints": [{"date": day, "value": value} for day, value in real_premium_points],
+        }
 
         # 2026 年净值收益：官方净值只到 navDate（滞后一天），而 A股 latest_date 收盘时
         # 能拿到的净值口径是「锚 × 当日15:00汇率 × 当日15:00期货」（与真实溢价率同源同时点）。
@@ -1120,14 +1471,6 @@ def main() -> None:
                     benchmark_map.get(group_key),
                     fx,
                 )
-
-        premium_history = group.copy()
-        premium_history["premium_for_mean"] = premium_history["live_premium_pct"]
-        premium_history.loc[premium_history.index[-1], "premium_for_mean"] = latest_premium
-        premium_history = premium_history.dropna(subset=["premium_for_mean"])
-        prev10 = premium_history.iloc[-10:]
-        prev20 = premium_history.iloc[-20:]
-        prev30 = premium_history.iloc[-30:]
 
         funds.append(
             {
@@ -1175,9 +1518,10 @@ def main() -> None:
                 "etfComDealBalance": clean_number(etfcom.get("etfComDealBalance")),
                 "etfComUnitNav": clean_number(etfcom.get("etfComUnitNav")),
                 "etfComNavDate": etfcom.get("etfComNavDate"),
-                "avg10Premium": clean_number(prev10["premium_for_mean"].mean()),
-                "avg20Premium": clean_number(prev20["premium_for_mean"].mean()),
-                "avg30Premium": clean_number(prev30["premium_for_mean"].mean()),
+                **(margin_map.get(code) or {}),
+                "avg10Premium": clean_number(pd.Series(real_premium_values[-10:]).mean()) if real_premium_values else None,
+                "avg20Premium": clean_number(pd.Series(real_premium_values[-20:]).mean()) if real_premium_values else None,
+                "avg30Premium": clean_number(pd.Series(real_premium_values[-30:]).mean()) if real_premium_values else None,
                 "avg7AmountWan": clean_number(last7["amount_wan"].mean()),
                 "amountWan": clean_number(latest["amount_wan"]),
                 "operatingFee": operating_fee,
@@ -1220,6 +1564,46 @@ def main() -> None:
     OUT_JS.write_text(f"window.NASDAQ_ETF_FUNDS = {json_text};\n", encoding="utf-8")
     print(f"Wrote {OUT}")
     print(f"Wrote {OUT_JS}")
+
+    # 对比图表页数据：完整 N 日逐日账面溢价序列（30/45/60/90/180/… 天窗口共用，
+    # N 按交易日只增不减）
+    # 同时导出各分组中位数参考线（纳指100=12支纯纳指ETF、标普500、美国50）。
+    median_series = []
+    for gkey, mcode, mname, exclude in MEDIAN_SERIES_DEFS:
+        series, member_count = compute_group_median_series(
+            premium_history_export, gkey, exclude
+        )
+        median_series.append(
+            {
+                "code": mcode,
+                "name": mname + "（" + str(member_count) + "支）",
+                "group": gkey,
+                "isMedian": True,
+                "memberCount": member_count,
+                "members": sorted(
+                    f["code"] for f in premium_history_export.values()
+                    if f.get("group") == gkey and f.get("code") not in exclude
+                ),
+                "points": series["points"],
+                "realPoints": series["realPoints"],
+            }
+        )
+    history_payload = clean_json_value(
+        {
+            "generatedAt": pd.Timestamp.now(tz="Asia/Shanghai").isoformat(),
+            "maxWindow": REAL_PREMIUM_WINDOW,
+            "funds": sorted(
+                premium_history_export.values(), key=lambda item: item["code"]
+            ),
+            "medianSeries": median_series,
+        }
+    )
+    history_json = json.dumps(history_payload, ensure_ascii=False, indent=2, allow_nan=False)
+    OUT_PREMIUM_HISTORY.write_text(history_json, encoding="utf-8")
+    OUT_PREMIUM_HISTORY_JS.write_text(
+        f"window.PREMIUM_HISTORY = {history_json};\n", encoding="utf-8"
+    )
+    print(f"Wrote {OUT_PREMIUM_HISTORY}")
 
 
 if __name__ == "__main__":
