@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-27T23:18:03.844307+08:00",
+  "generatedAt": "2026-11-28T01:35:12.167877+08:00",
   "latestDate": "2026-11-27",
   "groups": {
     "nasdaq100": {
@@ -14,9 +14,9 @@
         "NDX"
       ],
       "default_holding": "159660",
-      "fallbackFuturePrice": 26315.65,
-      "fallbackFutureChangePct": 0.8252794513462502,
-      "fallbackFutureTime": "2026-11-27 23:11:50",
+      "fallbackFuturePrice": 26643.35,
+      "fallbackFutureChangePct": 2.0808229806227763,
+      "fallbackFutureTime": "2026-11-28 01:30:09",
       "fallbackFutureSource": "新浪期货"
     },
     "sp500": {
@@ -32,9 +32,9 @@
         "SPTR500N"
       ],
       "default_holding": "513500",
-      "fallbackFuturePrice": 7238.075,
-      "fallbackFutureChangePct": 0.5881944203175449,
-      "fallbackFutureTime": "2026-11-27 23:11:50",
+      "fallbackFuturePrice": 7299.53,
+      "fallbackFutureChangePct": 1.4422402112358013,
+      "fallbackFutureTime": "2026-11-28 01:30:09",
       "fallbackFutureSource": "新浪期货"
     },
     "usa50": {
@@ -47,9 +47,9 @@
       "sina_future_symbol": "hf_ES",
       "etfcom_index_codes": [],
       "default_holding": "513850",
-      "fallbackFuturePrice": 7237.285,
-      "fallbackFutureChangePct": 0.5772157176110904,
-      "fallbackFutureTime": "2026-11-27 23:11:51",
+      "fallbackFuturePrice": 7300.475,
+      "fallbackFutureChangePct": 1.4553729632074575,
+      "fallbackFutureTime": "2026-11-28 01:30:09",
       "fallbackFutureSource": "新浪期货"
     }
   },
@@ -91,15 +91,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 19.912
+          "value": 19.916
         },
         {
           "date": "2026-11-18",
-          "value": 20.073
+          "value": 20.075
         },
         {
           "date": "2026-11-19",
-          "value": 18.552
+          "value": 18.55
         },
         {
           "date": "2026-11-20",
@@ -107,15 +107,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 19.988
+          "value": 19.98
         },
         {
           "date": "2026-11-24",
-          "value": 19.35
+          "value": 19.345
         },
         {
           "date": "2026-11-25",
-          "value": 19.597
+          "value": 19.598
         }
       ],
       "sessionAnchorNav": 1.6349,
@@ -124,23 +124,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF嘉实",
       "etfComPremiumRate": 23.48,
       "etfComLastPrice": 2.019,
       "etfComChangeRate": 2.8,
       "etfComDealBalance": 138728768.0,
-      "etfComUnitNav": 1.6349,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.6351,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 3.60357998,
       "marginDayNetBuyWan": 65.6702,
       "margin5dNetBuyWan": -47.9687,
       "margin10dNetBuyWan": 1402.3788,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 19.3849,
-      "avg20Premium": 19.8196,
-      "avg30Premium": 18.9929,
+      "avg10Premium": 19.381399999999996,
+      "avg20Premium": 19.81765,
+      "avg30Premium": 18.991333333333333,
       "avg7AmountWan": 14606.178799999998,
       "amountWan": 13872.8768,
       "operatingFee": 0.6,
@@ -155,9 +155,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.36011745323254,
       "fxStrippedReturn2026": 3.1119914337828236,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.5875733326099262,
+      "trackingDiff2025": 1.5875660619217191,
       "trackingDiff2026": -0.43328704298841725,
       "maxDrawdown2026": -13.360142984807865,
       "subscribeStatus": "暂停申购",
@@ -173,7 +173,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15950120261127.txt",
       "subscriptionLimitAmount": 16349000.0,
       "exchangeShares": 7224986575.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159509",
@@ -212,15 +212,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 39.814
+          "value": 39.819
         },
         {
           "date": "2026-11-18",
-          "value": 41.335
+          "value": 41.338
         },
         {
           "date": "2026-11-19",
-          "value": 40.325
+          "value": 40.323
         },
         {
           "date": "2026-11-20",
@@ -228,15 +228,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 40.397
+          "value": 40.387
         },
         {
           "date": "2026-11-24",
-          "value": 40.15
+          "value": 40.143
         },
         {
           "date": "2026-11-25",
-          "value": 39.814
+          "value": 39.816
         }
       ],
       "sessionAnchorNav": 1.9093,
@@ -254,9 +254,9 @@
       "etfComDealBalance": null,
       "etfComUnitNav": null,
       "etfComNavDate": null,
-      "avg10Premium": 40.0248,
-      "avg20Premium": 39.57079999999999,
-      "avg30Premium": 38.62096666666667,
+      "avg10Premium": 40.0207,
+      "avg20Premium": 39.5684,
+      "avg30Premium": 38.61903333333333,
       "avg7AmountWan": 126083.39952857142,
       "amountWan": 149489.355,
       "operatingFee": 1.0,
@@ -271,9 +271,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 33.23931722808664,
       "fxStrippedReturn2026": 6.087065714321294,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 12.466773107464025,
+      "trackingDiff2025": 12.466765836775817,
       "trackingDiff2026": 2.5417872375500528,
       "maxDrawdown2026": -21.07623318385651,
       "subscribeStatus": "暂停申购",
@@ -289,7 +289,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15950920261127.txt",
       "subscriptionLimitAmount": 15274400.0,
       "exchangeShares": 6918564118.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159513",
@@ -328,15 +328,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 14.031
+          "value": 14.035
         },
         {
           "date": "2026-11-18",
-          "value": 14.992
+          "value": 14.994
         },
         {
           "date": "2026-11-19",
-          "value": 14.136
+          "value": 14.134
         },
         {
           "date": "2026-11-20",
@@ -344,15 +344,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 14.322
+          "value": 14.315
         },
         {
           "date": "2026-11-24",
-          "value": 13.269
+          "value": 13.263
         },
         {
           "date": "2026-11-25",
-          "value": 12.935
+          "value": 12.936
         }
       ],
       "sessionAnchorNav": 1.4483,
@@ -361,23 +361,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克100ETF大成",
       "etfComPremiumRate": 18.62,
       "etfComLastPrice": 1.718,
       "etfComChangeRate": 3.62,
       "etfComDealBalance": 341039495.0,
-      "etfComUnitNav": 1.4483,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.4484,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 2.93673319,
       "marginDayNetBuyWan": -1291.5006,
       "margin5dNetBuyWan": 1620.9348,
       "margin10dNetBuyWan": 1585.094,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 13.820599999999999,
-      "avg20Premium": 13.2463,
-      "avg30Premium": 12.381900000000002,
+      "avg10Premium": 13.817200000000003,
+      "avg20Premium": 13.24435,
+      "avg30Premium": 12.380266666666666,
       "avg7AmountWan": 35243.55820000001,
       "amountWan": 34103.9495,
       "operatingFee": 1.0,
@@ -392,9 +392,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 21.69265372990685,
       "fxStrippedReturn2026": 2.234106592224472,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 0.9201096092842365,
+      "trackingDiff2025": 0.9201023385960294,
       "trackingDiff2026": -1.311171884546769,
       "maxDrawdown2026": -15.958549222797924,
       "subscribeStatus": "暂停申购",
@@ -410,7 +410,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15951320261127.txt",
       "subscriptionLimitAmount": 21724500.0,
       "exchangeShares": 5386549100.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159577",
@@ -426,12 +426,12 @@
       "latestChangePct": 2.935545628589664,
       "nav": 1.4257,
       "navDate": "2026-11-26",
-      "navForPremium": 1.4347663885108612,
-      "navForReturn": 1.433301659804249,
+      "navForPremium": 1.4451249281157281,
+      "navForReturn": 1.4439099722392779,
       "navForPremiumDate": "2026-11-27",
       "navForPremiumSource": "estimated",
-      "estimateNdxReturn": 0.6377175843583327,
-      "estimateFxReturn": -0.10208830638502864,
+      "estimateNdxReturn": 1.364288677526293,
+      "estimateFxReturn": -0.08407272290530399,
       "latestPremium": 13.137406186434731,
       "chinaCloseFutureChangePct": null,
       "chinaCloseFutureRawPct": null,
@@ -457,23 +457,23 @@
         },
         {
           "date": "2026-11-19",
-          "value": 10.118
+          "value": 10.114
         },
         {
           "date": "2026-11-20",
-          "value": 7.624
+          "value": 7.628
         },
         {
           "date": "2026-11-23",
-          "value": 8.93
+          "value": 8.934
         },
         {
           "date": "2026-11-24",
-          "value": 9.803
+          "value": 9.811
         },
         {
           "date": "2026-11-25",
-          "value": 7.319
+          "value": 7.326
         }
       ],
       "sessionAnchorNav": 1.4255,
@@ -496,27 +496,27 @@
       "margin5dNetBuyWan": -416.4628,
       "margin10dNetBuyWan": -516.2151,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 9.1078,
-      "avg20Premium": 9.044999999999998,
-      "avg30Premium": 8.537633333333332,
+      "avg10Premium": 9.1076,
+      "avg20Premium": 9.044699999999999,
+      "avg30Premium": 8.537433333333334,
       "avg7AmountWan": 11179.893257142858,
       "amountWan": 11679.817,
       "operatingFee": 0.65,
       "return2025": null,
       "return2026": 6.188281764318626,
       "navReturn2025": 17.002345708970303,
-      "navReturn2026": -0.9124327822848888,
+      "navReturn2026": -0.17905480544224694,
       "navReturn2026Fitted": null,
       "fxStrippedReturn2026Fitted": null,
       "trackingDiff2026Fitted": null,
       "latestFittedNav": null,
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.217965664657168,
-      "fxStrippedReturn2026": 4.058251448080363,
+      "fxStrippedReturn2026": 4.809517666378671,
       "qqqReturn2025": 17.719063776702647,
-      "qqqReturn2026": 6.657205474153494,
+      "qqqReturn2026": 7.416867129930149,
       "trackingDiff2025": 4.498901887954521,
-      "trackingDiff2026": -2.5989540260731303,
+      "trackingDiff2026": -2.6073494635514782,
       "maxDrawdown2026": -14.154048716260693,
       "subscribeStatus": "暂停申购",
       "redeemStatus": "暂停赎回",
@@ -531,7 +531,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15957720261127.txt",
       "subscriptionLimitAmount": 712750.0,
       "exchangeShares": 834665791.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159612",
@@ -578,23 +578,23 @@
         },
         {
           "date": "2026-11-19",
-          "value": 9.005
+          "value": 9.002
         },
         {
           "date": "2026-11-20",
-          "value": 8.436
+          "value": 8.44
         },
         {
           "date": "2026-11-23",
-          "value": 9.219
+          "value": 9.223
         },
         {
           "date": "2026-11-24",
-          "value": 8.835
+          "value": 8.842
         },
         {
           "date": "2026-11-25",
-          "value": 8.426
+          "value": 8.433
         }
       ],
       "sessionAnchorNav": 1.7874,
@@ -603,23 +603,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:48",
+      "etfComServerTime": "2026-11-28 01:30:07",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF国泰",
       "etfComPremiumRate": 11.1,
       "etfComLastPrice": 1.986,
       "etfComChangeRate": 2.16,
       "etfComDealBalance": 26208436.0,
-      "etfComUnitNav": 1.7874,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.7875,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 0.10710859,
       "marginDayNetBuyWan": -33.3542,
       "margin5dNetBuyWan": -6.4435,
       "margin10dNetBuyWan": 55.9815,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 8.855400000000001,
-      "avg20Premium": 8.64755,
-      "avg30Premium": 8.310833333333333,
+      "avg10Premium": 8.8552,
+      "avg20Premium": 8.647300000000001,
+      "avg30Premium": 8.3107,
       "avg7AmountWan": 3035.6668999999997,
       "amountWan": 2620.8436,
       "operatingFee": 0.65,
@@ -652,7 +652,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15961220261127.txt",
       "subscriptionLimitAmount": 1787400.0,
       "exchangeShares": 510898651.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159632",
@@ -691,15 +691,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 14.609
+          "value": 14.613
         },
         {
           "date": "2026-11-18",
-          "value": 15.864
+          "value": 15.866
         },
         {
           "date": "2026-11-19",
-          "value": 14.958
+          "value": 14.956
         },
         {
           "date": "2026-11-20",
@@ -707,15 +707,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 15.437
+          "value": 15.429
         },
         {
           "date": "2026-11-24",
-          "value": 14.31
+          "value": 14.305
         },
         {
           "date": "2026-11-25",
-          "value": 14.19
+          "value": 14.192
         }
       ],
       "sessionAnchorNav": 1.9773,
@@ -724,23 +724,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克ETF华安",
       "etfComPremiumRate": 19.49,
       "etfComLastPrice": 2.363,
       "etfComChangeRate": 3.64,
       "etfComDealBalance": 269779292.0,
-      "etfComUnitNav": 1.9773,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.9775,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 3.22646265,
       "marginDayNetBuyWan": -1938.6099,
       "margin5dNetBuyWan": -1484.3767,
       "margin10dNetBuyWan": -907.8595,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 14.655199999999999,
-      "avg20Premium": 13.933150000000001,
-      "avg30Premium": 12.998966666666668,
+      "avg10Premium": 14.651900000000001,
+      "avg20Premium": 13.93125,
+      "avg30Premium": 12.997433333333333,
       "avg7AmountWan": 34201.71244285715,
       "amountWan": 26977.9292,
       "operatingFee": 0.8,
@@ -755,9 +755,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 21.462027222611013,
       "fxStrippedReturn2026": 3.064253042988696,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 0.6894831019883974,
+      "trackingDiff2025": 0.6894758313001903,
       "trackingDiff2026": -0.4810254337825448,
       "maxDrawdown2026": -14.769699276741532,
       "subscribeStatus": "暂停申购",
@@ -773,7 +773,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15963220261127.txt",
       "subscriptionLimitAmount": 1977300.0,
       "exchangeShares": 5292720640.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159655",
@@ -820,23 +820,23 @@
         },
         {
           "date": "2026-11-19",
-          "value": 8.083
+          "value": 8.079
         },
         {
           "date": "2026-11-20",
-          "value": 6.944
+          "value": 6.947
         },
         {
           "date": "2026-11-23",
-          "value": 7.782
+          "value": 7.786
         },
         {
           "date": "2026-11-24",
-          "value": 7.546
+          "value": 7.553
         },
         {
           "date": "2026-11-25",
-          "value": 6.892
+          "value": 6.899
         }
       ],
       "sessionAnchorNav": 1.7454,
@@ -845,23 +845,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:48",
+      "etfComServerTime": "2026-11-28 01:30:07",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF华夏",
       "etfComPremiumRate": 10.56,
       "etfComLastPrice": 1.926,
       "etfComChangeRate": 2.83,
       "etfComDealBalance": 177519758.0,
-      "etfComUnitNav": 1.7454,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.7422,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 0.64587174,
       "marginDayNetBuyWan": 317.8518,
       "margin5dNetBuyWan": 1253.9477,
       "margin10dNetBuyWan": 1571.3925,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 7.883300000000001,
-      "avg20Premium": 7.82615,
-      "avg30Premium": 7.544033333333333,
+      "avg10Premium": 7.8828000000000005,
+      "avg20Premium": 7.82565,
+      "avg30Premium": 7.5437,
       "avg7AmountWan": 22689.08028571428,
       "amountWan": 17751.9758,
       "operatingFee": 0.85,
@@ -894,7 +894,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15965520261127.txt",
       "subscriptionLimitAmount": 1745400.0,
       "exchangeShares": 2304143045.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159659",
@@ -933,15 +933,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 16.757
+          "value": 16.761
         },
         {
           "date": "2026-11-18",
-          "value": 17.511
+          "value": 17.513
         },
         {
           "date": "2026-11-19",
-          "value": 16.167
+          "value": 16.165
         },
         {
           "date": "2026-11-20",
@@ -949,15 +949,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 17.783
+          "value": 17.775
         },
         {
           "date": "2026-11-24",
-          "value": 16.385
+          "value": 16.38
         },
         {
           "date": "2026-11-25",
-          "value": 16.858
+          "value": 16.859
         }
       ],
       "sessionAnchorNav": 1.8822,
@@ -966,23 +966,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克100ETF招商",
       "etfComPremiumRate": 21.28,
       "etfComLastPrice": 2.283,
       "etfComChangeRate": 3.21,
       "etfComDealBalance": 166880152.0,
-      "etfComUnitNav": 1.8822,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.8824,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 5.06272076,
       "marginDayNetBuyWan": 472.0827,
       "margin5dNetBuyWan": 946.9183,
       "margin10dNetBuyWan": 1329.0928,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 16.6959,
-      "avg20Premium": 15.9,
-      "avg30Premium": 15.07996666666667,
+      "avg10Premium": 16.6926,
+      "avg20Premium": 15.898149999999998,
+      "avg30Premium": 15.078399999999997,
       "avg7AmountWan": 17214.29152857143,
       "amountWan": 16688.0152,
       "operatingFee": 0.65,
@@ -997,9 +997,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.651617162880267,
       "fxStrippedReturn2026": 3.366221202957931,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.8790730422576507,
+      "trackingDiff2025": 1.8790657715694437,
       "trackingDiff2026": -0.17905727381331005,
       "maxDrawdown2026": -13.76037959667853,
       "subscribeStatus": "暂停申购",
@@ -1015,7 +1015,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15965920261127.txt",
       "subscriptionLimitAmount": 1882200.0,
       "exchangeShares": 4815744064.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159660",
@@ -1054,15 +1054,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 15.22
+          "value": 15.224
         },
         {
           "date": "2026-11-18",
-          "value": 16.18
+          "value": 16.182
         },
         {
           "date": "2026-11-19",
-          "value": 15.009
+          "value": 15.007
         },
         {
           "date": "2026-11-20",
@@ -1070,15 +1070,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 16.088
+          "value": 16.08
         },
         {
           "date": "2026-11-24",
-          "value": 14.947
+          "value": 14.941
         },
         {
           "date": "2026-11-25",
-          "value": 15.067
+          "value": 15.068
         }
       ],
       "sessionAnchorNav": 1.9017,
@@ -1087,23 +1087,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF汇添富",
       "etfComPremiumRate": 20.98,
       "etfComLastPrice": 2.301,
       "etfComChangeRate": 3.74,
       "etfComDealBalance": 234708697.0,
-      "etfComUnitNav": 1.9017,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.9019,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 1.63761551,
       "marginDayNetBuyWan": -570.9169,
       "margin5dNetBuyWan": 68.5595,
       "margin10dNetBuyWan": 1216.5376,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 15.1852,
-      "avg20Premium": 14.635349999999999,
-      "avg30Premium": 13.878433333333335,
+      "avg10Premium": 15.181700000000001,
+      "avg20Premium": 14.633349999999998,
+      "avg30Premium": 13.876766666666665,
       "avg7AmountWan": 19824.120400000003,
       "amountWan": 23470.8697,
       "operatingFee": 0.65,
@@ -1118,9 +1118,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.46721841882826,
       "fxStrippedReturn2026": 3.0614131792182198,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.694674298205645,
+      "trackingDiff2025": 1.694667027517438,
       "trackingDiff2026": -0.4838652975530211,
       "maxDrawdown2026": -15.333593445181437,
       "subscribeStatus": "暂停申购",
@@ -1136,7 +1136,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15966020261127.txt",
       "subscriptionLimitAmount": 950850.0,
       "exchangeShares": 2589151363.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159696",
@@ -1175,15 +1175,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 18.582
+          "value": 18.586
         },
         {
           "date": "2026-11-18",
-          "value": 19.209
+          "value": 19.211
         },
         {
           "date": "2026-11-19",
-          "value": 17.481
+          "value": 17.479
         },
         {
           "date": "2026-11-20",
@@ -1191,15 +1191,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 19.834
+          "value": 19.826
         },
         {
           "date": "2026-11-24",
-          "value": 18.873
+          "value": 18.868
         },
         {
           "date": "2026-11-25",
-          "value": 18.875
+          "value": 18.876
         }
       ],
       "sessionAnchorNav": 1.6211,
@@ -1208,23 +1208,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF易方达",
       "etfComPremiumRate": 23.36,
       "etfComLastPrice": 2.0,
       "etfComChangeRate": 2.67,
       "etfComDealBalance": 92849231.0,
-      "etfComUnitNav": 1.6211,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.6212,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 1.17142591,
       "marginDayNetBuyWan": -196.4156,
       "margin5dNetBuyWan": -198.7206,
       "margin10dNetBuyWan": 229.8504,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 18.427999999999997,
-      "avg20Premium": 17.7091,
-      "avg30Premium": 16.9618,
+      "avg10Premium": 18.424500000000002,
+      "avg20Premium": 17.707050000000002,
+      "avg30Premium": 16.960066666666666,
       "avg7AmountWan": 6662.949328571429,
       "amountWan": 9284.9231,
       "operatingFee": 0.6,
@@ -1239,9 +1239,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.602591412199267,
       "fxStrippedReturn2026": 3.2031980721576536,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.830047291576653,
+      "trackingDiff2025": 1.830040020888446,
       "trackingDiff2026": -0.34208040461358724,
       "maxDrawdown2026": -13.37262012692656,
       "subscribeStatus": "暂停申购",
@@ -1257,7 +1257,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15969620261127.txt",
       "subscriptionLimitAmount": 1621100.0,
       "exchangeShares": 3037824034.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "159941",
@@ -1296,15 +1296,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 17.308
+          "value": 17.312
         },
         {
           "date": "2026-11-18",
-          "value": 18.023
+          "value": 18.026
         },
         {
           "date": "2026-11-19",
-          "value": 16.659
+          "value": 16.657
         },
         {
           "date": "2026-11-20",
@@ -1312,15 +1312,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 17.973
+          "value": 17.965
         },
         {
           "date": "2026-11-24",
-          "value": 16.195
+          "value": 16.19
         },
         {
           "date": "2026-11-25",
-          "value": 15.996
+          "value": 15.998
         }
       ],
       "sessionAnchorNav": 1.3006,
@@ -1329,23 +1329,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF广发",
       "etfComPremiumRate": 20.78,
       "etfComLastPrice": 1.571,
       "etfComChangeRate": 3.29,
       "etfComDealBalance": 1113717110.0,
-      "etfComUnitNav": 1.3006,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.3007,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 14.94223313,
       "marginDayNetBuyWan": 910.8464,
       "margin5dNetBuyWan": 2806.8334,
       "margin10dNetBuyWan": 9685.4265,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 16.8232,
-      "avg20Premium": 16.5096,
-      "avg30Premium": 16.0812,
+      "avg10Premium": 16.819899999999997,
+      "avg20Premium": 16.507699999999996,
+      "avg30Premium": 16.079666666666665,
       "avg7AmountWan": 114490.95038571428,
       "amountWan": 111371.711,
       "operatingFee": 1.0,
@@ -1360,9 +1360,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 21.599716690566375,
       "fxStrippedReturn2026": 2.3748645211463693,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 0.8271725699437571,
+      "trackingDiff2025": 0.82716529925555,
       "trackingDiff2026": -1.1704139556248716,
       "maxDrawdown2026": -15.43244771057094,
       "subscribeStatus": "暂停申购",
@@ -1378,7 +1378,7 @@
       "subscriptionLimitSource": "https://reportdocs.static.szse.cn/files/text/etf/ETF15994120261127.txt",
       "subscriptionLimitAmount": 1690780.0,
       "exchangeShares": 22985610164.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "161128",
@@ -1394,12 +1394,12 @@
       "latestChangePct": 3.6112833230006247,
       "nav": 5.7573,
       "navDate": "2026-11-26",
-      "navForPremium": 5.78619994961975,
-      "navForReturn": 5.780292916087132,
+      "navForPremium": 5.85364175550408,
+      "navForReturn": 5.848720439491107,
       "navForPremiumDate": "2026-11-27",
       "navForPremiumSource": "estimated",
-      "estimateNdxReturn": 0.5047240892269711,
-      "estimateFxReturn": -0.10208830638502864,
+      "estimateNdxReturn": 1.676169969338548,
+      "estimateFxReturn": -0.08407272290530399,
       "latestPremium": 16.11345596025915,
       "chinaCloseFutureChangePct": null,
       "chinaCloseFutureRawPct": null,
@@ -1417,15 +1417,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 12.419
+          "value": 12.424
         },
         {
           "date": "2026-11-18",
-          "value": 12.818
+          "value": 12.82
         },
         {
           "date": "2026-11-19",
-          "value": 11.194
+          "value": 11.191
         },
         {
           "date": "2026-11-20",
@@ -1433,15 +1433,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 13.324
+          "value": 13.316
         },
         {
           "date": "2026-11-24",
-          "value": 10.772
+          "value": 10.766
         },
         {
           "date": "2026-11-25",
-          "value": 11.476
+          "value": 11.477
         }
       ],
       "sessionAnchorNav": 5.7568,
@@ -1459,27 +1459,27 @@
       "etfComDealBalance": null,
       "etfComUnitNav": null,
       "etfComNavDate": null,
-      "avg10Premium": 11.7451,
-      "avg20Premium": 11.51765,
-      "avg30Premium": 10.921133333333334,
+      "avg10Premium": 11.7414,
+      "avg20Premium": 11.515550000000001,
+      "avg30Premium": 10.919433333333332,
       "avg7AmountWan": 13409.578085714285,
       "amountWan": 13915.6094,
       "operatingFee": 1.0,
       "return2025": null,
       "return2026": 9.339221458946678,
       "navReturn2025": 18.859721082854808,
-      "navReturn2026": -0.2641156034382752,
+      "navReturn2026": 0.9165649715492163,
       "navReturn2026Fitted": null,
       "fxStrippedReturn2026Fitted": null,
       "trackingDiff2026Fitted": null,
       "latestFittedNav": null,
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 24.158137362038733,
-      "fxStrippedReturn2026": 4.739091173071297,
-      "qqqReturn2025": 20.772544120622616,
-      "qqqReturn2026": 4.533475403942688,
-      "trackingDiff2025": 3.3855932414161183,
-      "trackingDiff2026": 0.20561576912860868,
+      "fxStrippedReturn2026": 5.9598912693174855,
+      "qqqReturn2025": 20.772551391310824,
+      "qqqReturn2026": 5.649081274843115,
+      "trackingDiff2025": 3.3855859707279112,
+      "trackingDiff2026": 0.3108099944743703,
       "maxDrawdown2026": -18.27182718271827,
       "subscribeStatus": "暂停申购",
       "redeemStatus": "暂停赎回",
@@ -1489,7 +1489,7 @@
       "historyHighNav": 7.1048,
       "subscriptionLimitNote": "LOF，不适用ETF申赎清单",
       "exchangeShares": 479496563.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "161130",
@@ -1528,15 +1528,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 10.131
+          "value": 10.135
         },
         {
           "date": "2026-11-18",
-          "value": 10.803
+          "value": 10.805
         },
         {
           "date": "2026-11-19",
-          "value": 10.195
+          "value": 10.193
         },
         {
           "date": "2026-11-20",
@@ -1544,15 +1544,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 12.916
+          "value": 12.908
         },
         {
           "date": "2026-11-24",
-          "value": 10.726
+          "value": 10.721
         },
         {
           "date": "2026-11-25",
-          "value": 11.856
+          "value": 11.857
         }
       ],
       "sessionAnchorNav": 3.9209,
@@ -1570,9 +1570,9 @@
       "etfComDealBalance": null,
       "etfComUnitNav": null,
       "etfComNavDate": null,
-      "avg10Premium": 10.640899999999998,
-      "avg20Premium": 9.9017,
-      "avg30Premium": 9.072533333333334,
+      "avg10Premium": 10.6376,
+      "avg20Premium": 9.8997,
+      "avg30Premium": 9.070866666666666,
       "avg7AmountWan": 3329.7644000000005,
       "amountWan": 3862.3843,
       "operatingFee": 0.6,
@@ -1587,9 +1587,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 20.432550894337776,
       "fxStrippedReturn2026": 4.023264846841501,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": -0.3399932262848404,
+      "trackingDiff2025": -0.34000049697304746,
       "trackingDiff2026": 0.47798637007026024,
       "maxDrawdown2026": -12.33595800524936,
       "subscribeStatus": "暂停申购",
@@ -1599,7 +1599,7 @@
       "historyHighClose": 4.953,
       "historyHighNav": 4.6296,
       "exchangeShares": 157696584.0,
-      "scaleDate": "2026-11-27"
+      "scaleDate": "2026-11-28"
     },
     {
       "code": "513100",
@@ -1638,15 +1638,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 19.199
+          "value": 19.203
         },
         {
           "date": "2026-11-18",
-          "value": 19.345
+          "value": 19.347
         },
         {
           "date": "2026-11-19",
-          "value": 17.814
+          "value": 17.812
         },
         {
           "date": "2026-11-20",
@@ -1654,15 +1654,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 19.166
+          "value": 19.158
         },
         {
           "date": "2026-11-24",
-          "value": 18.658
+          "value": 18.653
         },
         {
           "date": "2026-11-25",
-          "value": 18.72
+          "value": 18.721
         }
       ],
       "sessionAnchorNav": 1.7405,
@@ -1671,23 +1671,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF国泰",
       "etfComPremiumRate": 21.1,
       "etfComLastPrice": 2.108,
       "etfComChangeRate": 1.69,
       "etfComDealBalance": 139860161.0,
-      "etfComUnitNav": 1.7405,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.7407,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 14.61948277,
       "marginDayNetBuyWan": 236.4362,
       "margin5dNetBuyWan": -2276.244,
       "margin10dNetBuyWan": -9473.0866,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 18.5439,
-      "avg20Premium": 18.323700000000002,
-      "avg30Premium": 17.770566666666664,
+      "avg10Premium": 18.540399999999998,
+      "avg20Premium": 18.3216,
+      "avg30Premium": 17.768866666666664,
       "avg7AmountWan": 39812.15414285714,
       "amountWan": 13986.0161,
       "operatingFee": 0.8,
@@ -1702,9 +1702,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.200356620967998,
       "fxStrippedReturn2026": 2.9690021874560157,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.4278125003453823,
+      "trackingDiff2025": 1.4278052296571753,
       "trackingDiff2026": -0.5762762893152251,
       "maxDrawdown2026": -14.625,
       "subscribeStatus": "暂停申购",
@@ -1759,15 +1759,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 13.819
+          "value": 13.823
         },
         {
           "date": "2026-11-18",
-          "value": 14.761
+          "value": 14.763
         },
         {
           "date": "2026-11-19",
-          "value": 13.669
+          "value": 13.667
         },
         {
           "date": "2026-11-20",
@@ -1775,15 +1775,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 14.381
+          "value": 14.374
         },
         {
           "date": "2026-11-24",
-          "value": 13.131
+          "value": 13.126
         },
         {
           "date": "2026-11-25",
-          "value": 12.906
+          "value": 12.907
         }
       ],
       "sessionAnchorNav": 1.9992,
@@ -1792,23 +1792,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF华泰柏瑞",
       "etfComPremiumRate": 18.24,
       "etfComLastPrice": 2.364,
       "etfComChangeRate": 3.5,
       "etfComDealBalance": 229802745.0,
-      "etfComUnitNav": 1.9992,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.9994,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 3.70500267,
       "marginDayNetBuyWan": -1231.7348,
       "margin5dNetBuyWan": -627.888,
       "margin10dNetBuyWan": -1341.9756,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 13.6477,
-      "avg20Premium": 13.175999999999998,
-      "avg30Premium": 12.360133333333334,
+      "avg10Premium": 13.644500000000003,
+      "avg20Premium": 13.174199999999999,
+      "avg30Premium": 12.358733333333333,
       "avg7AmountWan": 27607.627557142852,
       "amountWan": 22980.2745,
       "operatingFee": 1.0,
@@ -1823,9 +1823,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 21.79372205096337,
       "fxStrippedReturn2026": 2.7760044336042844,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.0211779303407553,
+      "trackingDiff2025": 1.0211706596525483,
       "trackingDiff2026": -0.7692740431669565,
       "maxDrawdown2026": -15.610859728506787,
       "subscribeStatus": "暂停申购",
@@ -1880,15 +1880,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 15.59
+          "value": 15.594
         },
         {
           "date": "2026-11-18",
-          "value": 16.667
+          "value": 16.669
         },
         {
           "date": "2026-11-19",
-          "value": 15.53
+          "value": 15.528
         },
         {
           "date": "2026-11-20",
@@ -1896,15 +1896,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 16.823
+          "value": 16.815
         },
         {
           "date": "2026-11-24",
-          "value": 15.715
+          "value": 15.71
         },
         {
           "date": "2026-11-25",
-          "value": 15.856
+          "value": 15.857
         }
       ],
       "sessionAnchorNav": 2.1619,
@@ -1913,23 +1913,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳斯达克ETF华夏",
       "etfComPremiumRate": 20.49,
       "etfComLastPrice": 2.6,
       "etfComChangeRate": 3.09,
       "etfComDealBalance": 530586154.0,
-      "etfComUnitNav": 2.1619,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 2.1579,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 20.28307304,
       "marginDayNetBuyWan": -1450.4876,
       "margin5dNetBuyWan": 1685.4817,
       "margin10dNetBuyWan": 1047.6696,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 15.850099999999998,
-      "avg20Premium": 14.979349999999997,
-      "avg30Premium": 14.104633333333332,
+      "avg10Premium": 15.846700000000002,
+      "avg20Premium": 14.97745,
+      "avg30Premium": 14.102999999999998,
       "avg7AmountWan": 44081.27344285714,
       "amountWan": 53058.6154,
       "operatingFee": 0.8,
@@ -1944,9 +1944,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 19.835611692675602,
       "fxStrippedReturn2026": 2.761535641630064,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": -0.9369324279470126,
+      "trackingDiff2025": -0.9369396986352196,
       "trackingDiff2026": -0.7837428351411768,
       "maxDrawdown2026": -14.364640883977897,
       "subscribeStatus": "暂停申购",
@@ -2001,15 +2001,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 15.271
+          "value": 15.275
         },
         {
           "date": "2026-11-18",
-          "value": 16.247
+          "value": 16.249
         },
         {
           "date": "2026-11-19",
-          "value": 15.056
+          "value": 15.054
         },
         {
           "date": "2026-11-20",
@@ -2017,15 +2017,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 16.063
+          "value": 16.055
         },
         {
           "date": "2026-11-24",
-          "value": 15.156
+          "value": 15.151
         },
         {
           "date": "2026-11-25",
-          "value": 15.165
+          "value": 15.166
         }
       ],
       "sessionAnchorNav": 1.9536,
@@ -2034,23 +2034,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指100ETF博时",
       "etfComPremiumRate": 19.97,
       "etfComLastPrice": 2.344,
       "etfComChangeRate": 3.21,
       "etfComDealBalance": 121647969.0,
-      "etfComUnitNav": 1.9536,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.9538,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 4.13323394,
       "marginDayNetBuyWan": 376.1031,
       "margin5dNetBuyWan": -319.8534,
       "margin10dNetBuyWan": -2230.2731,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 15.271799999999999,
-      "avg20Premium": 14.636600000000001,
-      "avg30Premium": 13.421233333333333,
+      "avg10Premium": 15.2684,
+      "avg20Premium": 14.6346,
+      "avg30Premium": 13.419566666666668,
       "avg7AmountWan": 14063.307542857145,
       "amountWan": 12164.7969,
       "operatingFee": 0.65,
@@ -2065,9 +2065,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.341012280844687,
       "fxStrippedReturn2026": 3.068178110436026,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.5684681602220696,
+      "trackingDiff2025": 1.5684608895338625,
       "trackingDiff2026": -0.4771003663352147,
       "maxDrawdown2026": -13.861003861003862,
       "subscribeStatus": "暂停申购",
@@ -2130,23 +2130,23 @@
         },
         {
           "date": "2026-11-19",
-          "value": 9.439
+          "value": 9.436
         },
         {
           "date": "2026-11-20",
-          "value": 9.15
+          "value": 9.154
         },
         {
           "date": "2026-11-23",
-          "value": 9.669
+          "value": 9.673
         },
         {
           "date": "2026-11-24",
-          "value": 9.695
+          "value": 9.703
         },
         {
           "date": "2026-11-25",
-          "value": 9.173
+          "value": 9.18
         }
       ],
       "sessionAnchorNav": 2.2785,
@@ -2155,23 +2155,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:49",
+      "etfComServerTime": "2026-11-28 01:30:08",
       "etfComIndexCode": "SPTR500N",
       "etfComName": "标普500ETF博时",
       "etfComPremiumRate": 11.59,
       "etfComLastPrice": 2.543,
       "etfComChangeRate": 2.17,
       "etfComDealBalance": 331529424.0,
-      "etfComUnitNav": 2.2785,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 2.2787,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 2.35311715,
       "marginDayNetBuyWan": 758.5278,
       "margin5dNetBuyWan": 53.806,
       "margin10dNetBuyWan": -917.2244,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 9.6036,
-      "avg20Premium": 9.6899,
-      "avg30Premium": 9.310633333333332,
+      "avg10Premium": 9.6033,
+      "avg20Premium": 9.6896,
+      "avg30Premium": 9.310433333333332,
       "avg7AmountWan": 33770.72914285715,
       "amountWan": 33152.9424,
       "operatingFee": 0.85,
@@ -2251,23 +2251,23 @@
         },
         {
           "date": "2026-11-19",
-          "value": 7.919
+          "value": 7.916
         },
         {
           "date": "2026-11-20",
-          "value": 6.954
+          "value": 6.958
         },
         {
           "date": "2026-11-23",
-          "value": 7.716
+          "value": 7.72
         },
         {
           "date": "2026-11-24",
-          "value": 7.579
+          "value": 7.586
         },
         {
           "date": "2026-11-25",
-          "value": 6.837
+          "value": 6.845
         }
       ],
       "sessionAnchorNav": 1.7363,
@@ -2276,23 +2276,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:48",
+      "etfComServerTime": "2026-11-28 01:30:07",
       "etfComIndexCode": "SPX",
       "etfComName": "标普500ETF南方",
       "etfComPremiumRate": 10.16,
       "etfComLastPrice": 1.908,
       "etfComChangeRate": 2.36,
       "etfComDealBalance": 570297036.0,
-      "etfComUnitNav": 1.7363,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.7364,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 2.21182608,
       "marginDayNetBuyWan": 748.1683,
       "margin5dNetBuyWan": 4633.4265,
       "margin10dNetBuyWan": 3906.0348,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 7.8088,
-      "avg20Premium": 7.864050000000001,
-      "avg30Premium": 7.508166666666667,
+      "avg10Premium": 7.8087,
+      "avg20Premium": 7.863850000000001,
+      "avg30Premium": 7.508,
       "avg7AmountWan": 63141.44542857143,
       "amountWan": 57029.7036,
       "operatingFee": 0.65,
@@ -2341,12 +2341,12 @@
       "latestChangePct": 3.0910131654264372,
       "nav": 1.5896,
       "navDate": "2026-11-26",
-      "navForPremium": 1.5997108616717755,
-      "navForReturn": 1.5980777439460374,
+      "navForPremium": 1.611260245912761,
+      "navForReturn": 1.6099056155509313,
       "navForPremiumDate": "2026-11-27",
       "navForPremiumSource": "estimated",
-      "estimateNdxReturn": 0.6377175843583327,
-      "estimateFxReturn": -0.10208830638502864,
+      "estimateNdxReturn": 1.364288677526293,
+      "estimateFxReturn": -0.08407272290530399,
       "latestPremium": 13.29894313034725,
       "chinaCloseFutureChangePct": null,
       "chinaCloseFutureRawPct": null,
@@ -2372,23 +2372,23 @@
         },
         {
           "date": "2026-11-19",
-          "value": 10.07
+          "value": 10.066
         },
         {
           "date": "2026-11-20",
-          "value": 7.879
+          "value": 7.882
         },
         {
           "date": "2026-11-23",
-          "value": 9.169
+          "value": 9.173
         },
         {
           "date": "2026-11-24",
-          "value": 9.797
+          "value": 9.805
         },
         {
           "date": "2026-11-25",
-          "value": 7.455
+          "value": 7.463
         }
       ],
       "sessionAnchorNav": 1.5895,
@@ -2411,27 +2411,27 @@
       "margin5dNetBuyWan": 705.4902,
       "margin10dNetBuyWan": -880.9443,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 9.2362,
-      "avg20Premium": 9.1421,
-      "avg30Premium": 8.761166666666668,
+      "avg10Premium": 9.2359,
+      "avg20Premium": 9.1417,
+      "avg30Premium": 8.760933333333334,
       "avg7AmountWan": 14643.414042857143,
       "amountWan": 12772.3672,
       "operatingFee": 0.6,
       "return2025": null,
       "return2026": 6.63114268798104,
       "navReturn2025": 17.382442859222614,
-      "navReturn2026": -0.9005491785912589,
+      "navReturn2026": -0.16708324749280523,
       "navReturn2026Fitted": null,
       "fxStrippedReturn2026Fitted": null,
       "trackingDiff2026Fitted": null,
       "latestFittedNav": null,
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.615006426338336,
-      "fxStrippedReturn2026": 4.07073118752681,
+      "fxStrippedReturn2026": 4.822087505423478,
       "qqqReturn2025": 17.719063776702647,
-      "qqqReturn2026": 6.657205474153494,
+      "qqqReturn2026": 7.416867129930149,
       "trackingDiff2025": 4.895942649635687,
-      "trackingDiff2026": -2.586474286626683,
+      "trackingDiff2026": -2.594779624506671,
       "maxDrawdown2026": -13.609467455621305,
       "subscribeStatus": "暂停申购",
       "redeemStatus": "暂停赎回",
@@ -2485,15 +2485,15 @@
       "realPremiumTrend": [
         {
           "date": "2026-11-17",
-          "value": 15.899
+          "value": 15.903
         },
         {
           "date": "2026-11-18",
-          "value": 16.631
+          "value": 16.633
         },
         {
           "date": "2026-11-19",
-          "value": 15.453
+          "value": 15.451
         },
         {
           "date": "2026-11-20",
@@ -2501,15 +2501,15 @@
         },
         {
           "date": "2026-11-23",
-          "value": 16.882
+          "value": 16.874
         },
         {
           "date": "2026-11-24",
-          "value": 15.898
+          "value": 15.892
         },
         {
           "date": "2026-11-25",
-          "value": 16.128
+          "value": 16.13
         }
       ],
       "sessionAnchorNav": 1.6576,
@@ -2518,23 +2518,23 @@
       "sessionAnchorUsCloseDate": "2026-11-26",
       "sessionAnchorIndexReturn": null,
       "sessionAnchorFxReturn": null,
-      "etfComServerTime": "2026-11-27 23:11:46",
+      "etfComServerTime": "2026-11-28 01:30:06",
       "etfComIndexCode": "NDX",
       "etfComName": "纳指ETF富国",
       "etfComPremiumRate": 21.12,
       "etfComLastPrice": 2.008,
       "etfComChangeRate": 3.29,
       "etfComDealBalance": 119187110.0,
-      "etfComUnitNav": 1.6576,
-      "etfComNavDate": "2026-11-25",
+      "etfComUnitNav": 1.6578,
+      "etfComNavDate": "2026-11-26",
       "marginBalanceYi": 2.03761524,
       "marginDayNetBuyWan": -76.0287,
       "margin5dNetBuyWan": -851.3108,
       "margin10dNetBuyWan": 85.9159,
       "marginDataDate": "2026-11-26",
-      "avg10Premium": 15.818000000000001,
-      "avg20Premium": 15.248250000000002,
-      "avg30Premium": 14.345433333333334,
+      "avg10Premium": 15.814599999999999,
+      "avg20Premium": 15.24625,
+      "avg30Premium": 14.3438,
       "avg7AmountWan": 10669.2512,
       "amountWan": 11918.711,
       "operatingFee": 0.6,
@@ -2549,9 +2549,9 @@
       "latestFittedNavDate": null,
       "fxStrippedReturn2025": 22.6489199863245,
       "fxStrippedReturn2026": 3.0995013603359434,
-      "qqqReturn2025": 20.772544120622616,
+      "qqqReturn2025": 20.772551391310824,
       "qqqReturn2026": 3.545278476771241,
-      "trackingDiff2025": 1.8763758657018847,
+      "trackingDiff2025": 1.8763685950136777,
       "trackingDiff2026": -0.4457771164352975,
       "maxDrawdown2026": -13.931469792605943,
       "subscribeStatus": "暂停申购",
